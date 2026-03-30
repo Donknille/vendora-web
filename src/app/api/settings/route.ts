@@ -9,30 +9,40 @@ const updateSettingsSchema = z.object({
 });
 
 export async function GET() {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const settings = await storage.getSettings(userId);
-  return NextResponse.json(settings);
+    const settings = await storage.getSettings(userId);
+    return NextResponse.json(settings);
+  } catch (error) {
+    console.error("GET /api/settings error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const body = await request.json();
-  const parsed = updateSettingsSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    const body = await request.json();
+    const parsed = updateSettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const settings = await storage.upsertSettings(userId, parsed.data);
-  return NextResponse.json(settings);
+    const settings = await storage.upsertSettings(userId, parsed.data);
+    return NextResponse.json(settings);
+  } catch (error) {
+    console.error("PUT /api/settings error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

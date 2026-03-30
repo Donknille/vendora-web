@@ -20,43 +20,53 @@ const createMarketSchema = z.object({
 });
 
 export async function GET() {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const data = await storage.getMarkets(userId);
-  return NextResponse.json(data);
+    const data = await storage.getMarkets(userId);
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("GET /api/markets error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const user = await storage.getUser(userId);
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 404 });
-  }
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
 
-  const sub = storage.getSubscriptionStatus(user);
-  if (!sub.isActive) {
-    return NextResponse.json(
-      { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
-      { status: 403 }
-    );
-  }
+    const sub = storage.getSubscriptionStatus(user);
+    if (!sub.isActive) {
+      return NextResponse.json(
+        { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
+        { status: 403 }
+      );
+    }
 
-  const body = await request.json();
-  const parsed = createMarketSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    const body = await request.json();
+    const parsed = createMarketSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const market = await storage.createMarket(userId, parsed.data);
-  return NextResponse.json(market, { status: 201 });
+    const market = await storage.createMarket(userId, parsed.data);
+    return NextResponse.json(market, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/markets error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

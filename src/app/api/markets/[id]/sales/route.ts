@@ -13,51 +13,68 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const { id: marketId } = await params;
-  const data = await storage.getMarketSales(userId, marketId);
-  return NextResponse.json(data);
+    const { id: marketId } = await params;
+    const data = await storage.getMarketSales(userId, marketId);
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("GET /api/markets/[id]/sales error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const user = await storage.getUser(userId);
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 404 });
-  }
+    const { id: marketId } = await params;
 
-  const sub = storage.getSubscriptionStatus(user);
-  if (!sub.isActive) {
-    return NextResponse.json(
-      { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
-      { status: 403 }
-    );
-  }
+    // Validate market exists and belongs to user
+    const market = await storage.getMarket(userId, marketId);
+    if (!market) {
+      return NextResponse.json({ message: "Market not found" }, { status: 404 });
+    }
 
-  const { id: marketId } = await params;
-  const body = await request.json();
-  const parsed = createMarketSaleSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
 
-  const sale = await storage.createMarketSale(userId, {
-    marketId,
-    ...parsed.data,
-  });
-  return NextResponse.json(sale, { status: 201 });
+    const sub = storage.getSubscriptionStatus(user);
+    if (!sub.isActive) {
+      return NextResponse.json(
+        { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = createMarketSaleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const sale = await storage.createMarketSale(userId, {
+      marketId,
+      ...parsed.data,
+    });
+    return NextResponse.json(sale, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/markets/[id]/sales error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

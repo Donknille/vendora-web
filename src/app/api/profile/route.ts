@@ -14,30 +14,40 @@ const updateProfileSchema = z.object({
 });
 
 export async function GET() {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const profile = await storage.getProfile(userId);
-  return NextResponse.json(profile);
+    const profile = await storage.getProfile(userId);
+    return NextResponse.json(profile);
+  } catch (error) {
+    console.error("GET /api/profile error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const body = await request.json();
-  const parsed = updateProfileSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    const body = await request.json();
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const profile = await storage.upsertProfile(userId, parsed.data);
-  return NextResponse.json(profile);
+    const profile = await storage.upsertProfile(userId, parsed.data);
+    return NextResponse.json(profile);
+  } catch (error) {
+    console.error("PUT /api/profile error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

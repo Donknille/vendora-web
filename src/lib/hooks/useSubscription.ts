@@ -1,13 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/api-client";
+import type { SubscriptionInfo } from "@/lib/types";
 
-export interface SubscriptionInfo {
-  status: "trial" | "active" | "expired" | "cancelled";
-  isActive: boolean;
-  trialEndsAt: string | null;
-  subscriptionExpiresAt: string | null;
-  daysRemaining: number | null;
-}
+export type { SubscriptionInfo };
 
 export function useSubscription() {
   return useQuery<SubscriptionInfo>({

@@ -24,6 +24,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export default function OrderDetailPage() {
   const { t } = useLanguage();
   const router = useRouter();
@@ -38,7 +47,7 @@ export default function OrderDetailPage() {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const order = orders?.find((o: any) => o.id === id);
+  const order = orders?.find((o) => o.id === id);
 
   if (isLoading) {
     return (
@@ -74,21 +83,21 @@ export default function OrderDetailPage() {
   };
 
   const handleCreateInvoice = () => {
-    const profileName = profile?.companyName || profile?.name || "Vendora";
-    const profileAddress = profile?.address || "";
-    const profileEmail = profile?.email || "";
-    const profilePhone = profile?.phone || "";
-    const taxNote = profile?.taxNote || "";
+    const profileName = escapeHtml(profile?.name || "Vendora");
+    const profileAddress = escapeHtml(profile?.address || "");
+    const profileEmail = escapeHtml(profile?.email || "");
+    const profilePhone = escapeHtml(profile?.phone || "");
+    const taxNote = escapeHtml(profile?.taxNote || "");
 
     const invoiceDate =
       order.orderDate || order.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0];
-    const invoiceNum = order.invoiceNumber || `INV-${order.id?.slice(0, 8)?.toUpperCase() || "0000"}`;
+    const invoiceNum = escapeHtml(order.invoiceNumber || `INV-${order.id?.slice(0, 8)?.toUpperCase() || "0000"}`);
 
     const itemRows = items
       .map(
-        (item: any) => `
+        (item: { name: string; quantity: number; price: number }) => `
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;">${item.name}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;">${escapeHtml(item.name)}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:center;">${item.quantity || 1}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:right;">${formatCurrency(Number(item.price || 0))}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:right;">${formatCurrency(Number(item.price || 0) * Number(item.quantity || 1))}</td>
@@ -147,9 +156,9 @@ export default function OrderDetailPage() {
       </div>
       <div class="party" style="text-align:right;">
         <div class="party-label" style="text-align:right;">${t.orders.invoiceTo}</div>
-        <p class="name">${order.customerName}</p>
-        ${order.customerAddress ? `<p>${order.customerAddress}</p>` : ""}
-        ${order.customerEmail ? `<p>${order.customerEmail}</p>` : ""}
+        <p class="name">${escapeHtml(order.customerName)}</p>
+        ${order.customerAddress ? `<p>${escapeHtml(order.customerAddress)}</p>` : ""}
+        ${order.customerEmail ? `<p>${escapeHtml(order.customerEmail)}</p>` : ""}
       </div>
     </div>
     <table>
@@ -170,7 +179,7 @@ export default function OrderDetailPage() {
     </div>
     ${
       order.notes
-        ? `<div class="notes"><div class="notes-label">${t.orders.invoiceNotes}</div><p>${order.notes}</p></div>`
+        ? `<div class="notes"><div class="notes-label">${t.orders.invoiceNotes}</div><p>${escapeHtml(order.notes)}</p></div>`
         : ""
     }
     ${
@@ -276,7 +285,7 @@ export default function OrderDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item: any, index: number) => (
+              {items.map((item: { name: string; quantity: number; price: number }, index: number) => (
                 <tr key={index} className="border-b border-zinc-800/50">
                   <td className="py-3 text-zinc-100">{item.name}</td>
                   <td className="py-3 text-center text-zinc-400">

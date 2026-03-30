@@ -68,7 +68,7 @@ export default function SettingsPage() {
   // Populate form when profile loads
   useEffect(() => {
     if (profile) {
-      setCompanyName(profile.name ?? profile.companyName ?? "");
+      setCompanyName(profile.name ?? "");
       setAddress(profile.address ?? "");
       setEmail(profile.email ?? "");
       setPhone(profile.phone ?? "");
@@ -92,7 +92,6 @@ export default function SettingsPage() {
     e.preventDefault();
     await updateProfile.mutateAsync({
       name: companyName.trim(),
-      companyName: companyName.trim(),
       address: address.trim(),
       email: email.trim(),
       phone: phone.trim(),

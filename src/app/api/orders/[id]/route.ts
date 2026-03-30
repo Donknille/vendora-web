@@ -30,39 +30,49 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const { id } = await params;
-  const body = await request.json();
-  const parsed = updateOrderSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    const { id } = await params;
+    const body = await request.json();
+    const parsed = updateOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const order = await storage.updateOrder(userId, id, parsed.data);
-  if (!order) {
-    return NextResponse.json({ message: "Order not found" }, { status: 404 });
-  }
+    const order = await storage.updateOrder(userId, id, parsed.data);
+    if (!order) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
+    }
 
-  return NextResponse.json(order);
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error("PUT /api/orders/[id] error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const { id } = await params;
-  await storage.deleteOrder(userId, id);
-  return NextResponse.json({ message: "Order deleted" });
+    const { id } = await params;
+    await storage.deleteOrder(userId, id);
+    return NextResponse.json({ message: "Order deleted" });
+  } catch (error) {
+    console.error("DELETE /api/orders/[id] error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

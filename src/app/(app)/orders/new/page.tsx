@@ -76,10 +76,10 @@ export default function NewOrderPage() {
     try {
       await createOrder.mutateAsync({
         customerName: customerName.trim(),
-        customerEmail: customerEmail.trim() || null,
-        customerAddress: customerAddress.trim() || null,
+        customerEmail: customerEmail.trim(),
+        customerAddress: customerAddress.trim(),
         orderDate,
-        notes: notes.trim() || null,
+        notes: notes.trim(),
         items: orderItems,
         status: "open",
       });

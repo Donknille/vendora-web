@@ -135,7 +135,6 @@ export const expenses = pgTable("expenses", {
   description: text("description").notNull().default(""),
   amount: numeric("amount").notNull().default("0"),
   category: text("category").notNull().default(""),
-  date: text("date").notNull(),
   expenseDate: text("expense_date").notNull(),
   createdAt: text("created_at").notNull(),
 });

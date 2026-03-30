@@ -361,7 +361,7 @@ export async function getExpenses(userId: string): Promise<ExpenseResponse[]> {
 
 export async function createExpense(
   userId: string,
-  data: { description: string; amount: number; category: string; date: string; expenseDate: string }
+  data: { description: string; amount: number; category: string; expenseDate: string }
 ): Promise<ExpenseResponse> {
   const now = new Date().toISOString();
   const [expense] = await db
@@ -371,8 +371,7 @@ export async function createExpense(
       description: data.description,
       amount: data.amount.toString(),
       category: data.category,
-      date: data.date,
-      expenseDate: data.expenseDate || data.date || now.split("T")[0],
+      expenseDate: data.expenseDate || now.split("T")[0],
       createdAt: now,
     })
     .returning();

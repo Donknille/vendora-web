@@ -108,10 +108,10 @@ export default function EditOrderPage() {
       await updateOrder.mutateAsync({
         id,
         customerName: customerName.trim(),
-        customerEmail: customerEmail.trim() || null,
-        customerAddress: customerAddress.trim() || null,
+        customerEmail: customerEmail.trim() || undefined,
+        customerAddress: customerAddress.trim() || undefined,
         orderDate,
-        notes: notes.trim() || null,
+        notes: notes.trim() || undefined,
         items: orderItems,
         status,
       });

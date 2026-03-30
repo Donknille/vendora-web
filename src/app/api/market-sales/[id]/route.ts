@@ -6,12 +6,17 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-  const { id } = await params;
-  await storage.deleteMarketSale(userId, id);
-  return NextResponse.json({ message: "Market sale deleted" });
+    const { id } = await params;
+    await storage.deleteMarketSale(userId, id);
+    return NextResponse.json({ message: "Market sale deleted" });
+  } catch (error) {
+    console.error("DELETE /api/market-sales/[id] error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

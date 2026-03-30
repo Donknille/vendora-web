@@ -1,8 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/api-client";
+import type { MarketSale } from "@/lib/types";
 
 export function useMarketSales(marketId: string) {
-  return useQuery<any[]>({
+  return useQuery<MarketSale[]>({
     queryKey: ["/api/markets", marketId, "sales"],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/markets/${marketId}/sales`);
@@ -13,26 +14,19 @@ export function useMarketSales(marketId: string) {
 }
 
 export function useAllMarketSales() {
-  return useQuery<any[]>({ queryKey: ["/api/market-sales"] });
+  return useQuery<MarketSale[]>({ queryKey: ["/api/market-sales"] });
 }
 
 export function useCreateMarketSale() {
   return useMutation({
-    mutationFn: async ({
-      marketId,
-      ...data
-    }: {
+    mutationFn: async ({ marketId, ...data }: {
       marketId: string;
       description: string;
       amount: number;
       quantity: number;
     }) => {
-      const res = await apiRequest(
-        "POST",
-        `/api/markets/${marketId}/sales`,
-        data,
-      );
-      return res.json();
+      const res = await apiRequest("POST", `/api/markets/${marketId}/sales`, data);
+      return res.json() as Promise<MarketSale>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/markets"] });
