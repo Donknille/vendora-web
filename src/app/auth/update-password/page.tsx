@@ -21,7 +21,7 @@ export default function UpdatePasswordPage() {
     }
 
     if (password !== confirmPassword) {
-      setError("Passw\u00F6rter stimmen nicht \u00FCberein");
+      setError("Passwörter stimmen nicht überein");
       return;
     }
 
@@ -31,7 +31,7 @@ export default function UpdatePasswordPage() {
     const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
-      setError("Passwort konnte nicht ge\u00E4ndert werden. Bitte versuche es erneut.");
+      setError("Passwort konnte nicht geändert werden. Bitte versuche es erneut.");
       setLoading(false);
       return;
     }
@@ -45,7 +45,7 @@ export default function UpdatePasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">Neues Passwort</h1>
-          <p className="text-zinc-400 mt-2">W\u00E4hle ein neues Passwort f\u00FCr dein Konto.</p>
+          <p className="text-zinc-400 mt-2">Wähle ein neues Passwort für dein Konto.</p>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-4">
@@ -68,7 +68,7 @@ export default function UpdatePasswordPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Passwort best\u00E4tigen</label>
+            <label className="block text-sm text-zinc-400 mb-1">Passwort bestätigen</label>
             <input
               type="password"
               value={confirmPassword}
@@ -84,7 +84,7 @@ export default function UpdatePasswordPage() {
             disabled={loading}
             className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
-            {loading ? "Wird gespeichert..." : "Passwort \u00E4ndern"}
+            {loading ? "Wird gespeichert..." : "Passwort ändern"}
           </button>
         </form>
       </div>

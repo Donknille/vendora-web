@@ -24,13 +24,13 @@ export default function LoginPage() {
     });
 
     if (authError) {
-      setError("Ung\u00FCltige E-Mail oder Passwort");
+      setError("Ungültige E-Mail oder Passwort");
       setLoading(false);
       return;
     }
 
     // Ensure user record exists in our DB
-    await fetch("/api/auth/me");
+    await fetch("/api/auth/ensure-user", { method: "POST" });
     router.push("/dashboard");
     router.refresh();
   };

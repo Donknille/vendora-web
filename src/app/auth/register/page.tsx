@@ -24,14 +24,14 @@ export default function RegisterPage() {
     }
 
     if (password !== confirmPassword) {
-      setError("Passw\u00F6rter stimmen nicht \u00FCberein");
+      setError("Passwörter stimmen nicht überein");
       return;
     }
 
     setLoading(true);
 
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -40,11 +40,19 @@ export default function RegisterPage() {
     });
 
     if (authError) {
-      setError("Konto konnte nicht erstellt werden. E-Mail ist m\u00F6glicherweise bereits vergeben.");
+      setError("Konto konnte nicht erstellt werden. E-Mail ist möglicherweise bereits vergeben.");
       setLoading(false);
       return;
     }
 
+    // If "Confirm email" is off, user is immediately logged in
+    if (data.user && data.session) {
+      await fetch("/api/auth/ensure-user", { method: "POST" });
+      router.push("/dashboard");
+      return;
+    }
+
+    // If "Confirm email" is on, show confirmation message
     setSuccess(true);
     setLoading(false);
   };
@@ -54,14 +62,14 @@ export default function RegisterPage() {
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
-            <h2 className="text-xl font-bold text-white mb-2">Best\u00E4tige deine E-Mail</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Bestätige deine E-Mail</h2>
             <p className="text-zinc-400">
-              Wir haben eine Best\u00E4tigungs-E-Mail an <span className="text-white">{email}</span> gesendet.
+              Wir haben eine Bestätigungs-E-Mail an <span className="text-white">{email}</span> gesendet.
               Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
             </p>
           </div>
           <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 inline-block">
-            Zur\u00FCck zum Login
+            Zurück zum Login
           </Link>
         </div>
       </div>
@@ -108,7 +116,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Passwort best\u00E4tigen</label>
+            <label className="block text-sm text-zinc-400 mb-1">Passwort bestätigen</label>
             <input
               type="password"
               value={confirmPassword}

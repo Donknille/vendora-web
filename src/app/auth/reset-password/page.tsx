@@ -37,11 +37,11 @@ export default function ResetPasswordPage() {
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
             <h2 className="text-xl font-bold text-white mb-2">E-Mail gesendet</h2>
             <p className="text-zinc-400">
-              Pr\u00FCfe dein E-Mail-Postfach f\u00FCr einen Link zum Zur\u00FCcksetzen deines Passworts.
+              Prüfe dein E-Mail-Postfach für einen Link zum Zurücksetzen deines Passworts.
             </p>
           </div>
           <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 inline-block">
-            Zur\u00FCck zum Login
+            Zurück zum Login
           </Link>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Passwort zur\u00FCcksetzen</h1>
+          <h1 className="text-3xl font-bold text-white">Passwort zurücksetzen</h1>
           <p className="text-zinc-400 mt-2">
             Gib deine E-Mail-Adresse ein und wir senden dir einen Reset-Link.
           </p>
@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
 
         <p className="mt-6 text-center text-zinc-500 text-sm">
           <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300">
-            Zur\u00FCck zum Login
+            Zurück zum Login
           </Link>
         </p>
       </div>
