@@ -1,34 +1,65 @@
 @import "tailwindcss";
 
+/* ── Class-based dark mode for Tailwind v4 ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Light mode (default) ── */
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --color-page: #fafafa;
+  --color-surface: #ffffff;
+  --color-elevated: #f4f4f5;
+  --color-hover: #e4e4e7;
+  --color-input: #ffffff;
+  --color-input-nested: #fafafa;
+  --color-line: #e4e4e7;
+  --color-line-hover: #d4d4d8;
+  --color-line-subtle: #f4f4f5;
+  --color-primary: #18181b;
+  --color-secondary: #3f3f46;
+  --color-muted: #71717a;
+  --color-faint: #a1a1aa;
+  --color-holder: #a1a1aa;
+  --color-scrollbar: #d4d4d8;
+  --color-autofill-bg: #ffffff;
+  --color-autofill-text: #18181b;
+}
+
+/* ── Dark mode ── */
+.dark {
+  --color-page: #09090b;
+  --color-surface: #18181b;
+  --color-elevated: #27272a;
+  --color-hover: #3f3f46;
+  --color-input: #18181b;
+  --color-input-nested: #09090b;
+  --color-line: #27272a;
+  --color-line-hover: #3f3f46;
+  --color-line-subtle: rgba(39, 39, 42, 0.5);
+  --color-primary: #f4f4f5;
+  --color-secondary: #d4d4d8;
+  --color-muted: #71717a;
+  --color-faint: #a1a1aa;
+  --color-holder: #71717a;
+  --color-scrollbar: #3f3f46;
+  --color-autofill-bg: #18181b;
+  --color-autofill-text: #fafafa;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-page);
+  color: var(--color-primary);
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-scrollbar); border-radius: 3px; }
 
 /* Safe area for mobile bottom nav */
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-/* Input autofill override for dark theme */
+/* Input autofill override */
 input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 30px #18181b inset !important;
-  -webkit-text-fill-color: #fafafa !important;
+  -webkit-box-shadow: 0 0 0 30px var(--color-autofill-bg) inset !important;
+  -webkit-text-fill-color: var(--color-autofill-text) !important;
 }

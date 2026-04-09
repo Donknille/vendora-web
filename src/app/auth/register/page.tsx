@@ -59,12 +59,12 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
-            <h2 className="text-xl font-bold text-white mb-2">Bestätige deine E-Mail</h2>
-            <p className="text-zinc-400">
-              Wir haben eine Bestätigungs-E-Mail an <span className="text-white">{email}</span> gesendet.
+            <h2 className="text-xl font-bold text-primary mb-2">Bestätige deine E-Mail</h2>
+            <p className="text-faint">
+              Wir haben eine Bestätigungs-E-Mail an <span className="text-primary">{email}</span> gesendet.
               Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
             </p>
           </div>
@@ -77,11 +77,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Vendora</h1>
-          <p className="text-zinc-400 mt-2">Erstelle dein Konto</p>
+          <h1 className="text-3xl font-bold text-primary">Vendora</h1>
+          <p className="text-faint mt-2">Erstelle dein Konto</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
@@ -92,36 +92,36 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">E-Mail</label>
+            <label className="block text-sm text-faint mb-1">E-Mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
               placeholder="deine@email.de"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Passwort</label>
+            <label className="block text-sm text-faint mb-1">Passwort</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
               placeholder="Mindestens 8 Zeichen"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Passwort bestätigen</label>
+            <label className="block text-sm text-faint mb-1">Passwort bestätigen</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
               placeholder="Passwort wiederholen"
               required
             />
@@ -130,13 +130,13 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
           >
             {loading ? "Wird erstellt..." : "Konto erstellen"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-zinc-500 text-sm">
+        <p className="mt-6 text-center text-muted text-sm">
           Bereits ein Konto?{" "}
           <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300">
             Anmelden

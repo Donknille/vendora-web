@@ -52,7 +52,7 @@ export default function OrderDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.common.loading}</p>
+        <p className="text-muted">{t.common.loading}</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.orders.noOrders}</p>
+        <p className="text-muted">{t.orders.noOrders}</p>
       </div>
     );
   }
@@ -207,17 +207,17 @@ export default function OrderDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/orders"
-            className="rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-zinc-100">
+          <h1 className="text-2xl font-bold text-primary">
             {t.orders.orderDetails}
           </h1>
         </div>
         <Link
           href={`/orders/${id}/edit`}
-          className="rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
         >
           <Pencil className="h-5 w-5" />
         </Link>
@@ -227,19 +227,19 @@ export default function OrderDetailPage() {
       <Card>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-100">
+            <h2 className="text-lg font-semibold text-primary">
               {order.customerName}
             </h2>
             {order.status && <StatusBadge status={order.status} />}
           </div>
 
-          <div className="space-y-2 text-sm text-zinc-400">
+          <div className="space-y-2 text-sm text-faint">
             {order.invoiceNumber && (
-              <p className="text-zinc-500">#{order.invoiceNumber}</p>
+              <p className="text-muted">#{order.invoiceNumber}</p>
             )}
             {(order.orderDate || order.createdAt) && (
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-zinc-500" />
+                <Calendar className="h-4 w-4 text-muted" />
                 <span>
                   {order.orderDate || order.createdAt?.split("T")[0]}
                 </span>
@@ -247,13 +247,13 @@ export default function OrderDetailPage() {
             )}
             {order.customerEmail && (
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-zinc-500" />
+                <Mail className="h-4 w-4 text-muted" />
                 <span>{order.customerEmail}</span>
               </div>
             )}
             {order.customerAddress && (
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-zinc-500" />
+                <MapPin className="h-4 w-4 text-muted" />
                 <span>{order.customerAddress}</span>
               </div>
             )}
@@ -263,38 +263,38 @@ export default function OrderDetailPage() {
 
       {/* Items Table */}
       <Card>
-        <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-medium text-faint uppercase tracking-wider mb-4">
           {t.orders.items}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="pb-2 text-left font-medium text-zinc-500">
+              <tr className="border-b border-line">
+                <th className="pb-2 text-left font-medium text-muted">
                   {t.orders.invoiceItem}
                 </th>
-                <th className="pb-2 text-center font-medium text-zinc-500">
+                <th className="pb-2 text-center font-medium text-muted">
                   {t.orders.invoiceQty}
                 </th>
-                <th className="pb-2 text-right font-medium text-zinc-500">
+                <th className="pb-2 text-right font-medium text-muted">
                   {t.orders.invoiceUnitPrice}
                 </th>
-                <th className="pb-2 text-right font-medium text-zinc-500">
+                <th className="pb-2 text-right font-medium text-muted">
                   {t.orders.invoiceAmount}
                 </th>
               </tr>
             </thead>
             <tbody>
               {items.map((item: { name: string; quantity: number; price: number }, index: number) => (
-                <tr key={index} className="border-b border-zinc-800/50">
-                  <td className="py-3 text-zinc-100">{item.name}</td>
-                  <td className="py-3 text-center text-zinc-400">
+                <tr key={index} className="border-b border-line-subtle">
+                  <td className="py-3 text-primary">{item.name}</td>
+                  <td className="py-3 text-center text-faint">
                     {item.quantity || 1}
                   </td>
-                  <td className="py-3 text-right text-zinc-400">
+                  <td className="py-3 text-right text-faint">
                     {formatCurrency(Number(item.price || 0))}
                   </td>
-                  <td className="py-3 text-right text-zinc-100">
+                  <td className="py-3 text-right text-primary">
                     {formatCurrency(
                       Number(item.price || 0) * Number(item.quantity || 1)
                     )}
@@ -306,8 +306,8 @@ export default function OrderDetailPage() {
         </div>
 
         {/* Total */}
-        <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4">
-          <span className="font-medium text-zinc-300">{t.orders.total}</span>
+        <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+          <span className="font-medium text-secondary">{t.orders.total}</span>
           <span className="text-lg font-bold text-emerald-400">
             {formatCurrency(total)}
           </span>
@@ -317,10 +317,10 @@ export default function OrderDetailPage() {
       {/* Notes */}
       {order.notes && (
         <Card>
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-2">
+          <h2 className="text-sm font-medium text-faint uppercase tracking-wider mb-2">
             {t.orders.notes}
           </h2>
-          <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+          <p className="text-sm text-secondary whitespace-pre-wrap">
             {order.notes}
           </p>
         </Card>
@@ -332,17 +332,17 @@ export default function OrderDetailPage() {
         <div className="relative">
           <button
             onClick={() => setShowStatusMenu(!showStatusMenu)}
-            className="w-full flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-100 hover:border-zinc-700 transition-colors"
+            className="w-full flex items-center justify-between rounded-lg border border-line bg-surface px-4 py-3 text-sm font-medium text-primary hover:border-line-hover transition-colors"
           >
             <span>{t.orders.changeStatus}</span>
             <ChevronDown
-              className={`h-4 w-4 text-zinc-400 transition-transform ${
+              className={`h-4 w-4 text-faint transition-transform ${
                 showStatusMenu ? "rotate-180" : ""
               }`}
             />
           </button>
           {showStatusMenu && (
-            <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-zinc-800 bg-zinc-900 py-1 shadow-xl">
+            <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-line bg-surface py-1 shadow-xl">
               {ORDER_STATUSES.map((status) => (
                 <button
                   key={status}
@@ -350,13 +350,13 @@ export default function OrderDetailPage() {
                   className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                     order.status === status
                       ? "bg-emerald-500/10 text-emerald-500"
-                      : "text-zinc-300 hover:bg-zinc-800"
+                      : "text-secondary hover:bg-elevated"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <StatusBadge status={status} />
                     {order.status === status && (
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-muted">
                         ({t.orders.processingStatusDone})
                       </span>
                     )}

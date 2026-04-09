@@ -37,7 +37,7 @@ export default function NewMarketPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -45,11 +45,11 @@ export default function NewMarketPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/markets"
-          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+          className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-zinc-100">
+        <h1 className="text-2xl font-bold text-primary">
           {t.markets.newMarket}
         </h1>
       </div>
@@ -57,12 +57,12 @@ export default function NewMarketPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Event Details */}
         <div className="space-y-4">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
             {t.markets.eventDetails}
           </h2>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.markets.marketName} *
             </label>
             <input
@@ -76,7 +76,7 @@ export default function NewMarketPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.orders.orderDate}
             </label>
             <input
@@ -88,7 +88,7 @@ export default function NewMarketPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.markets.location}
             </label>
             <input
@@ -103,13 +103,13 @@ export default function NewMarketPage() {
 
         {/* Costs */}
         <div className="space-y-4">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
             {t.markets.costs}
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.markets.standFee}
               </label>
               <input
@@ -122,7 +122,7 @@ export default function NewMarketPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.markets.travelCost}
               </label>
               <input
@@ -139,7 +139,7 @@ export default function NewMarketPage() {
 
         {/* Notes */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-300">
+          <label className="mb-1 block text-sm font-medium text-secondary">
             {t.markets.notes}
           </label>
           <textarea

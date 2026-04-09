@@ -51,7 +51,7 @@ export default function MarketDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.common.loading}</p>
+        <p className="text-muted">{t.common.loading}</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function MarketDetailPage() {
   if (!market) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">Market not found</p>
+        <p className="text-muted">Market not found</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function MarketDetailPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -108,24 +108,24 @@ export default function MarketDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/markets"
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-zinc-100">
+          <h1 className="text-2xl font-bold text-primary">
             {t.markets.marketDetails}
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/markets/${marketId}/edit`}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
           >
             <Pencil className="h-5 w-5" />
           </Link>
           <button
             onClick={() => setConfirmDeleteMarket(true)}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-red-400 transition-colors"
+            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-red-400 transition-colors"
           >
             <Trash2 className="h-5 w-5" />
           </button>
@@ -134,8 +134,8 @@ export default function MarketDetailPage() {
 
       {/* Market Info */}
       <Card>
-        <h2 className="text-lg font-semibold text-zinc-100">{market.name}</h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-400">
+        <h2 className="text-lg font-semibold text-primary">{market.name}</h2>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-faint">
           {market.date && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
@@ -150,27 +150,27 @@ export default function MarketDetailPage() {
           )}
         </div>
         {market.notes && (
-          <p className="mt-3 text-sm text-zinc-400">{market.notes}</p>
+          <p className="mt-3 text-sm text-faint">{market.notes}</p>
         )}
       </Card>
 
       {/* Cost Breakdown */}
       <Card>
-        <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-3">
+        <h3 className="text-sm font-medium text-faint uppercase tracking-wider mb-3">
           {t.markets.costBreakdown}
         </h3>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-300">{t.markets.standFee}</span>
-            <span className="text-zinc-100">{formatCurrency(standFee)}</span>
+            <span className="text-secondary">{t.markets.standFee}</span>
+            <span className="text-primary">{formatCurrency(standFee)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-300">{t.markets.travel}</span>
-            <span className="text-zinc-100">{formatCurrency(travelCost)}</span>
+            <span className="text-secondary">{t.markets.travel}</span>
+            <span className="text-primary">{formatCurrency(travelCost)}</span>
           </div>
-          <div className="border-t border-zinc-800 pt-2 flex items-center justify-between text-sm font-medium">
-            <span className="text-zinc-300">{t.markets.costs}</span>
-            <span className="text-zinc-100">
+          <div className="border-t border-line pt-2 flex items-center justify-between text-sm font-medium">
+            <span className="text-secondary">{t.markets.costs}</span>
+            <span className="text-primary">
               {formatCurrency(standFee + travelCost)}
             </span>
           </div>
@@ -180,12 +180,12 @@ export default function MarketDetailPage() {
       {/* Sales Section */}
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
             {t.markets.sales}
           </h3>
           <button
             onClick={() => setShowAddSale(!showAddSale)}
-            className="rounded-lg p-1.5 text-emerald-400 hover:bg-zinc-800 transition-colors"
+            className="rounded-lg p-1.5 text-emerald-400 hover:bg-elevated transition-colors"
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -195,7 +195,7 @@ export default function MarketDetailPage() {
         {showAddSale && (
           <form
             onSubmit={handleAddSale}
-            className="mb-4 space-y-3 rounded-lg border border-zinc-800 bg-zinc-950 p-3"
+            className="mb-4 space-y-3 rounded-lg border border-line bg-page p-3"
           >
             <input
               type="text"
@@ -235,7 +235,7 @@ export default function MarketDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowAddSale(false)}
-                className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors"
               >
                 {t.common.cancel}
               </button>
@@ -245,19 +245,19 @@ export default function MarketDetailPage() {
 
         {/* Sales List */}
         {!sales || sales.length === 0 ? (
-          <p className="text-sm text-zinc-500">{t.markets.noSales}</p>
+          <p className="text-sm text-muted">{t.markets.noSales}</p>
         ) : (
           <div className="space-y-2">
             {sales.map((sale: any) => (
               <div
                 key={sale.id}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"
+                className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-zinc-200 truncate">
+                  <p className="text-sm font-medium text-secondary truncate">
                     {sale.description}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted">
                     {Number(sale.quantity) > 1
                       ? `${sale.quantity} x ${formatCurrency(Number(sale.amount))}`
                       : formatCurrency(Number(sale.amount))}
@@ -269,7 +269,7 @@ export default function MarketDetailPage() {
                   </span>
                   <button
                     onClick={() => setConfirmDeleteSaleId(sale.id)}
-                    className="rounded p-1 text-zinc-500 hover:text-red-400 transition-colors"
+                    className="rounded p-1 text-muted hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -281,8 +281,8 @@ export default function MarketDetailPage() {
 
         {/* Sales Total */}
         {sales && sales.length > 0 && (
-          <div className="mt-3 border-t border-zinc-800 pt-3 flex items-center justify-between text-sm font-medium">
-            <span className="text-zinc-300">{t.orders.total}</span>
+          <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
+            <span className="text-secondary">{t.orders.total}</span>
             <span className="text-emerald-400">
               {formatCurrency(totalSales)}
             </span>
@@ -293,7 +293,7 @@ export default function MarketDetailPage() {
       {/* Profit */}
       <Card>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
             {t.markets.profit}
           </h3>
           <span

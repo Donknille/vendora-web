@@ -22,17 +22,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    const applyTheme = (isDark: boolean) => {
+      root.classList.toggle("dark", isDark);
+    };
+
     if (theme === "dark") {
-      root.classList.add("dark");
+      applyTheme(true);
     } else if (theme === "light") {
-      root.classList.remove("dark");
+      applyTheme(false);
     } else {
-      // System
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
+      // System — apply and listen for changes
+      const mql = window.matchMedia("(prefers-color-scheme: dark)");
+      applyTheme(mql.matches);
+
+      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
+      mql.addEventListener("change", handler);
+      return () => mql.removeEventListener("change", handler);
     }
   }, [theme]);
 

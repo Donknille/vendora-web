@@ -85,12 +85,12 @@ export default function ExpensesPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.common.loading}</p>
+        <p className="text-muted">{t.common.loading}</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function ExpensesPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-100">
+        <h1 className="text-2xl font-bold text-primary">
           {t.expenses.title}
         </h1>
         {!isSubscriptionInactive && (
@@ -128,7 +128,7 @@ export default function ExpensesPage() {
       {expenses && expenses.length > 0 && (
         <Card>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-400">{t.expenses.total}</p>
+            <p className="text-sm text-faint">{t.expenses.total}</p>
             <p className="text-2xl font-bold text-red-400">
               {formatCurrency(totalExpenses)}
             </p>
@@ -140,12 +140,12 @@ export default function ExpensesPage() {
       {showForm && (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
               {t.expenses.newExpense}
             </h2>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.expenses.description} *
               </label>
               <input
@@ -160,7 +160,7 @@ export default function ExpensesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-300">
+                <label className="mb-1 block text-sm font-medium text-secondary">
                   {t.expenses.amount} *
                 </label>
                 <input
@@ -175,7 +175,7 @@ export default function ExpensesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-300">
+                <label className="mb-1 block text-sm font-medium text-secondary">
                   {t.expenses.expenseDate}
                 </label>
                 <input
@@ -188,7 +188,7 @@ export default function ExpensesPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.expenses.category}
               </label>
               <select
@@ -248,7 +248,7 @@ export default function ExpensesPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-zinc-100 truncate">
+                      <h3 className="font-medium text-primary truncate">
                         {expense.description}
                       </h3>
                       <span
@@ -257,7 +257,7 @@ export default function ExpensesPage() {
                         {t.expenses.categories[cat as keyof typeof t.expenses.categories] ?? cat}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-zinc-500">
+                    <p className="mt-0.5 text-xs text-muted">
                       {expense.expenseDate ??
                         expense.date ??
                         (expense.createdAt
@@ -274,7 +274,7 @@ export default function ExpensesPage() {
                     </p>
                     <button
                       onClick={() => setDeleteId(expense.id)}
-                      className="rounded-lg p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+                      className="rounded-lg p-1.5 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

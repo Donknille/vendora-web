@@ -32,11 +32,11 @@ export default function ResetPasswordPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
-            <h2 className="text-xl font-bold text-white mb-2">E-Mail gesendet</h2>
-            <p className="text-zinc-400">
+            <h2 className="text-xl font-bold text-primary mb-2">E-Mail gesendet</h2>
+            <p className="text-faint">
               Prüfe dein E-Mail-Postfach für einen Link zum Zurücksetzen deines Passworts.
             </p>
           </div>
@@ -49,11 +49,11 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Passwort zurücksetzen</h1>
-          <p className="text-zinc-400 mt-2">
+          <h1 className="text-3xl font-bold text-primary">Passwort zurücksetzen</h1>
+          <p className="text-faint mt-2">
             Gib deine E-Mail-Adresse ein und wir senden dir einen Reset-Link.
           </p>
         </div>
@@ -66,12 +66,12 @@ export default function ResetPasswordPage() {
           )}
 
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">E-Mail</label>
+            <label className="block text-sm text-faint mb-1">E-Mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
               placeholder="deine@email.de"
               required
             />
@@ -80,13 +80,13 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
           >
             {loading ? "Wird gesendet..." : "Reset-Link senden"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-zinc-500 text-sm">
+        <p className="mt-6 text-center text-muted text-sm">
           <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300">
             Zurück zum Login
           </Link>

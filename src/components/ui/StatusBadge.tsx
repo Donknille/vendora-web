@@ -11,7 +11,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const colors = statusColors[status] ?? "bg-zinc-700/50 text-zinc-400 border-zinc-600";
+  const colors = statusColors[status] ?? "bg-elevated text-faint border-line";
 
   return (
     <span

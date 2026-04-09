@@ -36,7 +36,7 @@ export function SubscriptionBanner() {
           <p className="text-sm font-medium text-red-400">
             {t.subscription.expired}
           </p>
-          <p className="text-xs text-zinc-500">{t.subscription.expiredSub}</p>
+          <p className="text-xs text-muted">{t.subscription.expiredSub}</p>
         </div>
         <Link
           href="/settings"

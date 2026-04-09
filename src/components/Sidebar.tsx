@@ -39,13 +39,13 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-zinc-900 border-r border-zinc-800 h-screen">
+      <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-2 px-6 py-5 border-b border-zinc-800">
+        <div className="flex items-center gap-2 px-6 py-5 border-b border-line">
           <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center">
             <span className="text-white font-bold text-sm">V</span>
           </div>
-          <span className="text-lg font-semibold text-zinc-100">Vendora</span>
+          <span className="text-lg font-semibold text-primary">Vendora</span>
         </div>
 
         {/* Navigation */}
@@ -60,7 +60,7 @@ export function Sidebar() {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
                     ? "bg-emerald-500/10 text-emerald-500"
-                    : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                    : "text-faint hover:text-primary hover:bg-elevated"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -74,7 +74,7 @@ export function Sidebar() {
         <div className="px-3 pb-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-faint hover:text-red-400 hover:bg-elevated transition-colors"
           >
             <LogOut className="h-5 w-5 shrink-0" />
             <span>{t.auth.logout}</span>
@@ -83,7 +83,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile bottom bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around bg-zinc-900 border-t border-zinc-800 px-2 py-1 safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around bg-surface border-t border-line px-2 py-1 safe-area-bottom">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -94,7 +94,7 @@ export function Sidebar() {
               className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 active
                   ? "text-emerald-500"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-muted hover:text-secondary"
               }`}
             >
               <Icon className="h-5 w-5" />

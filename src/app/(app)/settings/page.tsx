@@ -170,7 +170,7 @@ export default function SettingsPage() {
   })();
 
   const subscriptionColor = (() => {
-    if (!sub) return "text-zinc-400";
+    if (!sub) return "text-faint";
     switch (sub.status) {
       case "trial":
         return "text-yellow-400";
@@ -180,19 +180,19 @@ export default function SettingsPage() {
       case "cancelled":
         return "text-red-400";
       default:
-        return "text-zinc-400";
+        return "text-faint";
     }
   })();
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
 
   const isLoading = loadingProfile || loadingSettings;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.common.loading}</p>
+        <p className="text-muted">{t.common.loading}</p>
       </div>
     );
   }
@@ -200,27 +200,27 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-10">
       {/* Header */}
-      <h1 className="text-2xl font-bold text-zinc-100">{t.settings.title}</h1>
+      <h1 className="text-2xl font-bold text-primary">{t.settings.title}</h1>
 
       {/* ───────── Account ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <User className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.auth.account}
           </h2>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-400">{t.auth.email}</span>
-            <span className="text-sm text-zinc-200">
+            <span className="text-sm text-faint">{t.auth.email}</span>
+            <span className="text-sm text-secondary">
               {userEmail ?? t.settings.notSet}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm text-faint">
               {t.subscription.currentPlan}
             </span>
             <span className={`text-sm font-medium ${subscriptionColor}`}>
@@ -231,7 +231,7 @@ export default function SettingsPage() {
 
         <button
           onClick={handleLogout}
-          className="mt-4 inline-flex items-center gap-2 rounded-lg border border-zinc-800 px-4 py-2 text-sm font-medium text-red-400 hover:bg-zinc-800 transition-colors"
+          className="mt-4 inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm font-medium text-red-400 hover:bg-elevated transition-colors"
         >
           <LogOut className="h-4 w-4" />
           {t.auth.logout}
@@ -242,14 +242,14 @@ export default function SettingsPage() {
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Building2 className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.settings.companyProfile}
           </h2>
         </div>
 
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.settings.companyName}
             </label>
             <input
@@ -262,7 +262,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.settings.address}
             </label>
             <textarea
@@ -276,7 +276,7 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.settings.email}
               </label>
               <input
@@ -288,7 +288,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
+              <label className="mb-1 block text-sm font-medium text-secondary">
                 {t.settings.phone}
               </label>
               <input
@@ -302,7 +302,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               {t.settings.taxNote}
             </label>
             <input
@@ -315,7 +315,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               Kleinunternehmerregelung
             </label>
             <input
@@ -328,7 +328,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-300">
+            <label className="mb-1 block text-sm font-medium text-secondary">
               Standardversandkosten
             </label>
             <input
@@ -360,7 +360,7 @@ export default function SettingsPage() {
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Palette className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.settings.appearance}
           </h2>
         </div>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
               className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 theme === value
                   ? "bg-emerald-500 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                  : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -391,7 +391,7 @@ export default function SettingsPage() {
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Globe className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.settings.language}
           </h2>
         </div>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
               className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 language === value
                   ? "bg-emerald-500 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                  : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
               }`}
             >
               {label}
@@ -420,7 +420,7 @@ export default function SettingsPage() {
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Database className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.settings.dataBackup}
           </h2>
         </div>
@@ -429,7 +429,7 @@ export default function SettingsPage() {
           <button
             onClick={handleExport}
             disabled={exportStatus === "loading"}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
           >
             <Download className="h-4 w-4" />
             {exportStatus === "loading"
@@ -444,7 +444,7 @@ export default function SettingsPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importStatus === "loading"}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
           >
             <Upload className="h-4 w-4" />
             {importStatus === "loading"
@@ -470,12 +470,12 @@ export default function SettingsPage() {
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Shield className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-primary">
             {t.settings.privacy}
           </h2>
         </div>
 
-        <p className="text-sm text-zinc-400 leading-relaxed">
+        <p className="text-sm text-faint leading-relaxed">
           {t.settings.privacyText}
         </p>
       </Card>

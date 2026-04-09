@@ -42,13 +42,13 @@ export function ConfirmDialog({
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="w-full max-w-sm mx-4 rounded-xl bg-zinc-900 border border-zinc-800 p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-zinc-100">{title}</h3>
-        <p className="mt-2 text-sm text-zinc-400">{message}</p>
+      <div className="w-full max-w-sm mx-4 rounded-xl bg-surface border border-line p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-primary">{title}</h3>
+        <p className="mt-2 text-sm text-faint">{message}</p>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-faint hover:text-secondary hover:bg-elevated transition-colors"
           >
             {cancelText}
           </button>

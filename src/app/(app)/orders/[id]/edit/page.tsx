@@ -124,7 +124,7 @@ export default function EditOrderPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.common.loading}</p>
+        <p className="text-muted">{t.common.loading}</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function EditOrderPage() {
   if (!order) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">{t.orders.noOrders}</p>
+        <p className="text-muted">{t.orders.noOrders}</p>
       </div>
     );
   }
@@ -143,11 +143,11 @@ export default function EditOrderPage() {
       <div className="flex items-center gap-3">
         <Link
           href={`/orders/${id}`}
-          className="rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-zinc-100">
+        <h1 className="text-2xl font-bold text-primary">
           {t.orders.orderDetails}
         </h1>
       </div>
@@ -155,58 +155,58 @@ export default function EditOrderPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer Info */}
         <div className="space-y-4">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
             {t.orders.customer}
           </h2>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label className="block text-sm font-medium text-secondary mb-1.5">
               {t.orders.customerName} *
             </label>
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
               placeholder={t.orders.customerName}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label className="block text-sm font-medium text-secondary mb-1.5">
               {t.orders.email}
             </label>
             <input
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
               placeholder={t.orders.email}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label className="block text-sm font-medium text-secondary mb-1.5">
               {t.orders.address}
             </label>
             <input
               type="text"
               value={customerAddress}
               onChange={(e) => setCustomerAddress(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
               placeholder={t.orders.address}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label className="block text-sm font-medium text-secondary mb-1.5">
               {t.orders.orderDate}
             </label>
             <input
               type="date"
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
             />
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function EditOrderPage() {
         {/* Items */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
               {t.orders.items}
             </h2>
             <button
@@ -231,19 +231,19 @@ export default function EditOrderPage() {
             {items.map((item, index) => (
               <div
                 key={index}
-                className="flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+                className="flex items-start gap-2 rounded-lg border border-line bg-surface p-3"
               >
                 <div className="flex-1 space-y-2">
                   <input
                     type="text"
                     value={item.name}
                     onChange={(e) => updateItem(index, "name", e.target.value)}
-                    className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                    className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
                     placeholder={t.orders.itemName}
                   />
                   <div className="flex gap-2">
                     <div className="w-24">
-                      <label className="block text-xs text-zinc-500 mb-1">
+                      <label className="block text-xs text-muted mb-1">
                         {t.orders.qty}
                       </label>
                       <input
@@ -253,11 +253,11 @@ export default function EditOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "quantity", e.target.value)
                         }
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-zinc-500 mb-1">
+                      <label className="block text-xs text-muted mb-1">
                         {t.orders.price}
                       </label>
                       <input
@@ -267,7 +267,7 @@ export default function EditOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "price", e.target.value)
                         }
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
                         placeholder="0,00"
                       />
                     </div>
@@ -277,7 +277,7 @@ export default function EditOrderPage() {
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="mt-1 rounded-lg p-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+                    className="mt-1 rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -287,8 +287,8 @@ export default function EditOrderPage() {
           </div>
 
           {/* Total */}
-          <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3">
-            <span className="text-sm font-medium text-zinc-300">
+          <div className="flex items-center justify-between rounded-lg border border-line bg-surface px-4 py-3">
+            <span className="text-sm font-medium text-secondary">
               {t.orders.total}
             </span>
             <span className="text-lg font-bold text-emerald-400">
@@ -299,14 +299,14 @@ export default function EditOrderPage() {
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-secondary mb-1.5">
             {t.orders.notes}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"
             placeholder={t.orders.additionalNotes}
           />
         </div>
