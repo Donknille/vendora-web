@@ -7,11 +7,27 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (code) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error && data.user) {
-      await ensureUserRecord(data.user.id, data.user.email!);
-      return NextResponse.redirect(`${origin}/dashboard`);
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error("Auth callback - exchangeCodeForSession error:", error);
+        return NextResponse.redirect(`${origin}/auth/login?error=callback_failed`);
+      }
+
+      if (data.user) {
+        try {
+          await ensureUserRecord(data.user.id, data.user.email!);
+        } catch (dbError) {
+          console.error("Auth callback - ensureUserRecord error:", dbError);
+          // Continue anyway — user is authenticated, DB record can be created later
+        }
+        return NextResponse.redirect(`${origin}/dashboard`);
+      }
+    } catch (error) {
+      console.error("Auth callback - unexpected error:", error);
+      return NextResponse.redirect(`${origin}/auth/login?error=callback_failed`);
     }
   }
 
