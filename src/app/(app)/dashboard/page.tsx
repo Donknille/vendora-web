@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { FileDown } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { useProfile } from "@/lib/hooks/useProfile";
 import { Card } from "@/components/ui/Card";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
@@ -33,7 +35,8 @@ function monthKey(dateStr: string | undefined | null): string | null {
 // ---------------------------------------------------------------------------
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { data: profile } = useProfile();
   // Single batched API call instead of 4 separate ones
   const { data, isLoading } = useQuery<{
     orders: Order[];
@@ -174,11 +177,72 @@ export default function DashboardPage() {
     );
   }
 
+  // ----- GuV Export -----
+  const handleExportGuV = () => {
+    const reportYear = selectedYear ?? new Date().getFullYear();
+    const pName = profile?.name || "Vendora";
+    const pAddress = profile?.address || "";
+    const pEmail = profile?.email || "";
+    const pTaxNote = profile?.taxNote || "";
+    const pSmallBiz = profile?.smallBusinessNote || "";
+    const isDE = language === "de";
+
+    const expensesByCategory: Record<string, number> = {};
+    filteredExpenses.forEach((e: any) => {
+      const cat = e.category || (isDE ? "Sonstiges" : "Other");
+      expensesByCategory[cat] = (expensesByCategory[cat] || 0) + (Number(e.amount) || 0);
+    });
+
+    const categoryRows = Object.entries(expensesByCategory)
+      .sort(([, a], [, b]) => b - a)
+      .map(([cat, amount]) => `<tr><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#4b5563;">${cat}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:right;">${formatCurrency(amount)}</td></tr>`)
+      .join("");
+
+    const monthRows = monthlyData
+      .map((row) => `<tr><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#4b5563;">${isDE ? ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"][row.monthIndex] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][row.monthIndex]} ${row.year}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#047857;text-align:right;">${formatCurrency(row.revenue)}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#dc2626;text-align:right;">${formatCurrency(row.expenses)}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;font-weight:600;text-align:right;color:${row.profit >= 0 ? "#047857" : "#dc2626"}">${formatCurrency(row.profit)}</td></tr>`)
+      .join("");
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${isDE ? "GuV" : "P&L"} ${reportYear} — ${pName}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',system-ui,sans-serif;background:#fff;color:#1f2937;padding:0}.page{max-width:800px;margin:0 auto;padding:48px}.header{border-bottom:3px solid #00B4A6;padding-bottom:24px;margin-bottom:32px;display:flex;justify-content:space-between}.brand-name{font-size:22px;font-weight:700;color:#00B4A6}.brand-details{font-size:12px;color:#6b7280;line-height:1.6;margin-top:4px}.report-title{font-size:28px;font-weight:700;text-align:right}.report-period{font-size:14px;color:#6b7280;text-align:right;margin-top:4px}h2{font-size:16px;font-weight:600;color:#1f2937;margin:32px 0 12px;text-transform:uppercase;letter-spacing:0.05em}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{padding:8px 16px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #e5e7eb;background:#f9fafb}th.right{text-align:right}.summary{margin-top:32px;padding:24px;border-radius:12px}.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:15px}.summary-row.total{border-top:2px solid #1f2937;padding-top:16px;margin-top:8px;font-size:18px;font-weight:700}.tax-notice{margin-top:24px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#166534;text-align:center}.footer{margin-top:32px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px}@media print{body{padding:0}.page{padding:24px 32px}}</style></head><body><div class="page">
+<div class="header"><div><div class="brand-name">${pName}</div><div class="brand-details">${pAddress ? pAddress.replace(/\n/g, "<br/>") + "<br/>" : ""}${pEmail}</div></div><div><div class="report-title">${isDE ? "Gewinn- und Verlustrechnung" : "Profit & Loss Statement"}</div><div class="report-period">${isDE ? "Geschäftsjahr" : "Fiscal Year"} ${reportYear}</div></div></div>
+
+<h2>${isDE ? "Zusammenfassung" : "Summary"}</h2>
+<div class="summary" style="background:#f9fafb;border:1px solid #e5e7eb;">
+<div class="summary-row"><span>${isDE ? "Umsatz (Aufträge)" : "Revenue (Orders)"}</span><span style="color:#047857">${formatCurrency(paidOrders.reduce((s: number, o: any) => s + (Number(o.total) || 0), 0))}</span></div>
+<div class="summary-row"><span>${isDE ? "Umsatz (Marktverkäufe)" : "Revenue (Market Sales)"}</span><span style="color:#047857">${formatCurrency(filteredSales.reduce((s: number, sa: any) => s + (Number(sa.amount) || 0) * (Number(sa.quantity) || 1), 0))}</span></div>
+<div class="summary-row" style="border-top:1px solid #e5e7eb;padding-top:8px;font-weight:600"><span>${isDE ? "Gesamtumsatz" : "Total Revenue"}</span><span style="color:#047857">${formatCurrency(totalRevenue)}</span></div>
+<div class="summary-row" style="margin-top:12px"><span>${isDE ? "Gesamtausgaben" : "Total Expenses"}</span><span style="color:#dc2626">${formatCurrency(totalExpenses)}</span></div>
+<div class="summary-row total"><span>${isDE ? "Nettogewinn" : "Net Profit"}</span><span style="color:${netProfit >= 0 ? "#047857" : "#dc2626"}">${formatCurrency(netProfit)}</span></div>
+</div>
+
+${Object.keys(expensesByCategory).length > 0 ? `<h2>${isDE ? "Ausgaben nach Kategorie" : "Expenses by Category"}</h2>
+<table><thead><tr><th>${isDE ? "Kategorie" : "Category"}</th><th class="right">${isDE ? "Betrag" : "Amount"}</th></tr></thead><tbody>${categoryRows}</tbody></table>` : ""}
+
+${monthlyData.length > 0 ? `<h2>${isDE ? "Monatliche Entwicklung" : "Monthly Breakdown"}</h2>
+<table><thead><tr><th>${isDE ? "Monat" : "Month"}</th><th class="right">${isDE ? "Umsatz" : "Revenue"}</th><th class="right">${isDE ? "Ausgaben" : "Expenses"}</th><th class="right">${isDE ? "Gewinn" : "Profit"}</th></tr></thead><tbody>${monthRows}</tbody></table>` : ""}
+
+${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSmallBiz ? "<br/>" : ""}${pSmallBiz}</div>` : ""}
+<div class="footer"><p>${pName}${pEmail ? " · " + pEmail : ""}</p><p style="margin-top:4px">${isDE ? "Erstellt am" : "Generated on"} ${new Date().toLocaleDateString(isDE ? "de-DE" : "en-US")}</p></div>
+</div><script>window.onload=function(){window.print();}</script></body></html>`;
+
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
   // ----- Render -----
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <h1 className="text-2xl font-bold font-display text-primary">{t.dashboard.overview}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold font-display text-primary">{t.dashboard.overview}</h1>
+        <button
+          onClick={handleExportGuV}
+          className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+        >
+          <FileDown className="h-4 w-4" />
+          {language === "de" ? "GuV exportieren" : "Export P&L"}
+        </button>
+      </div>
 
       {/* Year filter */}
       {availableYears.length > 0 && (
