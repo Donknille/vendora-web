@@ -17,6 +17,7 @@ export function useCreateMarket() {
       standFee: number;
       travelCost: number;
       notes: string;
+      quickItems?: { name: string; price: number }[];
     }) => {
       const res = await apiRequest("POST", "/api/markets", data);
       return res.json() as Promise<MarketEvent>;
@@ -36,6 +37,7 @@ export function useUpdateMarket() {
       standFee: number;
       travelCost: number;
       notes: string;
+      quickItems: { name: string; price: number }[];
     }>) => {
       const res = await apiRequest("PUT", `/api/markets/${id}`, data);
       return res.json() as Promise<MarketEvent>;
@@ -50,6 +52,18 @@ export function useDeleteMarket() {
   return useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/markets/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEY });
+    },
+  });
+}
+
+export function useCopyMarket() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/markets/${id}/copy`);
+      return res.json() as Promise<MarketEvent>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KEY });

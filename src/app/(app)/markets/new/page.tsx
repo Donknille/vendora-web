@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCreateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
+
+interface QuickItem {
+  name: string;
+  price: string;
+}
 
 export default function NewMarketPage() {
   const { t } = useLanguage();
@@ -19,10 +24,29 @@ export default function NewMarketPage() {
   const [standFee, setStandFee] = useState("");
   const [travelCost, setTravelCost] = useState("");
   const [notes, setNotes] = useState("");
+  const [quickItems, setQuickItems] = useState<QuickItem[]>([]);
+
+  const addQuickItem = () => {
+    setQuickItems((prev) => [...prev, { name: "", price: "" }]);
+  };
+
+  const updateQuickItem = (index: number, field: keyof QuickItem, value: string) => {
+    setQuickItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const removeQuickItem = (index: number) => {
+    setQuickItems((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    const validItems = quickItems
+      .filter((item) => item.name.trim())
+      .map((item) => ({ name: item.name.trim(), price: parseAmount(item.price) }));
 
     await createMarket.mutateAsync({
       name: name.trim(),
@@ -31,6 +55,7 @@ export default function NewMarketPage() {
       standFee: parseAmount(standFee),
       travelCost: parseAmount(travelCost),
       notes: notes.trim(),
+      ...(validItems.length > 0 ? { quickItems: validItems } : {}),
     });
 
     router.push("/markets");
@@ -135,6 +160,70 @@ export default function NewMarketPage() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Articles */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-faint uppercase tracking-wider">
+              {t.markets.articles}
+            </h2>
+            <button
+              type="button"
+              onClick={addQuickItem}
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-teal hover:bg-brand-teal/10 transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t.markets.addArticle}
+            </button>
+          </div>
+
+          {quickItems.length === 0 ? (
+            <button
+              type="button"
+              onClick={addQuickItem}
+              className="w-full rounded-lg border border-dashed border-line py-6 text-sm text-muted hover:border-brand-teal hover:text-brand-teal transition-colors"
+            >
+              <Plus className="h-5 w-5 mx-auto mb-1" />
+              {t.markets.addArticle}
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {quickItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 rounded-lg border border-line bg-surface p-3"
+                >
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => updateQuickItem(index, "name", e.target.value)}
+                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                      placeholder={t.markets.articleName}
+                    />
+                  </div>
+                  <div className="w-28">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={item.price}
+                      onChange={(e) => updateQuickItem(index, "price", e.target.value)}
+                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors text-right"
+                      placeholder="0,00 €"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeQuickItem(index)}
+                    className="rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Notes */}

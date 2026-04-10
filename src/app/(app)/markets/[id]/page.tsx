@@ -10,8 +10,9 @@ import {
   Plus,
   MapPin,
   Calendar,
+  Copy,
 } from "lucide-react";
-import { useMarkets, useDeleteMarket } from "@/lib/hooks/useMarkets";
+import { useMarkets, useDeleteMarket, useCopyMarket } from "@/lib/hooks/useMarkets";
 import {
   useMarketSales,
   useCreateMarketSale,
@@ -33,6 +34,7 @@ export default function MarketDetailPage() {
   const deleteMarket = useDeleteMarket();
   const createSale = useCreateMarketSale();
   const deleteSale = useDeleteMarketSale();
+  const copyMarket = useCopyMarket();
 
   // Add-sale form state
   const [saleDescription, setSaleDescription] = useState("");
@@ -42,11 +44,9 @@ export default function MarketDetailPage() {
 
   // Confirm dialogs
   const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(false);
-  const [confirmDeleteSaleId, setConfirmDeleteSaleId] = useState<string | null>(
-    null
-  );
+  const [confirmDeleteSaleId, setConfirmDeleteSaleId] = useState<string | null>(null);
 
-  const market = markets?.find((m: any) => m.id === marketId);
+  const market = markets?.find((m) => m.id === marketId);
 
   if (isLoading) {
     return (
@@ -59,7 +59,7 @@ export default function MarketDetailPage() {
   if (!market) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-muted">Market not found</p>
+        <p className="text-muted">{t.markets.noMarkets}</p>
       </div>
     );
   }
@@ -67,10 +67,19 @@ export default function MarketDetailPage() {
   const standFee = Number(market.standFee) || 0;
   const travelCost = Number(market.travelCost) || 0;
   const totalSales = (sales || []).reduce(
-    (sum: number, s: any) => sum + Number(s.amount) * Number(s.quantity),
+    (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
     0
   );
   const profit = totalSales - standFee - travelCost;
+
+  const handleQuickSale = async (item: { name: string; price: number }) => {
+    await createSale.mutateAsync({
+      marketId,
+      description: item.name,
+      amount: item.price,
+      quantity: 1,
+    });
+  };
 
   const handleAddSale = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +105,17 @@ export default function MarketDetailPage() {
 
   const handleDeleteSale = async (saleId: string) => {
     await deleteSale.mutateAsync(saleId);
+  };
+
+  const handleCopy = async () => {
+    const copied = await copyMarket.mutateAsync(marketId);
+    router.push(`/markets/${copied.id}/edit`);
+  };
+
+  const getSoldCount = (itemName: string, itemPrice: number) => {
+    return (sales ?? [])
+      .filter((s) => s.description === itemName && Number(s.amount) === itemPrice)
+      .reduce((sum, s) => sum + Number(s.quantity), 0);
   };
 
   const inputClass =
@@ -170,18 +190,50 @@ export default function MarketDetailPage() {
           </div>
           <div className="border-t border-line pt-2 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.markets.costs}</span>
-            <span className="text-primary">
-              {formatCurrency(standFee + travelCost)}
-            </span>
+            <span className="text-primary">{formatCurrency(standFee + travelCost)}</span>
           </div>
         </div>
       </Card>
+
+      {/* Quick Sale Buttons */}
+      {market.quickItems && market.quickItems.length > 0 && (
+        <Card>
+          <h3 className="text-sm font-medium text-faint uppercase tracking-wider mb-3">
+            {t.markets.quickSale}
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {market.quickItems.map((item, idx) => {
+              const soldCount = getSoldCount(item.name, item.price);
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleQuickSale(item)}
+                  disabled={createSale.isPending}
+                  className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-teal hover:bg-brand-teal/5 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  <span className="text-sm font-semibold text-primary truncate w-full text-center">
+                    {item.name}
+                  </span>
+                  <span className="text-lg font-bold font-display text-brand-tealDark">
+                    {formatCurrency(item.price)}
+                  </span>
+                  {soldCount > 0 && (
+                    <span className="text-xs text-muted">
+                      {soldCount}× {t.markets.sold}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Sales Section */}
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
-            {t.markets.sales}
+            {market.quickItems && market.quickItems.length > 0 ? t.markets.otherSale : t.markets.sales}
           </h3>
           <button
             onClick={() => setShowAddSale(!showAddSale)}
@@ -193,50 +245,17 @@ export default function MarketDetailPage() {
 
         {/* Add Sale Form */}
         {showAddSale && (
-          <form
-            onSubmit={handleAddSale}
-            className="mb-4 space-y-3 rounded-lg border border-line bg-page p-3"
-          >
-            <input
-              type="text"
-              value={saleDescription}
-              onChange={(e) => setSaleDescription(e.target.value)}
-              className={inputClass}
-              placeholder={t.markets.itemDescription}
-              required
-            />
+          <form onSubmit={handleAddSale} className="mb-4 space-y-3 rounded-lg border border-line bg-page p-3">
+            <input type="text" value={saleDescription} onChange={(e) => setSaleDescription(e.target.value)} className={inputClass} placeholder={t.markets.itemDescription} required />
             <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={saleAmount}
-                onChange={(e) => setSaleAmount(e.target.value)}
-                className={inputClass}
-                placeholder={t.expenses.amount}
-                required
-              />
-              <input
-                type="number"
-                min="1"
-                value={saleQuantity}
-                onChange={(e) => setSaleQuantity(e.target.value)}
-                className={inputClass}
-                placeholder={t.orders.qty}
-              />
+              <input type="text" inputMode="decimal" value={saleAmount} onChange={(e) => setSaleAmount(e.target.value)} className={inputClass} placeholder={t.expenses.amount} required />
+              <input type="number" min="1" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={createSale.isPending}
-                className="flex-1 rounded-lg bg-brand-teal py-2 text-sm font-medium text-white hover:bg-brand-teal/90 disabled:opacity-50 transition-colors"
-              >
+              <button type="submit" disabled={createSale.isPending} className="flex-1 rounded-lg bg-brand-teal py-2 text-sm font-medium text-white hover:bg-brand-teal/90 disabled:opacity-50 transition-colors">
                 {createSale.isPending ? t.common.loading : t.common.save}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowAddSale(false)}
-                className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors"
-              >
+              <button type="button" onClick={() => setShowAddSale(false)} className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors">
                 {t.common.cancel}
               </button>
             </div>
@@ -248,18 +267,13 @@ export default function MarketDetailPage() {
           <p className="text-sm text-muted">{t.markets.noSales}</p>
         ) : (
           <div className="space-y-2">
-            {sales.map((sale: any) => (
-              <div
-                key={sale.id}
-                className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5"
-              >
+            {sales.map((sale) => (
+              <div key={sale.id} className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-secondary truncate">
-                    {sale.description}
-                  </p>
+                  <p className="text-sm font-medium text-secondary truncate">{sale.description}</p>
                   <p className="text-xs text-muted">
                     {Number(sale.quantity) > 1
-                      ? `${sale.quantity} x ${formatCurrency(Number(sale.amount))}`
+                      ? `${sale.quantity} × ${formatCurrency(Number(sale.amount))}`
                       : formatCurrency(Number(sale.amount))}
                   </p>
                 </div>
@@ -267,10 +281,7 @@ export default function MarketDetailPage() {
                   <span className="text-sm font-medium text-brand-tealDark">
                     {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
                   </span>
-                  <button
-                    onClick={() => setConfirmDeleteSaleId(sale.id)}
-                    className="rounded p-1 text-muted hover:text-red-400 transition-colors"
-                  >
+                  <button onClick={() => setConfirmDeleteSaleId(sale.id)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -283,9 +294,7 @@ export default function MarketDetailPage() {
         {sales && sales.length > 0 && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
-            <span className="text-brand-tealDark">
-              {formatCurrency(totalSales)}
-            </span>
+            <span className="text-brand-tealDark">{formatCurrency(totalSales)}</span>
           </div>
         )}
       </Card>
@@ -293,28 +302,33 @@ export default function MarketDetailPage() {
       {/* Profit */}
       <Card>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
-            {t.markets.profit}
-          </h3>
-          <span
-            className={`text-xl font-bold ${
-              profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
-            }`}
-          >
+          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.profit}</h3>
+          <span className={`text-xl font-bold font-display ${profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"}`}>
             {formatCurrency(profit)}
           </span>
         </div>
       </Card>
 
-      {/* Delete Market Button */}
-      <button
-        onClick={() => setConfirmDeleteMarket(true)}
-        className="w-full rounded-lg border border-red-500/20 bg-red-500/5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-      >
-        {t.markets.deleteMarket}
-      </button>
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        <button
+          onClick={handleCopy}
+          disabled={copyMarket.isPending}
+          className="w-full flex items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm font-medium text-secondary hover:bg-elevated transition-colors disabled:opacity-50"
+        >
+          <Copy className="h-4 w-4" />
+          {copyMarket.isPending ? t.common.loading : t.markets.copyMarket}
+        </button>
 
-      {/* Confirm Delete Market Dialog */}
+        <button
+          onClick={() => setConfirmDeleteMarket(true)}
+          className="w-full rounded-lg border border-red-500/20 bg-red-500/5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          {t.markets.deleteMarket}
+        </button>
+      </div>
+
+      {/* Confirm Dialogs */}
       <ConfirmDialog
         open={confirmDeleteMarket}
         onClose={() => setConfirmDeleteMarket(false)}
@@ -324,14 +338,10 @@ export default function MarketDetailPage() {
         confirmText={t.markets.deleteAction}
         cancelText={t.markets.deleteCancel}
       />
-
-      {/* Confirm Delete Sale Dialog */}
       <ConfirmDialog
         open={!!confirmDeleteSaleId}
         onClose={() => setConfirmDeleteSaleId(null)}
-        onConfirm={() => {
-          if (confirmDeleteSaleId) handleDeleteSale(confirmDeleteSaleId);
-        }}
+        onConfirm={() => { if (confirmDeleteSaleId) handleDeleteSale(confirmDeleteSaleId); }}
         title={t.markets.deleteSale}
         message={t.markets.removeSale}
         confirmText={t.markets.deleteAction}
