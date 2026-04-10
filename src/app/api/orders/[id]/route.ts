@@ -15,7 +15,10 @@ const updateOrderItemSchema = z.object({
 const updateOrderSchema = z.object({
   customerName: z.string().min(1).max(200).optional(),
   customerEmail: z.string().max(254).optional(),
-  customerAddress: z.string().max(500).optional(),
+  customerStreet: z.string().max(200).optional(),
+  customerZip: z.string().max(20).optional(),
+  customerCity: z.string().max(100).optional(),
+  customerCountry: z.string().max(100).optional(),
   status: z.string().max(50).optional(),
   notes: z.string().max(5000).optional(),
   orderDate: z.string().max(50).optional(),

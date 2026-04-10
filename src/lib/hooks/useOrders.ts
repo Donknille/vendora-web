@@ -13,7 +13,10 @@ export function useCreateOrder() {
     mutationFn: async (data: {
       customerName: string;
       customerEmail: string;
-      customerAddress: string;
+      customerStreet: string;
+      customerZip: string;
+      customerCity: string;
+      customerCountry?: string;
       status: string;
       notes: string;
       orderDate: string;
@@ -33,7 +36,10 @@ export function useUpdateOrder() {
     mutationFn: async ({ id, ...data }: { id: string } & Partial<{
       customerName: string;
       customerEmail: string;
-      customerAddress: string;
+      customerStreet: string;
+      customerZip: string;
+      customerCity: string;
+      customerCountry?: string;
       status: string;
       notes: string;
       orderDate: string;

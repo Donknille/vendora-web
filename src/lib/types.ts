@@ -15,7 +15,10 @@ export interface Order {
   userId: string;
   customerName: string;
   customerEmail: string;
-  customerAddress: string;
+  customerStreet: string;
+  customerZip: string;
+  customerCity: string;
+  customerCountry: string;
   status: string;
   invoiceNumber: string;
   notes: string;

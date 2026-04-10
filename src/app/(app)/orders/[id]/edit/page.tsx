@@ -25,7 +25,10 @@ export default function EditOrderPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerStreet, setCustomerStreet] = useState("");
+  const [customerZip, setCustomerZip] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerCountry, setCustomerCountry] = useState("");
   const [orderDate, setOrderDate] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("open");
@@ -42,7 +45,10 @@ export default function EditOrderPage() {
     if (order && !initialized) {
       setCustomerName(order.customerName || "");
       setCustomerEmail(order.customerEmail || "");
-      setCustomerAddress(order.customerAddress || "");
+      setCustomerStreet(order.customerStreet || "");
+      setCustomerZip(order.customerZip || "");
+      setCustomerCity(order.customerCity || "");
+      setCustomerCountry(order.customerCountry || "");
       setOrderDate(
         order.orderDate || order.createdAt?.split("T")[0] || ""
       );
@@ -109,7 +115,10 @@ export default function EditOrderPage() {
         id,
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim() || undefined,
-        customerAddress: customerAddress.trim() || undefined,
+        customerStreet: customerStreet.trim() || undefined,
+        customerZip: customerZip.trim() || undefined,
+        customerCity: customerCity.trim() || undefined,
+        customerCountry: customerCountry.trim() || undefined,
         orderDate,
         notes: notes.trim() || undefined,
         items: orderItems,
@@ -187,14 +196,54 @@ export default function EditOrderPage() {
 
           <div>
             <label className="block text-sm font-medium text-secondary mb-1.5">
-              {t.orders.address}
+              Straße + Hausnr. *
             </label>
             <input
               type="text"
-              value={customerAddress}
-              onChange={(e) => setCustomerAddress(e.target.value)}
+              value={customerStreet}
+              onChange={(e) => setCustomerStreet(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-              placeholder={t.orders.address}
+              placeholder="Straße + Hausnr."
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <div className="w-1/3">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                PLZ *
+              </label>
+              <input
+                type="text"
+                value={customerZip}
+                onChange={(e) => setCustomerZip(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                placeholder="PLZ"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                Ort *
+              </label>
+              <input
+                type="text"
+                value={customerCity}
+                onChange={(e) => setCustomerCity(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                placeholder="Ort"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary mb-1.5">
+              Land
+            </label>
+            <input
+              type="text"
+              value={customerCountry}
+              onChange={(e) => setCustomerCountry(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              placeholder="Land"
             />
           </div>
 

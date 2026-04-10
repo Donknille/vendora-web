@@ -123,7 +123,10 @@ export async function createOrder(
   data: {
     customerName: string;
     customerEmail: string;
-    customerAddress: string;
+    customerStreet: string;
+    customerZip: string;
+    customerCity: string;
+    customerCountry?: string;
     status: string;
     notes: string;
     orderDate: string;
@@ -144,7 +147,10 @@ export async function createOrder(
       userId,
       customerName: data.customerName,
       customerEmail: data.customerEmail,
-      customerAddress: data.customerAddress,
+      customerStreet: data.customerStreet,
+      customerZip: data.customerZip,
+      customerCity: data.customerCity,
+      customerCountry: data.customerCountry || "",
       status: data.status,
       invoiceNumber,
       notes: data.notes,
@@ -190,7 +196,10 @@ export async function updateOrder(
   updates: {
     customerName?: string;
     customerEmail?: string;
-    customerAddress?: string;
+    customerStreet?: string;
+    customerZip?: string;
+    customerCity?: string;
+    customerCountry?: string;
     status?: string;
     notes?: string;
     orderDate?: string;
@@ -209,7 +218,10 @@ export async function updateOrder(
 
   if (fields.customerName !== undefined) dbUpdates.customerName = fields.customerName;
   if (fields.customerEmail !== undefined) dbUpdates.customerEmail = fields.customerEmail;
-  if (fields.customerAddress !== undefined) dbUpdates.customerAddress = fields.customerAddress;
+  if (fields.customerStreet !== undefined) dbUpdates.customerStreet = fields.customerStreet;
+  if (fields.customerZip !== undefined) dbUpdates.customerZip = fields.customerZip;
+  if (fields.customerCity !== undefined) dbUpdates.customerCity = fields.customerCity;
+  if (fields.customerCountry !== undefined) dbUpdates.customerCountry = fields.customerCountry;
   if (fields.status !== undefined) dbUpdates.status = fields.status;
   if (fields.notes !== undefined) dbUpdates.notes = fields.notes;
   if (fields.orderDate !== undefined) dbUpdates.orderDate = fields.orderDate;

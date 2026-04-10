@@ -97,7 +97,7 @@ export default function OrderDetailPage() {
     const subtotal = items.reduce((s: number, i: { price: number; quantity: number }) => s + i.price * i.quantity, 0);
     const grandTotal = subtotal + shippingCost;
 
-    const customerAddress = escapeHtml(order.customerAddress || "").replace(/\n/g, "<br/>");
+    const customerAddress = escapeHtml(order.customerStreet || "") + "<br/>" + escapeHtml(order.customerZip || "") + " " + escapeHtml(order.customerCity || "") + (order.customerCountry ? "<br/>" + escapeHtml(order.customerCountry) : "");
 
     const itemRows = items
       .map(
@@ -291,10 +291,15 @@ export default function OrderDetailPage() {
                 <span>{order.customerEmail}</span>
               </div>
             )}
-            {order.customerAddress && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted" />
-                <span>{order.customerAddress}</span>
+            {order.customerStreet && (
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-muted mt-0.5" />
+                <div>
+                  <span>{order.customerStreet}, {order.customerZip} {order.customerCity}</span>
+                  {order.customerCountry && (
+                    <div>{order.customerCountry}</div>
+                  )}
+                </div>
               </div>
             )}
           </div>

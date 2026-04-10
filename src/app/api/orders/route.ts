@@ -14,7 +14,10 @@ const orderItemSchema = z.object({
 const createOrderSchema = z.object({
   customerName: z.string().min(1, "Customer name is required").max(200),
   customerEmail: z.string().max(254).default(""),
-  customerAddress: z.string().max(500).default(""),
+  customerStreet: z.string().min(1, "Street is required").max(200),
+  customerZip: z.string().min(1, "ZIP is required").max(20),
+  customerCity: z.string().min(1, "City is required").max(100),
+  customerCountry: z.string().max(100).default(""),
   status: z.string().max(50).default("open"),
   notes: z.string().max(5000).default(""),
   orderDate: z.string().min(1, "Order date is required").max(50),

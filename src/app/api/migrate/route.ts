@@ -12,7 +12,11 @@ const migrateItemSchema = z.object({
 const migrateOrderSchema = z.object({
   customerName: z.string().max(200).optional(),
   customerEmail: z.string().max(254).optional(),
-  customerAddress: z.string().max(500).optional(),
+  customerAddress: z.string().max(500).optional(), // legacy, mapped to street
+  customerStreet: z.string().max(200).optional(),
+  customerZip: z.string().max(20).optional(),
+  customerCity: z.string().max(100).optional(),
+  customerCountry: z.string().max(100).optional(),
   status: z.string().max(50).optional(),
   notes: z.string().max(5000).optional(),
   orderDate: z.string().max(50).optional(),
@@ -83,7 +87,10 @@ export async function POST(request: Request) {
         await storage.createOrder(userId, {
           customerName: order.customerName || "",
           customerEmail: order.customerEmail || "",
-          customerAddress: order.customerAddress || "",
+          customerStreet: order.customerStreet || order.customerAddress || "",
+          customerZip: order.customerZip || "",
+          customerCity: order.customerCity || "",
+          customerCountry: order.customerCountry || "",
           status: order.status || "open",
           notes: order.notes || "",
           orderDate: order.orderDate || new Date().toISOString().split("T")[0],

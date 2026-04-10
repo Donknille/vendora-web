@@ -21,7 +21,10 @@ export default function NewOrderPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerStreet, setCustomerStreet] = useState("");
+  const [customerZip, setCustomerZip] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerCountry, setCustomerCountry] = useState("");
   const [orderDate, setOrderDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -56,7 +59,7 @@ export default function NewOrderPage() {
     e.preventDefault();
     setError("");
 
-    if (!customerName.trim()) {
+    if (!customerName.trim() || !customerStreet.trim() || !customerZip.trim() || !customerCity.trim()) {
       setError(t.orders.enterCustomerName);
       return;
     }
@@ -77,7 +80,10 @@ export default function NewOrderPage() {
       await createOrder.mutateAsync({
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
-        customerAddress: customerAddress.trim(),
+        customerStreet: customerStreet.trim(),
+        customerZip: customerZip.trim(),
+        customerCity: customerCity.trim(),
+        customerCountry: customerCountry.trim(),
         orderDate,
         notes: notes.trim(),
         items: orderItems,
@@ -139,14 +145,54 @@ export default function NewOrderPage() {
 
           <div>
             <label className="block text-sm font-medium text-secondary mb-1.5">
-              {t.orders.address}
+              Straße + Hausnr. *
             </label>
             <input
               type="text"
-              value={customerAddress}
-              onChange={(e) => setCustomerAddress(e.target.value)}
+              value={customerStreet}
+              onChange={(e) => setCustomerStreet(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-              placeholder={t.orders.address}
+              placeholder="Musterstraße 1"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <div className="w-1/3">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                PLZ *
+              </label>
+              <input
+                type="text"
+                value={customerZip}
+                onChange={(e) => setCustomerZip(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                placeholder="12345"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                Ort *
+              </label>
+              <input
+                type="text"
+                value={customerCity}
+                onChange={(e) => setCustomerCity(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                placeholder="Musterstadt"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary mb-1.5">
+              Land
+            </label>
+            <input
+              type="text"
+              value={customerCountry}
+              onChange={(e) => setCustomerCountry(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              placeholder="Deutschland"
             />
           </div>
 
