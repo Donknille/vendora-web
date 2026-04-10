@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/server/admin";
 import { db } from "@/lib/server/db";
-import { users, orders, marketEvents, expenses } from "@/lib/server/schema";
-import { eq, sql } from "drizzle-orm";
+import { users } from "@/lib/server/schema";
+import { sql } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -19,9 +19,9 @@ export async function GET() {
         trialEndsAt: users.trialEndsAt,
         subscriptionExpiresAt: users.subscriptionExpiresAt,
         isBlocked: users.isBlocked,
-        orderCount: sql<number>`(SELECT count(*) FROM orders WHERE user_id = ${users.id})`,
-        marketCount: sql<number>`(SELECT count(*) FROM market_events WHERE user_id = ${users.id})`,
-        expenseCount: sql<number>`(SELECT count(*) FROM expenses WHERE user_id = ${users.id})`,
+        orderCount: sql<number>`(SELECT count(*) FROM orders WHERE orders.user_id = "users"."id")`,
+        marketCount: sql<number>`(SELECT count(*) FROM market_events WHERE market_events.user_id = "users"."id")`,
+        expenseCount: sql<number>`(SELECT count(*) FROM expenses WHERE expenses.user_id = "users"."id")`,
       })
       .from(users)
       .orderBy(sql`${users.createdAt} DESC`);

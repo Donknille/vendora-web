@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Shield, Users, CreditCard, Clock, Ban, ShoppingCart, Store, Receipt, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/lib/context/LanguageContext";
+import { formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 
 interface AdminStats {
@@ -35,6 +37,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminDashboardPage() {
+  const { language } = useLanguage();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,7 +173,7 @@ export default function AdminDashboardPage() {
                   <td className="py-3 text-center text-secondary">{user.stats.orders}</td>
                   <td className="py-3 text-center text-secondary">{user.stats.markets}</td>
                   <td className="py-3 text-right text-faint">
-                    {new Date(user.createdAt).toLocaleDateString("de-DE")}
+                    {formatDate(user.createdAt, language === "de" ? "de-DE" : "en-US")}
                   </td>
                   <td className="py-3 text-right">
                     <Link

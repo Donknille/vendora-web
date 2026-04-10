@@ -18,12 +18,12 @@ import {
   useDeleteMarketSale,
 } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function MarketDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const marketId = params.id as string;
@@ -139,7 +139,7 @@ export default function MarketDetailPage() {
           {market.date && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              {market.date}
+              {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
             </span>
           )}
           {market.location && (

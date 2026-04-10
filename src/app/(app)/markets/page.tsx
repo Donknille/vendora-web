@@ -5,13 +5,13 @@ import { Plus, Store, MapPin, Calendar } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 
 export default function MarketsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: markets, isLoading } = useMarkets();
   const { data: allSales } = useAllMarketSales();
 
@@ -83,7 +83,7 @@ export default function MarketsPage() {
                           {market.date && (
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {market.date}
+                              {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
                             </span>
                           )}
                           {market.location && (

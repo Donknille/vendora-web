@@ -4,14 +4,14 @@ import Link from "next/link";
 import { Plus, ShoppingCart, Calendar, Package } from "lucide-react";
 import { useOrders } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 
 export default function OrdersPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: orders, isLoading } = useOrders();
 
   if (isLoading) {
@@ -82,7 +82,7 @@ export default function OrdersPage() {
                           {(order.orderDate || order.createdAt) && (
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {order.orderDate || order.createdAt?.split("T")[0]}
+                              {formatDate(order.orderDate || order.createdAt?.split("T")[0] || "", language === "de" ? "de-DE" : "en-US")}
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1">

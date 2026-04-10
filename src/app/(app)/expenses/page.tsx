@@ -5,7 +5,7 @@ import { Receipt, Plus, Trash2, X } from "lucide-react";
 import { useExpenses, useCreateExpense, useDeleteExpense } from "@/lib/hooks/useExpenses";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useSubscription } from "@/lib/hooks/useSubscription";
-import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
@@ -34,7 +34,7 @@ const categoryColors: Record<Category, string> = {
 };
 
 export default function ExpensesPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: expenses, isLoading } = useExpenses();
   const { data: sub } = useSubscription();
   const createExpense = useCreateExpense();
@@ -42,6 +42,7 @@ export default function ExpensesPage() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<Category>("Other");
@@ -61,21 +62,26 @@ export default function ExpensesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     if (!description.trim() || !amount.trim()) return;
 
-    await createExpense.mutateAsync({
-      description: description.trim(),
-      amount: parseAmount(amount),
-      category,
-      expenseDate,
-    });
+    try {
+      await createExpense.mutateAsync({
+        description: description.trim(),
+        amount: parseAmount(amount),
+        category,
+        expenseDate,
+      });
 
-    // Reset form
-    setDescription("");
-    setAmount("");
-    setCategory("Other");
-    setExpenseDate(new Date().toISOString().slice(0, 10));
-    setShowForm(false);
+      // Reset form
+      setDescription("");
+      setAmount("");
+      setCategory("Other");
+      setExpenseDate(new Date().toISOString().slice(0, 10));
+      setShowForm(false);
+    } catch {
+      setFormError(t.expenses.deleteExpense === "Delete Expense" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut.");
+    }
   };
 
   const handleDelete = async () => {
@@ -217,6 +223,10 @@ export default function ExpensesPage() {
                 ? t.common.loading
                 : t.expenses.addExpense}
             </button>
+
+            {formError && (
+              <p className="mt-2 text-sm text-red-400">{formError}</p>
+            )}
           </form>
         </Card>
       )}
@@ -258,13 +268,16 @@ export default function ExpensesPage() {
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-muted">
-                      {expense.expenseDate ??
-                        expense.date ??
-                        (expense.createdAt
-                          ? new Date(expense.createdAt)
-                              .toISOString()
-                              .slice(0, 10)
-                          : "")}
+                      {formatDate(
+                        expense.expenseDate ??
+                          expense.date ??
+                          (expense.createdAt
+                            ? new Date(expense.createdAt)
+                                .toISOString()
+                                .slice(0, 10)
+                            : ""),
+                        language === "de" ? "de-DE" : "en-US"
+                      )}
                     </p>
                   </div>
 

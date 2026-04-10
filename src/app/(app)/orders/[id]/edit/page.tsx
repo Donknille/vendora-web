@@ -60,7 +60,7 @@ export default function EditOrderPage() {
           order.items.map((item: any) => ({
             name: item.name || "",
             quantity: String(item.quantity || 1),
-            price: String(item.price || ""),
+            price: item.price ? Number(item.price).toFixed(2).replace(".", ",") : "",
           }))
         );
       }
@@ -157,7 +157,7 @@ export default function EditOrderPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-2xl font-bold font-display text-primary">
-          {t.orders.orderDetails}
+          {t.orders.editOrder}
         </h1>
       </div>
 

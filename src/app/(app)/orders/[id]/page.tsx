@@ -17,7 +17,7 @@ import {
 import { useOrders, useUpdateOrder, useDeleteOrder } from "@/lib/hooks/useOrders";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -34,7 +34,7 @@ function escapeHtml(str: string): string {
 }
 
 export default function OrderDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -281,7 +281,7 @@ export default function OrderDetailPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted" />
                 <span>
-                  {order.orderDate || order.createdAt?.split("T")[0]}
+                  {formatDate(order.orderDate || order.createdAt?.split("T")[0] || "", language === "de" ? "de-DE" : "en-US")}
                 </span>
               </div>
             )}
