@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   User,
   Building2,
@@ -466,7 +467,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* ───────── Privacy ───────── */}
+      {/* ───────── Privacy & Legal ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
           <Shield className="h-5 w-5 text-emerald-500" />
@@ -475,9 +476,30 @@ export default function SettingsPage() {
           </h2>
         </div>
 
-        <p className="text-sm text-faint leading-relaxed">
+        <p className="text-sm text-faint leading-relaxed mb-4">
           {t.settings.privacyText}
         </p>
+
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/legal/datenschutz"
+            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+          >
+            Datenschutzerklärung →
+          </Link>
+          <Link
+            href="/legal/impressum"
+            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+          >
+            Impressum →
+          </Link>
+          <Link
+            href="/legal/changelog"
+            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+          >
+            Changelog →
+          </Link>
+        </div>
       </Card>
     </div>
   );
