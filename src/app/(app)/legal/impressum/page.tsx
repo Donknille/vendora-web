@@ -14,7 +14,7 @@ export default function ImpressumPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-primary">Impressum</h1>
+        <h1 className="text-2xl font-bold font-display text-primary">Impressum</h1>
       </div>
 
       <Card>
@@ -59,7 +59,7 @@ export default function ImpressumPage() {
             href="https://ec.europa.eu/consumers/odr/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-500 hover:text-emerald-400"
+            className="text-brand-primary hover:text-brand-primary/80"
           >
             https://ec.europa.eu/consumers/odr/
           </a>

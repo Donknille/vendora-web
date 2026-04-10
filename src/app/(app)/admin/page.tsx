@@ -29,9 +29,9 @@ interface AdminUser {
 
 const statusColors: Record<string, string> = {
   trial: "text-yellow-500",
-  active: "text-emerald-500",
-  expired: "text-red-400",
-  cancelled: "text-red-400",
+  active: "text-brand-tealDark",
+  expired: "text-brand-primary",
+  cancelled: "text-brand-primary",
 };
 
 export default function AdminDashboardPage() {
@@ -61,8 +61,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-emerald-500" />
-        <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
+        <Shield className="h-6 w-6 text-brand-teal" />
+        <h1 className="text-2xl font-bold font-display text-primary">Admin Dashboard</h1>
       </div>
 
       {/* Stats */}
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-emerald-500" />
+              <Users className="h-5 w-5 text-brand-teal" />
               <div>
                 <p className="text-2xl font-bold text-primary">{stats.totalUsers}</p>
                 <p className="text-xs text-muted">User gesamt</p>
@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
           </Card>
           <Card>
             <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-emerald-500" />
+              <CreditCard className="h-5 w-5 text-brand-teal" />
               <div>
                 <p className="text-2xl font-bold text-primary">{stats.activeSubscriptions}</p>
                 <p className="text-xs text-muted">Aktive Abos</p>
@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
           </Card>
           <Card>
             <div className="flex items-center gap-3">
-              <Ban className="h-5 w-5 text-red-400" />
+              <Ban className="h-5 w-5 text-brand-primary" />
               <div>
                 <p className="text-2xl font-bold text-primary">{stats.expiredUsers}</p>
                 <p className="text-xs text-muted">Abgelaufen</p>
@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
                 <tr key={user.id} className="border-b border-line-subtle">
                   <td className="py-3 text-primary">
                     <div className="flex items-center gap-2">
-                      {user.isBlocked && <Ban className="h-3.5 w-3.5 text-red-400" />}
+                      {user.isBlocked && <Ban className="h-3.5 w-3.5 text-brand-primary" />}
                       <span className={user.isBlocked ? "line-through text-muted" : ""}>
                         {user.email}
                       </span>

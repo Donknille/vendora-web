@@ -251,7 +251,7 @@ export default function OrderDetailPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-primary">
+          <h1 className="text-2xl font-bold font-display text-primary">
             {t.orders.orderDetails}
           </h1>
         </div>
@@ -353,7 +353,7 @@ export default function OrderDetailPage() {
         {/* Total */}
         <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
           <span className="font-medium text-secondary">{t.orders.total}</span>
-          <span className="text-lg font-bold text-emerald-400">
+          <span className="text-lg font-bold font-display text-brand-tealDark">
             {formatCurrency(total)}
           </span>
         </div>
@@ -394,7 +394,7 @@ export default function OrderDetailPage() {
                   onClick={() => handleStatusChange(status)}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                     order.status === status
-                      ? "bg-emerald-500/10 text-emerald-500"
+                      ? "bg-brand-primary/10 text-brand-primary"
                       : "text-secondary hover:bg-elevated"
                   }`}
                 >
@@ -415,7 +415,7 @@ export default function OrderDetailPage() {
         {/* Create Invoice */}
         <button
           onClick={handleCreateInvoice}
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-primary px-4 py-3 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
         >
           <FileText className="h-4 w-4" />
           {t.orders.createInvoice}

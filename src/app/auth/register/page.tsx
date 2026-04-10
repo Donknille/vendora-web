@@ -61,14 +61,14 @@ export default function RegisterPage() {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
+          <div className="bg-brand-primary/10 border border-brand-teal/20 rounded-xl p-8">
             <h2 className="text-xl font-bold text-primary mb-2">Bestätige deine E-Mail</h2>
             <p className="text-faint">
               Wir haben eine Bestätigungs-E-Mail an <span className="text-primary">{email}</span> gesendet.
               Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
             </p>
           </div>
-          <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 inline-block">
+          <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80 text-sm mt-4 inline-block">
             Zurück zum Login
           </Link>
         </div>
@@ -80,7 +80,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Vendora</h1>
+          <h1 className="font-display text-[22px] font-bold text-primary">Vendora</h1>
           <p className="text-faint mt-2">Erstelle dein Konto</p>
         </div>
 
@@ -97,7 +97,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="deine@email.de"
               required
             />
@@ -109,7 +109,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="Mindestens 8 Zeichen"
               required
             />
@@ -121,7 +121,7 @@ export default function RegisterPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="Passwort wiederholen"
               required
             />
@@ -130,7 +130,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
+            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
           >
             {loading ? "Wird erstellt..." : "Konto erstellen"}
           </button>
@@ -138,7 +138,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-muted text-sm">
           Bereits ein Konto?{" "}
-          <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300">
+          <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80">
             Anmelden
           </Link>
         </p>

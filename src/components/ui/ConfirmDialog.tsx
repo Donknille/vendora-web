@@ -57,7 +57,7 @@ export function ConfirmDialog({
               onConfirm();
               onClose();
             }}
-            className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors"
+            className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
           >
             {confirmText}
           </button>

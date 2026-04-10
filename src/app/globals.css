@@ -1,51 +1,116 @@
 @import "tailwindcss";
+@import "@fontsource/fredoka/400.css";
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
 
 /* ── Class-based dark mode for Tailwind v4 ── */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── Light mode (default) ── */
+/* ── Light mode (default) — warm, friendly, handmade feel ── */
 :root {
-  --color-page: #fafafa;
-  --color-surface: #ffffff;
-  --color-elevated: #f4f4f5;
-  --color-hover: #e4e4e7;
-  --color-input: #ffffff;
-  --color-input-nested: #fafafa;
-  --color-line: #e4e4e7;
-  --color-line-hover: #d4d4d8;
-  --color-line-subtle: #f4f4f5;
-  --color-primary: #18181b;
-  --color-secondary: #3f3f46;
-  --color-muted: #71717a;
-  --color-faint: #a1a1aa;
-  --color-holder: #a1a1aa;
-  --color-scrollbar: #d4d4d8;
-  --color-autofill-bg: #ffffff;
-  --color-autofill-text: #18181b;
+  /* Brand colors */
+  --color-brand-primary: #FF5252;
+  --color-brand-primaryLt: #FFE8E8;
+  --color-brand-teal: #00B4A6;
+  --color-brand-tealLt: #D0FAF6;
+  --color-brand-tealDark: #008F83;
+  --color-brand-yellow: #FFCA28;
+  --color-brand-yellowLt: #FFF8DC;
+
+  /* Surfaces */
+  --color-page: #FFFCF5;
+  --color-surface: #FFFFFF;
+  --color-elevated: #F5F3FF;
+  --color-hover: #EDE9FE;
+  --color-input: #FFFFFF;
+
+  /* Borders */
+  --color-line: rgba(26, 26, 46, 0.08);
+  --color-line-hover: rgba(26, 26, 46, 0.15);
+  --color-line-subtle: rgba(26, 26, 46, 0.04);
+
+  /* Text */
+  --color-primary: #1A1A2E;
+  --color-secondary: #4A4458;
+  --color-muted: #7A6880;
+  --color-faint: #9E8FA6;
+  --color-holder: #B8ACBE;
+
+  /* Misc */
+  --color-scrollbar: #D4C8DA;
+  --color-autofill-bg: #FFFCF5;
+  --color-autofill-text: #1A1A2E;
 }
 
-/* ── Dark mode ── */
+/* ── Dark mode — deep navy, warm accent colors ── */
 .dark {
-  --color-page: #09090b;
-  --color-surface: #18181b;
-  --color-elevated: #27272a;
-  --color-hover: #3f3f46;
-  --color-input: #18181b;
-  --color-input-nested: #09090b;
-  --color-line: #27272a;
-  --color-line-hover: #3f3f46;
-  --color-line-subtle: rgba(39, 39, 42, 0.5);
-  --color-primary: #f4f4f5;
-  --color-secondary: #d4d4d8;
-  --color-muted: #71717a;
-  --color-faint: #a1a1aa;
-  --color-holder: #71717a;
-  --color-scrollbar: #3f3f46;
-  --color-autofill-bg: #18181b;
-  --color-autofill-text: #fafafa;
+  /* Brand colors (slightly brighter for dark backgrounds) */
+  --color-brand-primary: #FF6868;
+  --color-brand-primaryLt: #2C1318;
+  --color-brand-teal: #00C4B4;
+  --color-brand-tealLt: #092624;
+  --color-brand-tealDark: #00E0CF;
+  --color-brand-yellow: #FFCA28;
+  --color-brand-yellowLt: #252000;
+
+  /* Surfaces */
+  --color-page: #0F0E1A;
+  --color-surface: #1C1B2C;
+  --color-elevated: #252438;
+  --color-hover: #302F45;
+  --color-input: #252438;
+
+  /* Borders */
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-hover: rgba(255, 255, 255, 0.12);
+  --color-line-subtle: rgba(255, 255, 255, 0.04);
+
+  /* Text */
+  --color-primary: #EEEEFF;
+  --color-secondary: #C4C0D8;
+  --color-muted: #8A88AA;
+  --color-faint: #6E6C8A;
+  --color-holder: #56547A;
+
+  /* Misc */
+  --color-scrollbar: #3A3850;
+  --color-autofill-bg: #1C1B2C;
+  --color-autofill-text: #EEEEFF;
+}
+
+/* ── Register as Tailwind theme ── */
+@theme {
+  --font-display: "Fredoka", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primaryLt: var(--color-brand-primaryLt);
+  --color-brand-teal: var(--color-brand-teal);
+  --color-brand-tealLt: var(--color-brand-tealLt);
+  --color-brand-tealDark: var(--color-brand-tealDark);
+  --color-brand-yellow: var(--color-brand-yellow);
+  --color-brand-yellowLt: var(--color-brand-yellowLt);
+
+  --color-page: var(--color-page);
+  --color-surface: var(--color-surface);
+  --color-elevated: var(--color-elevated);
+  --color-hover: var(--color-hover);
+  --color-input: var(--color-input);
+
+  --color-line: var(--color-line);
+  --color-line-hover: var(--color-line-hover);
+  --color-line-subtle: var(--color-line-subtle);
+
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-muted: var(--color-muted);
+  --color-faint: var(--color-faint);
+  --color-holder: var(--color-holder);
 }
 
 body {
+  font-family: "Nunito", system-ui, sans-serif;
   background: var(--color-page);
   color: var(--color-primary);
 }

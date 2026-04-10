@@ -49,10 +49,10 @@ export function Sidebar() {
       <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
         {/* Logo */}
         <div className="flex items-center gap-2 px-6 py-5 border-b border-line">
-          <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
             <span className="text-white font-bold text-sm">V</span>
           </div>
-          <span className="text-lg font-semibold text-primary">Vendora</span>
+          <span className="font-display text-[22px] text-primary">Vendora</span>
         </div>
 
         {/* Navigation */}
@@ -66,7 +66,7 @@ export function Sidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? "bg-emerald-500/10 text-emerald-500"
+                    ? "bg-brand-primary/10 text-brand-primary"
                     : "text-faint hover:text-primary hover:bg-elevated"
                 }`}
               >
@@ -82,7 +82,7 @@ export function Sidebar() {
               href="/admin"
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mt-2 ${
                 isActive("/admin")
-                  ? "bg-emerald-500/10 text-emerald-500"
+                  ? "bg-brand-primary/10 text-brand-primary"
                   : "text-faint hover:text-primary hover:bg-elevated"
               }`}
             >
@@ -115,7 +115,7 @@ export function Sidebar() {
               href={item.href}
               className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 active
-                  ? "text-emerald-500"
+                  ? "text-brand-primary"
                   : "text-muted hover:text-secondary"
               }`}
             >

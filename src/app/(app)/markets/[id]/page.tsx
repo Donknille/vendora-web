@@ -99,7 +99,7 @@ export default function MarketDetailPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -112,7 +112,7 @@ export default function MarketDetailPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-primary">
+          <h1 className="text-2xl font-bold font-display text-primary">
             {t.markets.marketDetails}
           </h1>
         </div>
@@ -185,7 +185,7 @@ export default function MarketDetailPage() {
           </h3>
           <button
             onClick={() => setShowAddSale(!showAddSale)}
-            className="rounded-lg p-1.5 text-emerald-400 hover:bg-elevated transition-colors"
+            className="rounded-lg p-1.5 text-brand-teal hover:bg-elevated transition-colors"
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -228,7 +228,7 @@ export default function MarketDetailPage() {
               <button
                 type="submit"
                 disabled={createSale.isPending}
-                className="flex-1 rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-lg bg-brand-teal py-2 text-sm font-medium text-white hover:bg-brand-teal/90 disabled:opacity-50 transition-colors"
               >
                 {createSale.isPending ? t.common.loading : t.common.save}
               </button>
@@ -264,7 +264,7 @@ export default function MarketDetailPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-emerald-400">
+                  <span className="text-sm font-medium text-brand-tealDark">
                     {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
                   </span>
                   <button
@@ -283,7 +283,7 @@ export default function MarketDetailPage() {
         {sales && sales.length > 0 && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
-            <span className="text-emerald-400">
+            <span className="text-brand-tealDark">
               {formatCurrency(totalSales)}
             </span>
           </div>
@@ -298,7 +298,7 @@ export default function MarketDetailPage() {
           </h3>
           <span
             className={`text-xl font-bold ${
-              profit >= 0 ? "text-emerald-400" : "text-red-400"
+              profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
             }`}
           >
             {formatCurrency(profit)}

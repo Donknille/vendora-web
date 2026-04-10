@@ -82,7 +82,7 @@ export default function EditMarketPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -94,7 +94,7 @@ export default function EditMarketPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-primary">
+        <h1 className="text-2xl font-bold font-display text-primary">
           {t.markets.marketDetails}
         </h1>
       </div>
@@ -200,7 +200,7 @@ export default function EditMarketPage() {
         <button
           type="submit"
           disabled={updateMarket.isPending || !name.trim()}
-          className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {updateMarket.isPending ? t.common.loading : t.common.save}
         </button>

@@ -163,7 +163,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-full min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-hover border-t-emerald-500" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-hover border-t-brand-primary" />
           <span className="text-sm text-muted">{t.common.loading}</span>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <h1 className="text-2xl font-bold text-primary">{t.dashboard.overview}</h1>
+      <h1 className="text-2xl font-bold font-display text-primary">{t.dashboard.overview}</h1>
 
       {/* Year filter */}
       {availableYears.length > 0 && (
@@ -183,7 +183,7 @@ export default function DashboardPage() {
             onClick={() => setSelectedYear(null)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               selectedYear === null
-                ? "bg-emerald-500 text-white"
+                ? "bg-brand-primary text-white"
                 : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
             }`}
           >
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               onClick={() => setSelectedYear(year)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedYear === year
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-brand-primary text-white"
                   : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
               }`}
             >
@@ -210,7 +210,7 @@ export default function DashboardPage() {
         {/* Revenue */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.revenue}</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-400">
+          <p className="mt-1 text-2xl font-bold font-display text-brand-tealDark">
             {formatCurrency(totalRevenue)}
           </p>
         </Card>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
         {/* Expenses */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.expenses}</p>
-          <p className="mt-1 text-2xl font-bold text-red-400">
+          <p className="mt-1 text-2xl font-bold font-display text-brand-primary">
             {formatCurrency(totalExpenses)}
           </p>
         </Card>
@@ -227,8 +227,8 @@ export default function DashboardPage() {
         <Card>
           <p className="text-sm text-faint">{t.dashboard.netProfit}</p>
           <p
-            className={`mt-1 text-2xl font-bold ${
-              netProfit >= 0 ? "text-emerald-400" : "text-red-400"
+            className={`mt-1 text-2xl font-bold font-display ${
+              netProfit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
             }`}
           >
             {formatCurrency(netProfit)}
@@ -239,17 +239,17 @@ export default function DashboardPage() {
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{openOrdersCount}</p>
+          <p className="text-2xl font-bold font-display text-primary">{openOrdersCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.openOrders}</p>
         </Card>
 
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{paidOrdersCount}</p>
+          <p className="text-2xl font-bold font-display text-primary">{paidOrdersCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.paidOrders}</p>
         </Card>
 
         <Card className="text-center">
-          <p className="text-2xl font-bold text-primary">{marketsCount}</p>
+          <p className="text-2xl font-bold font-display text-primary">{marketsCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.markets}</p>
         </Card>
       </div>
@@ -282,15 +282,15 @@ export default function DashboardPage() {
                     <td className="py-2.5 pr-4 text-secondary">
                       {t.months[row.monthIndex]} {row.year}
                     </td>
-                    <td className="py-2.5 pr-4 text-right text-emerald-400">
+                    <td className="py-2.5 pr-4 text-right text-brand-tealDark">
                       {formatCurrency(row.revenue)}
                     </td>
-                    <td className="py-2.5 pr-4 text-right text-red-400">
+                    <td className="py-2.5 pr-4 text-right text-brand-primary">
                       {formatCurrency(row.expenses)}
                     </td>
                     <td
                       className={`py-2.5 text-right font-medium ${
-                        row.profit >= 0 ? "text-emerald-400" : "text-red-400"
+                        row.profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
                       }`}
                     >
                       {formatCurrency(row.profit)}

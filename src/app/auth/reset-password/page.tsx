@@ -34,13 +34,13 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8">
+          <div className="bg-brand-primary/10 border border-brand-teal/20 rounded-xl p-8">
             <h2 className="text-xl font-bold text-primary mb-2">E-Mail gesendet</h2>
             <p className="text-faint">
               Prüfe dein E-Mail-Postfach für einen Link zum Zurücksetzen deines Passworts.
             </p>
           </div>
-          <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 inline-block">
+          <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80 text-sm mt-4 inline-block">
             Zurück zum Login
           </Link>
         </div>
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Passwort zurücksetzen</h1>
+          <h1 className="text-3xl font-bold text-primary font-display">Passwort zurücksetzen</h1>
           <p className="text-faint mt-2">
             Gib deine E-Mail-Adresse ein und wir senden dir einen Reset-Link.
           </p>
@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="deine@email.de"
               required
             />
@@ -80,14 +80,14 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
+            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
           >
             {loading ? "Wird gesendet..." : "Reset-Link senden"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-muted text-sm">
-          <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300">
+          <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80">
             Zurück zum Login
           </Link>
         </p>

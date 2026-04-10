@@ -85,7 +85,7 @@ export default function ExpensesPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
 
   if (isLoading) {
     return (
@@ -99,13 +99,13 @@ export default function ExpensesPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">
+        <h1 className="text-2xl font-bold font-display text-primary">
           {t.expenses.title}
         </h1>
         {!isSubscriptionInactive && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
           >
             {showForm ? (
               <>
@@ -129,7 +129,7 @@ export default function ExpensesPage() {
         <Card>
           <div className="flex items-center justify-between">
             <p className="text-sm text-faint">{t.expenses.total}</p>
-            <p className="text-2xl font-bold text-red-400">
+            <p className="text-2xl font-bold text-brand-primary">
               {formatCurrency(totalExpenses)}
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function ExpensesPage() {
                 !description.trim() ||
                 !amount.trim()
               }
-              className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createExpense.isPending
                 ? t.common.loading
@@ -269,7 +269,7 @@ export default function ExpensesPage() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <p className="text-sm font-semibold text-red-400">
+                    <p className="text-sm font-semibold text-brand-primary">
                       {formatCurrency(Number(expense.amount) || 0)}
                     </p>
                     <button

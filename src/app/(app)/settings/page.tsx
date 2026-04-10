@@ -176,7 +176,7 @@ export default function SettingsPage() {
       case "trial":
         return "text-yellow-400";
       case "active":
-        return "text-emerald-400";
+        return "text-brand-primary";
       case "expired":
       case "cancelled":
         return "text-red-400";
@@ -186,7 +186,7 @@ export default function SettingsPage() {
   })();
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
 
   const isLoading = loadingProfile || loadingSettings;
 
@@ -201,12 +201,12 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-10">
       {/* Header */}
-      <h1 className="text-2xl font-bold text-primary">{t.settings.title}</h1>
+      <h1 className="text-2xl font-bold text-primary font-display">{t.settings.title}</h1>
 
       {/* ───────── Account ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <User className="h-5 w-5 text-emerald-500" />
+          <User className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.auth.account}
           </h2>
@@ -242,7 +242,7 @@ export default function SettingsPage() {
       {/* ───────── Company Profile ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <Building2 className="h-5 w-5 text-emerald-500" />
+          <Building2 className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.settings.companyProfile}
           </h2>
@@ -345,7 +345,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={updateProfile.isPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {profileSaved && <Check className="h-4 w-4" />}
             {updateProfile.isPending
@@ -360,7 +360,7 @@ export default function SettingsPage() {
       {/* ───────── Appearance ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <Palette className="h-5 w-5 text-emerald-500" />
+          <Palette className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.settings.appearance}
           </h2>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
               onClick={() => setTheme(value)}
               className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 theme === value
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-brand-primary text-white"
                   : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
               }`}
             >
@@ -391,7 +391,7 @@ export default function SettingsPage() {
       {/* ───────── Language ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <Globe className="h-5 w-5 text-emerald-500" />
+          <Globe className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.settings.language}
           </h2>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
               onClick={() => setLanguage(value)}
               className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 language === value
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-brand-primary text-white"
                   : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
               }`}
             >
@@ -420,7 +420,7 @@ export default function SettingsPage() {
       {/* ───────── Data & Backup ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <Database className="h-5 w-5 text-emerald-500" />
+          <Database className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.settings.dataBackup}
           </h2>
@@ -470,7 +470,7 @@ export default function SettingsPage() {
       {/* ───────── Privacy & Legal ───────── */}
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <Shield className="h-5 w-5 text-emerald-500" />
+          <Shield className="h-5 w-5 text-brand-primary" />
           <h2 className="text-base font-semibold text-primary">
             {t.settings.privacy}
           </h2>
@@ -483,19 +483,19 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/legal/datenschutz"
-            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+            className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
           >
             Datenschutzerklärung →
           </Link>
           <Link
             href="/legal/impressum"
-            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+            className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
           >
             Impressum →
           </Link>
           <Link
             href="/legal/changelog"
-            className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
+            className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
           >
             Changelog →
           </Link>

@@ -21,7 +21,7 @@ export function SubscriptionBanner() {
         </p>
         <Link
           href="/settings"
-          className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors"
+          className="shrink-0 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-primary/90 transition-colors"
         >
           {t.subscription.upgrade}
         </Link>
@@ -40,7 +40,7 @@ export function SubscriptionBanner() {
         </div>
         <Link
           href="/settings"
-          className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors"
+          className="shrink-0 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-primary/90 transition-colors"
         >
           {t.subscription.upgrade}
         </Link>

@@ -37,9 +37,9 @@ const statusLabels: Record<string, string> = {
 
 const statusColors: Record<string, string> = {
   trial: "text-yellow-500",
-  active: "text-emerald-500",
-  expired: "text-red-400",
-  cancelled: "text-red-400",
+  active: "text-brand-tealDark",
+  expired: "text-brand-primary",
+  cancelled: "text-brand-primary",
 };
 
 export default function AdminUserDetailPage() {
@@ -112,7 +112,7 @@ export default function AdminUserDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-primary">{user.email}</h1>
+          <h1 className="text-2xl font-bold font-display text-primary">{user.email}</h1>
           <p className="text-sm text-muted flex items-center gap-1">
             <Shield className="h-3.5 w-3.5" /> User-Verwaltung
           </p>
@@ -146,8 +146,8 @@ export default function AdminUserDetailPage() {
           </div>
           {user.isBlocked && (
             <div className="flex items-center gap-3 text-sm">
-              <Ban className="h-4 w-4 text-red-400" />
-              <span className="text-red-400 font-medium">Gesperrt</span>
+              <Ban className="h-4 w-4 text-brand-primary" />
+              <span className="text-brand-primary font-medium">Gesperrt</span>
             </div>
           )}
         </div>
@@ -200,7 +200,7 @@ export default function AdminUserDetailPage() {
               handleAction({ action: "activate_subscription", expiresAt: date.toISOString() });
             }}
             disabled={actionLoading}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-teal px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-teal/90 disabled:opacity-50 transition-colors"
           >
             <CheckCircle className="h-4 w-4" />
             Abo aktivieren (1 Jahr)
@@ -210,7 +210,7 @@ export default function AdminUserDetailPage() {
             <button
               onClick={() => handleAction({ action: "unblock" })}
               disabled={actionLoading}
-              className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-sm font-medium text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-brand-teal/20 bg-brand-teal/5 px-4 py-2.5 text-sm font-medium text-brand-teal hover:bg-brand-teal/10 disabled:opacity-50 transition-colors"
             >
               <CheckCircle className="h-4 w-4" />
               Entsperren
@@ -243,6 +243,6 @@ export default function AdminUserDetailPage() {
 
 function CreditCardIcon({ status }: { status: string }) {
   if (status === "trial") return <Clock className="h-4 w-4 text-yellow-500" />;
-  if (status === "active") return <CheckCircle className="h-4 w-4 text-emerald-500" />;
-  return <Ban className="h-4 w-4 text-red-400" />;
+  if (status === "active") return <CheckCircle className="h-4 w-4 text-brand-tealDark" />;
+  return <Ban className="h-4 w-4 text-brand-primary" />;
 }

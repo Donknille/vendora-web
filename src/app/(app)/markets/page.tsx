@@ -37,10 +37,10 @@ export default function MarketsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">{t.markets.title}</h1>
+        <h1 className="text-2xl font-bold font-display text-primary">{t.markets.title}</h1>
         <Link
           href="/markets/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
         >
           <Plus className="h-4 w-4" />
           {t.markets.newMarket}
@@ -100,7 +100,7 @@ export default function MarketsPage() {
                         </p>
                         <p
                           className={`text-sm font-semibold ${
-                            profit >= 0 ? "text-emerald-400" : "text-red-400"
+                            profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
                           }`}
                         >
                           {t.markets.profit}: {formatCurrency(profit)}

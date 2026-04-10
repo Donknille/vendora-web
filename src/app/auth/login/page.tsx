@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Vendora</h1>
+          <h1 className="font-display text-[22px] font-bold text-primary">Vendora</h1>
           <p className="text-faint mt-2">Melde dich bei deinem Konto an</p>
         </div>
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="deine@email.de"
               required
             />
@@ -68,7 +68,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-emerald-500 transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
               placeholder="••••••••"
               required
             />
@@ -77,19 +77,19 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
+            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
           >
             {loading ? "Anmelden..." : "Anmelden"}
           </button>
         </form>
 
         <div className="mt-6 text-center space-y-2">
-          <Link href="/auth/reset-password" className="text-sm text-emerald-400 hover:text-emerald-300">
+          <Link href="/auth/reset-password" className="text-sm text-brand-primary hover:text-brand-primary/80">
             Passwort vergessen?
           </Link>
           <p className="text-muted text-sm">
             Noch kein Konto?{" "}
-            <Link href="/auth/register" className="text-emerald-400 hover:text-emerald-300">
+            <Link href="/auth/register" className="text-brand-primary hover:text-brand-primary/80">
               Registrieren
             </Link>
           </p>
