@@ -83,24 +83,31 @@ export default function OrderDetailPage() {
   };
 
   const handleCreateInvoice = () => {
-    const profileName = escapeHtml(profile?.name || "Vendora");
-    const profileAddress = escapeHtml(profile?.address || "");
-    const profileEmail = escapeHtml(profile?.email || "");
-    const profilePhone = escapeHtml(profile?.phone || "");
-    const taxNote = escapeHtml(profile?.taxNote || "");
+    const pName = escapeHtml(profile?.name || "");
+    const pAddress = escapeHtml(profile?.address || "").replace(/\n/g, "<br/>");
+    const pEmail = escapeHtml(profile?.email || "");
+    const pPhone = escapeHtml(profile?.phone || "");
+    const pTaxNote = escapeHtml(profile?.taxNote || "");
+    const pSmallBiz = escapeHtml(profile?.smallBusinessNote || "");
 
-    const invoiceDate =
-      order.orderDate || order.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0];
     const invoiceNum = escapeHtml(order.invoiceNumber || `INV-${order.id?.slice(0, 8)?.toUpperCase() || "0000"}`);
+    const invoiceDate = order.orderDate || order.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0];
+    const serviceDate = order.serviceDate || invoiceDate;
+    const shippingCost = order.shippingCost ?? 0;
+    const subtotal = items.reduce((s: number, i: { price: number; quantity: number }) => s + i.price * i.quantity, 0);
+    const grandTotal = subtotal + shippingCost;
+
+    const customerAddress = escapeHtml(order.customerAddress || "").replace(/\n/g, "<br/>");
 
     const itemRows = items
       .map(
-        (item: { name: string; quantity: number; price: number }) => `
+        (item: { name: string; quantity: number; price: number }, idx: number) => `
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;">${escapeHtml(item.name)}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:center;">${item.quantity || 1}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:right;">${formatCurrency(Number(item.price || 0))}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #27272a;color:#e4e4e7;text-align:right;">${formatCurrency(Number(item.price || 0) * Number(item.quantity || 1))}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;">${idx + 1}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;">${escapeHtml(item.name)}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:center;">${item.quantity || 1}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:right;">${formatCurrency(Number(item.price || 0))}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:right;font-weight:500;">${formatCurrency(Number(item.price || 0) * Number(item.quantity || 1))}</td>
         </tr>`
       )
       .join("");
@@ -112,82 +119,115 @@ export default function OrderDetailPage() {
   <title>${t.orders.invoiceTitle} ${invoiceNum}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#09090b; color:#e4e4e7; padding:40px; }
-    .invoice { max-width:800px; margin:0 auto; background:#18181b; border:1px solid #27272a; border-radius:12px; padding:40px; }
-    .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; }
-    .title { font-size:28px; font-weight:700; color:#10b981; }
+    body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:#fff; color:#1f2937; padding:0; }
+    .page { max-width:800px; margin:0 auto; padding:48px 48px 32px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:48px; border-bottom:3px solid #10b981; padding-bottom:24px; }
+    .brand { }
+    .brand-name { font-size:24px; font-weight:700; color:#10b981; margin-bottom:4px; }
+    .brand-details { font-size:12px; color:#6b7280; line-height:1.6; }
     .invoice-meta { text-align:right; }
-    .invoice-meta p { font-size:14px; color:#a1a1aa; margin-bottom:4px; }
-    .invoice-meta strong { color:#e4e4e7; }
-    .parties { display:flex; justify-content:space-between; margin-bottom:32px; }
+    .invoice-title { font-size:28px; font-weight:700; color:#1f2937; letter-spacing:-0.5px; }
+    .invoice-meta-table { margin-top:8px; }
+    .invoice-meta-table td { font-size:13px; padding:2px 0; }
+    .invoice-meta-table td:first-child { color:#6b7280; padding-right:12px; }
+    .invoice-meta-table td:last-child { color:#1f2937; font-weight:600; text-align:right; }
+    .parties { display:flex; justify-content:space-between; margin-bottom:36px; }
     .party { flex:1; }
-    .party-label { font-size:12px; font-weight:600; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
-    .party p { font-size:14px; color:#a1a1aa; margin-bottom:2px; }
-    .party p.name { color:#e4e4e7; font-weight:600; }
+    .party-label { font-size:11px; font-weight:600; color:#10b981; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; }
+    .party-name { font-size:15px; font-weight:600; color:#1f2937; margin-bottom:4px; }
+    .party-details { font-size:13px; color:#6b7280; line-height:1.6; }
     table { width:100%; border-collapse:collapse; margin-bottom:24px; }
-    th { padding:10px 12px; text-align:left; font-size:12px; font-weight:600; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid #27272a; }
+    thead { background:#f9fafb; }
+    th { padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid #e5e7eb; }
     th.right { text-align:right; }
     th.center { text-align:center; }
-    .total-row { display:flex; justify-content:flex-end; margin-bottom:32px; }
-    .total-box { background:#10b981; color:#fff; padding:12px 24px; border-radius:8px; font-size:18px; font-weight:700; }
-    .notes { margin-top:24px; padding:16px; background:#09090b; border-radius:8px; border:1px solid #27272a; }
-    .notes-label { font-size:12px; font-weight:600; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
-    .notes p { font-size:14px; color:#a1a1aa; }
-    .footer { margin-top:32px; text-align:center; font-size:12px; color:#52525b; }
-    @media print { body { background:#fff; color:#18181b; padding:20px; } .invoice { background:#fff; border:1px solid #e4e4e7; } th { color:#18181b; border-bottom-color:#e4e4e7; } td { color:#18181b !important; border-bottom-color:#e4e4e7 !important; } .invoice-meta p { color:#52525b; } .invoice-meta strong { color:#18181b; } .party p { color:#52525b; } .party p.name { color:#18181b; } .notes { background:#f4f4f5; border-color:#e4e4e7; } .notes p { color:#52525b; } .footer { color:#a1a1aa; } }
+    .totals { display:flex; justify-content:flex-end; margin-bottom:32px; }
+    .totals-table { width:280px; }
+    .totals-table tr td { padding:6px 0; font-size:14px; }
+    .totals-table tr td:first-child { color:#6b7280; }
+    .totals-table tr td:last-child { text-align:right; color:#1f2937; font-weight:500; }
+    .totals-table .grand-total td { padding-top:10px; border-top:2px solid #1f2937; font-size:16px; font-weight:700; }
+    .totals-table .grand-total td:last-child { color:#10b981; }
+    .notes { margin-top:24px; padding:16px; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb; }
+    .notes-label { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+    .notes p { font-size:13px; color:#4b5563; line-height:1.5; white-space:pre-wrap; }
+    .tax-notice { margin-top:24px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:12px; color:#166534; text-align:center; }
+    .footer { margin-top:32px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; }
+    .footer p { font-size:12px; color:#9ca3af; margin-bottom:4px; }
+    .footer .thank-you { font-size:14px; color:#6b7280; font-weight:500; margin-bottom:8px; }
+    @media print {
+      body { padding:0; }
+      .page { padding:24px 32px 16px; max-width:100%; }
+    }
   </style>
 </head>
 <body>
-  <div class="invoice">
+  <div class="page">
     <div class="header">
-      <div class="title">${t.orders.invoiceTitle}</div>
+      <div class="brand">
+        <div class="brand-name">${pName || "Vendora"}</div>
+        <div class="brand-details">
+          ${pAddress ? pAddress + "<br/>" : ""}${pEmail ? pEmail + "<br/>" : ""}${pPhone ? "Tel. " + pPhone : ""}
+        </div>
+      </div>
       <div class="invoice-meta">
-        <p>${t.orders.invoiceNumber}: <strong>${invoiceNum}</strong></p>
-        <p>${t.orders.invoiceDate}: <strong>${invoiceDate}</strong></p>
+        <div class="invoice-title">${t.orders.invoiceTitle}</div>
+        <table class="invoice-meta-table">
+          <tr><td>${t.orders.invoiceNumber}:</td><td>${invoiceNum}</td></tr>
+          <tr><td>Rechnungsdatum:</td><td>${invoiceDate}</td></tr>
+          <tr><td>Leistungsdatum:</td><td>${serviceDate}</td></tr>
+        </table>
       </div>
     </div>
+
     <div class="parties">
       <div class="party">
-        <div class="party-label">${t.orders.invoiceFrom}</div>
-        <p class="name">${profileName}</p>
-        ${profileAddress ? `<p>${profileAddress}</p>` : ""}
-        ${profileEmail ? `<p>${profileEmail}</p>` : ""}
-        ${profilePhone ? `<p>${profilePhone}</p>` : ""}
-      </div>
-      <div class="party" style="text-align:right;">
-        <div class="party-label" style="text-align:right;">${t.orders.invoiceTo}</div>
-        <p class="name">${escapeHtml(order.customerName)}</p>
-        ${order.customerAddress ? `<p>${escapeHtml(order.customerAddress)}</p>` : ""}
-        ${order.customerEmail ? `<p>${escapeHtml(order.customerEmail)}</p>` : ""}
+        <div class="party-label">${t.orders.invoiceTo}</div>
+        <div class="party-name">${escapeHtml(order.customerName)}</div>
+        <div class="party-details">
+          ${customerAddress ? customerAddress + "<br/>" : ""}${order.customerEmail ? escapeHtml(order.customerEmail) : ""}
+        </div>
       </div>
     </div>
+
     <table>
       <thead>
         <tr>
+          <th style="width:40px;">Pos.</th>
           <th>${t.orders.invoiceItem}</th>
-          <th class="center">${t.orders.invoiceQty}</th>
-          <th class="right">${t.orders.invoiceUnitPrice}</th>
-          <th class="right">${t.orders.invoiceAmount}</th>
+          <th class="center" style="width:60px;">${t.orders.invoiceQty}</th>
+          <th class="right" style="width:120px;">${t.orders.invoiceUnitPrice}</th>
+          <th class="right" style="width:120px;">${t.orders.invoiceAmount}</th>
         </tr>
       </thead>
       <tbody>
         ${itemRows}
       </tbody>
     </table>
-    <div class="total-row">
-      <div class="total-box">${t.orders.invoiceTotal}: ${formatCurrency(total)}</div>
+
+    <div class="totals">
+      <table class="totals-table">
+        <tr><td>${t.orders.invoiceSubtotal}:</td><td>${formatCurrency(subtotal)}</td></tr>
+        ${shippingCost > 0 ? `<tr><td>Versandkosten:</td><td>${formatCurrency(shippingCost)}</td></tr>` : ""}
+        <tr class="grand-total"><td>${t.orders.invoiceTotal}:</td><td>${formatCurrency(grandTotal)}</td></tr>
+      </table>
     </div>
-    ${
-      order.notes
-        ? `<div class="notes"><div class="notes-label">${t.orders.invoiceNotes}</div><p>${escapeHtml(order.notes)}</p></div>`
-        : ""
-    }
-    ${
-      taxNote
-        ? `<div class="footer">${taxNote}</div>`
-        : ""
-    }
-    <div class="footer" style="margin-top:16px;">${t.orders.invoiceThankYou}</div>
+
+    ${pTaxNote || pSmallBiz ? `
+    <div class="tax-notice">
+      ${pTaxNote}${pTaxNote && pSmallBiz ? "<br/>" : ""}${pSmallBiz}
+    </div>` : ""}
+
+    ${order.notes ? `
+    <div class="notes">
+      <div class="notes-label">${t.orders.invoiceNotes}</div>
+      <p>${escapeHtml(order.notes)}</p>
+    </div>` : ""}
+
+    <div class="footer">
+      <p class="thank-you">${t.orders.invoiceThankYou}</p>
+      <p>${pName || "Vendora"}${pEmail ? " · " + pEmail : ""}${pPhone ? " · Tel. " + pPhone : ""}</p>
+    </div>
   </div>
   <script>window.onload=function(){window.print();}</script>
 </body>
