@@ -196,54 +196,54 @@ export default function EditOrderPage() {
 
           <div>
             <label className="block text-sm font-medium text-secondary mb-1.5">
-              Straße + Hausnr. *
+              {t.orders.street} *
             </label>
             <input
               type="text"
               value={customerStreet}
               onChange={(e) => setCustomerStreet(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
-              placeholder="Straße + Hausnr."
+              placeholder={t.orders.streetPlaceholder}
             />
           </div>
 
           <div className="flex gap-3">
             <div className="w-1/3">
               <label className="block text-sm font-medium text-secondary mb-1.5">
-                PLZ *
+                {t.orders.zip} *
               </label>
               <input
                 type="text"
                 value={customerZip}
                 onChange={(e) => setCustomerZip(e.target.value)}
                 className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
-                placeholder="PLZ"
+                placeholder={t.orders.zipPlaceholder}
               />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-secondary mb-1.5">
-                Ort *
+                {t.orders.city} *
               </label>
               <input
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
                 className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
-                placeholder="Ort"
+                placeholder={t.orders.cityPlaceholder}
               />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-secondary mb-1.5">
-              Land
+              {t.orders.country}
             </label>
             <input
               type="text"
               value={customerCountry}
               onChange={(e) => setCustomerCountry(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
-              placeholder="Land"
+              placeholder={t.orders.country}
             />
           </div>
 

@@ -77,7 +77,7 @@ export default function DashboardPage() {
   const paidOrders = useMemo(
     () =>
       (orders ?? []).filter(
-        (o: any) => o.status === "paid" && matchesYear(o.orderDate ?? o.createdAt),
+        (o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered" && matchesYear(o.orderDate ?? o.createdAt),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, selectedYear],
@@ -119,7 +119,7 @@ export default function DashboardPage() {
 
   // ----- Quick stats (always unfiltered) -----
   const openOrdersCount = (orders ?? []).filter((o: any) => o.status === "open").length;
-  const paidOrdersCount = (orders ?? []).filter((o: any) => o.status === "paid").length;
+  const paidOrdersCount = (orders ?? []).filter((o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered").length;
   const marketsCount = (markets ?? []).length;
 
   // ----- Monthly performance data -----

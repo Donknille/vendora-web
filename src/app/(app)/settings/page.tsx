@@ -330,7 +330,7 @@ export default function SettingsPage() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-secondary">
-              Standardversandkosten
+              {t.settings.defaultShippingCost}
             </label>
             <input
               type="text"

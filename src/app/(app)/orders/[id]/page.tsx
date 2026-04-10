@@ -174,8 +174,8 @@ export default function OrderDetailPage() {
         <div class="invoice-title">${t.orders.invoiceTitle}</div>
         <table class="invoice-meta-table">
           <tr><td>${t.orders.invoiceNumber}:</td><td>${invoiceNum}</td></tr>
-          <tr><td>Rechnungsdatum:</td><td>${invoiceDate}</td></tr>
-          <tr><td>Leistungsdatum:</td><td>${serviceDate}</td></tr>
+          <tr><td>${t.orders.invoiceDateLabel}:</td><td>${invoiceDate}</td></tr>
+          <tr><td>${t.orders.serviceDateLabel}:</td><td>${serviceDate}</td></tr>
         </table>
       </div>
     </div>
@@ -193,7 +193,7 @@ export default function OrderDetailPage() {
     <table>
       <thead>
         <tr>
-          <th style="width:40px;">Pos.</th>
+          <th style="width:40px;">${t.orders.posLabel}</th>
           <th>${t.orders.invoiceItem}</th>
           <th class="center" style="width:60px;">${t.orders.invoiceQty}</th>
           <th class="right" style="width:120px;">${t.orders.invoiceUnitPrice}</th>
@@ -208,7 +208,7 @@ export default function OrderDetailPage() {
     <div class="totals">
       <table class="totals-table">
         <tr><td>${t.orders.invoiceSubtotal}:</td><td>${formatCurrency(subtotal)}</td></tr>
-        ${shippingCost > 0 ? `<tr><td>Versandkosten:</td><td>${formatCurrency(shippingCost)}</td></tr>` : ""}
+        ${shippingCost > 0 ? `<tr><td>${t.orders.shippingCostLabel}:</td><td>${formatCurrency(shippingCost)}</td></tr>` : ""}
         <tr class="grand-total"><td>${t.orders.invoiceTotal}:</td><td>${formatCurrency(grandTotal)}</td></tr>
       </table>
     </div>
