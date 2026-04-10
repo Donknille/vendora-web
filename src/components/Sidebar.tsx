@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ import {
   Receipt,
   Settings,
   LogOut,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +28,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/check")
+      .then((r) => r.json())
+      .then((data) => setIsAdmin(data.isAdmin === true))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -68,6 +78,21 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          {/* Admin Link — only visible for admins */}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mt-2 ${
+                isActive("/admin")
+                  ? "bg-emerald-500/10 text-emerald-500"
+                  : "text-faint hover:text-primary hover:bg-elevated"
+              }`}
+            >
+              <Shield className="h-5 w-5 shrink-0" />
+              <span>Admin</span>
+            </Link>
+          )}
         </nav>
 
         {/* Logout */}

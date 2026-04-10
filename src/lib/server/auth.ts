@@ -12,7 +12,13 @@ export async function getAuthUserId(): Promise<string | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  if (!user) return null;
+
+  // Check if user is blocked
+  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id));
+  if (dbUser?.isBlocked) return null;
+
+  return user.id;
 }
 
 /**
