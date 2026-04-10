@@ -4,9 +4,9 @@ import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const createMarketSaleSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z.number().min(0),
-  quantity: z.number().int().min(1).default(1),
+  description: z.string().min(1, "Description is required").max(200),
+  amount: z.number().min(0).max(999999.99),
+  quantity: z.number().int().min(1).max(9999).default(1),
 });
 
 export async function GET(

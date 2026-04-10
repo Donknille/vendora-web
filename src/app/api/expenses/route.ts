@@ -4,10 +4,10 @@ import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const createExpenseSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z.number().min(0),
-  category: z.string().min(1, "Category is required"),
-  expenseDate: z.string().min(1, "Date is required"),
+  description: z.string().min(1, "Description is required").max(200),
+  amount: z.number().min(0).max(999999.99),
+  category: z.string().min(1, "Category is required").max(100),
+  expenseDate: z.string().min(1, "Date is required").max(50),
 });
 
 export async function GET() {

@@ -4,19 +4,19 @@ import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const quickItemSchema = z.object({
-  name: z.string().min(1),
-  price: z.number().min(0),
+  name: z.string().min(1).max(200),
+  price: z.number().min(0).max(999999.99),
 });
 
 const createMarketSchema = z.object({
-  name: z.string().min(1, "Market name is required"),
-  date: z.string().min(1, "Date is required"),
-  location: z.string().default(""),
-  standFee: z.number().min(0).default(0),
-  travelCost: z.number().min(0).default(0),
-  notes: z.string().default(""),
-  status: z.string().optional(),
-  quickItems: z.array(quickItemSchema).optional(),
+  name: z.string().min(1, "Market name is required").max(200),
+  date: z.string().min(1, "Date is required").max(50),
+  location: z.string().max(300).default(""),
+  standFee: z.number().min(0).max(99999.99).default(0),
+  travelCost: z.number().min(0).max(99999.99).default(0),
+  notes: z.string().max(5000).default(""),
+  status: z.string().max(50).optional(),
+  quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 
 export async function GET() {

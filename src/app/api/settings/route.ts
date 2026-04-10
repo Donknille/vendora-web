@@ -4,8 +4,8 @@ import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const updateSettingsSchema = z.object({
-  theme: z.string().default("system"),
-  currency: z.string().default("€"),
+  theme: z.enum(["light", "dark", "system"]).default("system"),
+  currency: z.string().max(10).default("€"),
 });
 
 export async function GET() {

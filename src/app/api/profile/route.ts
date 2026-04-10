@@ -4,13 +4,13 @@ import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const updateProfileSchema = z.object({
-  name: z.string().default(""),
-  address: z.string().default(""),
-  email: z.string().default(""),
-  phone: z.string().default(""),
-  taxNote: z.string().default(""),
-  smallBusinessNote: z.string().optional(),
-  defaultShippingCost: z.number().min(0).optional(),
+  name: z.string().max(200).default(""),
+  address: z.string().max(500).default(""),
+  email: z.string().max(254).default(""),
+  phone: z.string().max(50).default(""),
+  taxNote: z.string().max(500).default(""),
+  smallBusinessNote: z.string().max(500).optional(),
+  defaultShippingCost: z.number().min(0).max(99999.99).optional(),
 });
 
 export async function GET() {
