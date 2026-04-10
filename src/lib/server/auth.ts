@@ -5,20 +5,33 @@ import { eq } from "drizzle-orm";
 
 /**
  * Gets the authenticated user ID from the Supabase session.
- * Use this in API routes to protect endpoints.
+ * Fast — no DB query, only checks Supabase session cookie.
+ * Use for read-only endpoints.
  */
 export async function getAuthUserId(): Promise<string | null> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  return user?.id ?? null;
+}
 
-  // Check if user is blocked
-  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id));
+/**
+ * Gets the authenticated user ID AND checks if user is blocked.
+ * Slower — makes an additional DB query.
+ * Use for write endpoints (POST, PUT, DELETE).
+ */
+export async function getAuthUserIdStrict(): Promise<string | null> {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
+
+  const [dbUser] = await db
+    .select({ isBlocked: users.isBlocked })
+    .from(users)
+    .where(eq(users.id, userId));
+
   if (dbUser?.isBlocked) return null;
-
-  return user.id;
+  return userId;
 }
 
 /**

@@ -9,32 +9,37 @@ export async function GET() {
     const result = await requireAdmin();
     if (result instanceof NextResponse) return result;
 
-    const allUsers = await db.select().from(users).orderBy(sql`${users.createdAt} DESC`);
-
-    const usersWithStats = await Promise.all(
-      allUsers.map(async (user) => {
-        const [[orderCount], [marketCount], [expenseCount]] = await Promise.all([
-          db.select({ count: sql<number>`count(*)` }).from(orders).where(eq(orders.userId, user.id)),
-          db.select({ count: sql<number>`count(*)` }).from(marketEvents).where(eq(marketEvents.userId, user.id)),
-          db.select({ count: sql<number>`count(*)` }).from(expenses).where(eq(expenses.userId, user.id)),
-        ]);
-
-        return {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
-          subscriptionStatus: user.subscriptionStatus,
-          trialEndsAt: user.trialEndsAt?.toISOString() ?? null,
-          subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
-          isBlocked: user.isBlocked ?? false,
-          stats: {
-            orders: Number(orderCount.count),
-            markets: Number(marketCount.count),
-            expenses: Number(expenseCount.count),
-          },
-        };
+    // Single query with subquery counts (eliminates N+1)
+    const allUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        createdAt: users.createdAt,
+        subscriptionStatus: users.subscriptionStatus,
+        trialEndsAt: users.trialEndsAt,
+        subscriptionExpiresAt: users.subscriptionExpiresAt,
+        isBlocked: users.isBlocked,
+        orderCount: sql<number>`(SELECT count(*) FROM orders WHERE user_id = ${users.id})`,
+        marketCount: sql<number>`(SELECT count(*) FROM market_events WHERE user_id = ${users.id})`,
+        expenseCount: sql<number>`(SELECT count(*) FROM expenses WHERE user_id = ${users.id})`,
       })
-    );
+      .from(users)
+      .orderBy(sql`${users.createdAt} DESC`);
+
+    const usersWithStats = allUsers.map((user) => ({
+      id: user.id,
+      email: user.email,
+      createdAt: user.createdAt,
+      subscriptionStatus: user.subscriptionStatus,
+      trialEndsAt: user.trialEndsAt?.toISOString() ?? null,
+      subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
+      isBlocked: user.isBlocked ?? false,
+      stats: {
+        orders: Number(user.orderCount),
+        markets: Number(user.marketCount),
+        expenses: Number(user.expenseCount),
+      },
+    }));
 
     return NextResponse.json(usersWithStats);
   } catch (error) {

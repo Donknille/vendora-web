@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -73,8 +73,7 @@ export async function getUser(id: string): Promise<User | undefined> {
 
 // ── Orders ─────────────────────────────────────────────────
 
-async function buildOrderWithItems(order: SelectOrder): Promise<OrderWithItems> {
-  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
+function buildOrderWithItems(order: SelectOrder, items: SelectOrderItem[]): OrderWithItems {
   return {
     ...order,
     total: toNumber(order.total),
@@ -89,7 +88,24 @@ export async function getOrders(userId: string): Promise<OrderWithItems[]> {
     .from(orders)
     .where(eq(orders.userId, userId))
     .orderBy(sql`${orders.createdAt} DESC`);
-  return Promise.all(rows.map((o) => buildOrderWithItems(o)));
+
+  if (rows.length === 0) return [];
+
+  // Fetch ALL items for ALL orders in ONE query (eliminates N+1)
+  const orderIds = rows.map((o) => o.id);
+  const allItems = await db
+    .select()
+    .from(orderItems)
+    .where(inArray(orderItems.orderId, orderIds));
+
+  const itemsByOrder = new Map<string, SelectOrderItem[]>();
+  for (const item of allItems) {
+    const list = itemsByOrder.get(item.orderId) || [];
+    list.push(item);
+    itemsByOrder.set(item.orderId, list);
+  }
+
+  return rows.map((o) => buildOrderWithItems(o, itemsByOrder.get(o.id) || []));
 }
 
 export async function getOrder(userId: string, id: string): Promise<OrderWithItems | undefined> {
@@ -98,7 +114,8 @@ export async function getOrder(userId: string, id: string): Promise<OrderWithIte
     .from(orders)
     .where(and(eq(orders.id, id), eq(orders.userId, userId)));
   if (!order) return undefined;
-  return buildOrderWithItems(order);
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
+  return buildOrderWithItems(order, items);
 }
 
 export async function createOrder(

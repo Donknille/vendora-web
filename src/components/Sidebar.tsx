@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -28,14 +28,11 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/admin/check")
-      .then((r) => r.json())
-      .then((data) => setIsAdmin(data.isAdmin === true))
-      .catch(() => setIsAdmin(false));
-  }, []);
+  const { data: adminData } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+  const isAdmin = adminData?.isAdmin === true;
 
   const handleLogout = async () => {
     const supabase = createClient();
