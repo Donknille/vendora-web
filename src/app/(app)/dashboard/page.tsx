@@ -1,13 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useOrders } from "@/lib/hooks/useOrders";
-import { useExpenses } from "@/lib/hooks/useExpenses";
-import { useMarkets } from "@/lib/hooks/useMarkets";
-import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
+import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,14 +34,20 @@ function monthKey(dateStr: string | undefined | null): string | null {
 
 export default function DashboardPage() {
   const { t } = useLanguage();
-  const { data: orders, isLoading: loadingOrders } = useOrders();
-  const { data: expenses, isLoading: loadingExpenses } = useExpenses();
-  const { data: markets, isLoading: loadingMarkets } = useMarkets();
-  const { data: marketSales, isLoading: loadingSales } = useAllMarketSales();
+  // Single batched API call instead of 4 separate ones
+  const { data, isLoading } = useQuery<{
+    orders: Order[];
+    expenses: Expense[];
+    markets: MarketEvent[];
+    marketSales: MarketSale[];
+  }>({ queryKey: ["/api/dashboard"] });
+
+  const orders = data?.orders;
+  const expenses = data?.expenses;
+  const markets = data?.markets;
+  const marketSales = data?.marketSales;
 
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-
-  const isLoading = loadingOrders || loadingExpenses || loadingMarkets || loadingSales;
 
   // ----- Collect available years -----
   const availableYears = useMemo(() => {

@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource/fredoka/400.css";
 @import "@fontsource/nunito/400.css";
-@import "@fontsource/nunito/700.css";
 @import "@fontsource/nunito/800.css";
 
 /* ── Class-based dark mode for Tailwind v4 ── */
@@ -108,6 +107,10 @@
   --color-faint: var(--color-faint);
   --color-holder: var(--color-holder);
 }
+
+/* Force font-display: swap to prevent render-blocking */
+@font-face { font-family: "Fredoka"; font-display: swap; }
+@font-face { font-family: "Nunito"; font-display: swap; }
 
 body {
   font-family: "Nunito", system-ui, sans-serif;
