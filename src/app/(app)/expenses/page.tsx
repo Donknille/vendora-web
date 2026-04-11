@@ -57,7 +57,7 @@ export default function ExpensesPage() {
   const isSubscriptionInactive = sub && !sub.isActive;
 
   const totalExpenses = (expenses ?? []).reduce(
-    (sum: number, e: any) => sum + (Number(e.amount) || 0),
+    (sum: number, e) => sum + (Number(e.amount) || 0),
     0
   );
 
@@ -81,7 +81,7 @@ export default function ExpensesPage() {
       setExpenseDate(new Date().toISOString().slice(0, 10));
       setShowForm(false);
     } catch {
-      setFormError(t.expenses.deleteExpense === "Delete Expense" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut.");
+      setFormError(language === "en" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut.");
     }
   };
 
@@ -236,12 +236,12 @@ export default function ExpensesPage() {
       ) : (
         <div className="space-y-3">
           {[...expenses]
-            .sort((a: any, b: any) => {
-              const dateA = a.expenseDate ?? a.date ?? a.createdAt ?? "";
-              const dateB = b.expenseDate ?? b.date ?? b.createdAt ?? "";
+            .sort((a, b) => {
+              const dateA = a.expenseDate ?? a.createdAt ?? "";
+              const dateB = b.expenseDate ?? b.createdAt ?? "";
               return dateB.localeCompare(dateA);
             })
-            .map((expense: any) => {
+            .map((expense) => {
               const cat = (expense.category as Category) || "Other";
               const colors =
                 categoryColors[cat] || categoryColors.Other;
@@ -265,7 +265,6 @@ export default function ExpensesPage() {
                     <p className="mt-0.5 text-xs text-muted">
                       {formatDate(
                         expense.expenseDate ??
-                          expense.date ??
                           (expense.createdAt
                             ? new Date(expense.createdAt)
                                 .toISOString()

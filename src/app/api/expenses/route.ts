@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
@@ -32,18 +32,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
-
-    const sub = storage.getSubscriptionStatus(user);
-    if (!sub.isActive) {
-      return NextResponse.json(
-        { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
-        { status: 403 }
-      );
-    }
+    const subCheck = await requireActiveSubscription(userId);
+    if (subCheck) return subCheck;
 
     const body = await request.json();
     const parsed = createExpenseSchema.safeParse(body);

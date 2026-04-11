@@ -1,7 +1,9 @@
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "./db";
 import { users } from "./schema";
 import { eq } from "drizzle-orm";
+import { getUser, getSubscriptionStatus } from "./storage";
 
 /**
  * Gets the authenticated user ID from the Supabase session.
@@ -32,6 +34,25 @@ export async function getAuthUserIdStrict(): Promise<string | null> {
 
   if (dbUser?.isBlocked) return null;
   return userId;
+}
+
+/**
+ * Checks if the user has an active subscription.
+ * Returns NextResponse error if not, or null if subscription is active.
+ */
+export async function requireActiveSubscription(userId: string): Promise<NextResponse | null> {
+  const user = await getUser(userId);
+  if (!user) {
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+  const sub = getSubscriptionStatus(user);
+  if (!sub.isActive) {
+    return NextResponse.json(
+      { message: "Subscription required", code: "SUBSCRIPTION_REQUIRED", subscription: sub },
+      { status: 403 }
+    );
+  }
+  return null;
 }
 
 /**

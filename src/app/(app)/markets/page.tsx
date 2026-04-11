@@ -22,7 +22,7 @@ export default function MarketsPage() {
     if (!search.trim()) return markets ?? [];
     const q = search.toLowerCase();
     return (markets ?? []).filter(
-      (m: any) =>
+      (m) =>
         m.name?.toLowerCase().includes(q) ||
         m.location?.toLowerCase().includes(q)
     );
@@ -86,11 +86,11 @@ export default function MarketsPage() {
       ) : (
         <div className="space-y-3">
           {filteredMarkets
-            .sort((a: any, b: any) => (b.date || "").localeCompare(a.date || ""))
-            .map((market: any) => {
+            .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+            .map((market) => {
               const marketSales = salesByMarket[market.id] || [];
               const totalSales = marketSales.reduce(
-                (sum: number, s: any) =>
+                (sum: number, s) =>
                   sum + Number(s.amount) * Number(s.quantity),
                 0
               );

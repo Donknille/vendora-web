@@ -32,14 +32,14 @@ export default function OrdersPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
-        (o: any) =>
+        (o) =>
           o.customerName?.toLowerCase().includes(q) ||
           o.invoiceNumber?.toLowerCase().includes(q) ||
           o.notes?.toLowerCase().includes(q)
       );
     }
     if (statusFilter) {
-      result = result.filter((o: any) => o.status === statusFilter);
+      result = result.filter((o) => o.status === statusFilter);
     }
     return result;
   }, [orders, search, statusFilter]);
@@ -109,15 +109,15 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {[...filteredOrders]
-            .sort((a: any, b: any) => {
+            .sort((a, b) => {
               const dateA = a.orderDate || a.createdAt || "";
               const dateB = b.orderDate || b.createdAt || "";
               return dateB.localeCompare(dateA);
             })
-            .map((order: any) => {
+            .map((order) => {
               const items = order.items || [];
               const total = items.reduce(
-                (sum: number, item: any) =>
+                (sum: number, item) =>
                   sum + Number(item.price || 0) * Number(item.quantity || 1),
                 0
               );

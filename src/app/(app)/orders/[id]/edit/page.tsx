@@ -38,7 +38,7 @@ export default function EditOrderPage() {
   const [error, setError] = useState("");
   const [initialized, setInitialized] = useState(false);
 
-  const order = orders?.find((o: any) => o.id === id);
+  const order = orders?.find((o) => o.id === id);
 
   // Pre-fill form with existing order data
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function EditOrderPage() {
 
       if (order.items && order.items.length > 0) {
         setItems(
-          order.items.map((item: any) => ({
+          order.items.map((item) => ({
             name: item.name || "",
             quantity: String(item.quantity || 1),
             price: item.price ? Number(item.price).toFixed(2).replace(".", ",") : "",

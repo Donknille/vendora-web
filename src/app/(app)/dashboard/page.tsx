@@ -56,15 +56,15 @@ export default function DashboardPage() {
   // ----- Collect available years -----
   const availableYears = useMemo(() => {
     const yearSet = new Set<number>();
-    (orders ?? []).forEach((o: any) => {
+    (orders ?? []).forEach((o) => {
       const y = yearOf(o.orderDate ?? o.createdAt);
       if (y) yearSet.add(y);
     });
-    (expenses ?? []).forEach((e: any) => {
-      const y = yearOf(e.expenseDate ?? e.date ?? e.createdAt);
+    (expenses ?? []).forEach((e) => {
+      const y = yearOf(e.expenseDate ?? e.createdAt);
       if (y) yearSet.add(y);
     });
-    (marketSales ?? []).forEach((s: any) => {
+    (marketSales ?? []).forEach((s) => {
       const y = yearOf(s.createdAt);
       if (y) yearSet.add(y);
     });
@@ -81,7 +81,7 @@ export default function DashboardPage() {
   const paidOrders = useMemo(
     () =>
       (orders ?? []).filter(
-        (o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered" && matchesYear(o.orderDate ?? o.createdAt),
+        (o) => o.status === "paid" || o.status === "shipped" || o.status === "delivered" && matchesYear(o.orderDate ?? o.createdAt),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, selectedYear],
@@ -89,7 +89,7 @@ export default function DashboardPage() {
 
   // ----- Market sales (filtered) -----
   const filteredSales = useMemo(
-    () => (marketSales ?? []).filter((s: any) => matchesYear(s.createdAt)),
+    () => (marketSales ?? []).filter((s) => matchesYear(s.createdAt)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [marketSales, selectedYear],
   );
@@ -97,8 +97,8 @@ export default function DashboardPage() {
   // ----- Expenses (filtered) -----
   const filteredExpenses = useMemo(
     () =>
-      (expenses ?? []).filter((e: any) =>
-        matchesYear(e.expenseDate ?? e.date ?? e.createdAt),
+      (expenses ?? []).filter((e) =>
+        matchesYear(e.expenseDate ?? e.createdAt),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [expenses, selectedYear],
@@ -106,46 +106,46 @@ export default function DashboardPage() {
 
   // ----- KPIs -----
   const totalRevenue = useMemo(() => {
-    const orderRev = paidOrders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
+    const orderRev = paidOrders.reduce((sum: number, o) => sum + (Number(o.total) || 0), 0);
     const salesRev = filteredSales.reduce(
-      (sum: number, s: any) => sum + (Number(s.amount) || 0) * (Number(s.quantity) || 1),
+      (sum: number, s) => sum + (Number(s.amount) || 0) * (Number(s.quantity) || 1),
       0,
     );
     return orderRev + salesRev;
   }, [paidOrders, filteredSales]);
 
   const totalExpenses = useMemo(
-    () => filteredExpenses.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0),
+    () => filteredExpenses.reduce((sum: number, e) => sum + (Number(e.amount) || 0), 0),
     [filteredExpenses],
   );
 
   const netProfit = totalRevenue - totalExpenses;
 
   // ----- Quick stats (always unfiltered) -----
-  const openOrdersCount = (orders ?? []).filter((o: any) => o.status === "open").length;
-  const paidOrdersCount = (orders ?? []).filter((o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered").length;
+  const openOrdersCount = (orders ?? []).filter((o) => o.status === "open").length;
+  const paidOrdersCount = (orders ?? []).filter((o) => o.status === "paid" || o.status === "shipped" || o.status === "delivered").length;
   const marketsCount = (markets ?? []).length;
 
   // ----- Monthly performance data -----
   const monthlyData = useMemo(() => {
     const map: Record<string, { revenue: number; expenses: number }> = {};
 
-    paidOrders.forEach((o: any) => {
+    paidOrders.forEach((o) => {
       const mk = monthKey(o.orderDate ?? o.createdAt);
       if (!mk) return;
       if (!map[mk]) map[mk] = { revenue: 0, expenses: 0 };
       map[mk].revenue += Number(o.total) || 0;
     });
 
-    filteredSales.forEach((s: any) => {
+    filteredSales.forEach((s) => {
       const mk = monthKey(s.createdAt);
       if (!mk) return;
       if (!map[mk]) map[mk] = { revenue: 0, expenses: 0 };
       map[mk].revenue += (Number(s.amount) || 0) * (Number(s.quantity) || 1);
     });
 
-    filteredExpenses.forEach((e: any) => {
-      const mk = monthKey(e.expenseDate ?? e.date ?? e.createdAt);
+    filteredExpenses.forEach((e) => {
+      const mk = monthKey(e.expenseDate ?? e.createdAt);
       if (!mk) return;
       if (!map[mk]) map[mk] = { revenue: 0, expenses: 0 };
       map[mk].expenses += Number(e.amount) || 0;
@@ -191,7 +191,7 @@ export default function DashboardPage() {
     const isDE = language === "de";
 
     const expensesByCategory: Record<string, number> = {};
-    filteredExpenses.forEach((e: any) => {
+    filteredExpenses.forEach((e) => {
       const cat = e.category || (isDE ? "Sonstiges" : "Other");
       expensesByCategory[cat] = (expensesByCategory[cat] || 0) + (Number(e.amount) || 0);
     });

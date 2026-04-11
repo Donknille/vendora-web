@@ -68,7 +68,7 @@ export default function OrderDetailPage() {
 
   const items = order.items || [];
   const total = items.reduce(
-    (sum: number, item: any) =>
+    (sum: number, item) =>
       sum + Number(item.price || 0) * Number(item.quantity || 1),
     0
   );
