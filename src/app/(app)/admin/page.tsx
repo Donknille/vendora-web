@@ -31,7 +31,7 @@ interface AdminUser {
 
 const statusColors: Record<string, string> = {
   trial: "text-yellow-500",
-  active: "text-brand-tealDark",
+  active: "text-green-600",
   expired: "text-brand-primary",
   cancelled: "text-brand-primary",
 };
@@ -64,8 +64,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-brand-teal" />
-        <h1 className="text-2xl font-bold font-display text-primary">Admin Dashboard</h1>
+        <Shield className="h-6 w-6 text-brand-primary" />
+        <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
       </div>
 
       {/* Stats */}
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-brand-teal" />
+              <Users className="h-5 w-5 text-brand-primary" />
               <div>
                 <p className="text-2xl font-bold text-primary">{stats.totalUsers}</p>
                 <p className="text-xs text-muted">User gesamt</p>
@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
           </Card>
           <Card>
             <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-brand-teal" />
+              <CreditCard className="h-5 w-5 text-brand-primary" />
               <div>
                 <p className="text-2xl font-bold text-primary">{stats.activeSubscriptions}</p>
                 <p className="text-xs text-muted">Aktive Abos</p>

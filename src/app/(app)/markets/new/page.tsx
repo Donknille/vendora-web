@@ -69,7 +69,7 @@ export default function NewMarketPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -81,7 +81,7 @@ export default function NewMarketPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold font-display text-primary">
+        <h1 className="text-2xl font-bold text-primary">
           {t.markets.newMarket}
         </h1>
       </div>
@@ -178,7 +178,7 @@ export default function NewMarketPage() {
             <button
               type="button"
               onClick={addQuickItem}
-              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-teal hover:bg-brand-teal/10 transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
               {t.markets.addArticle}
@@ -189,7 +189,7 @@ export default function NewMarketPage() {
             <button
               type="button"
               onClick={addQuickItem}
-              className="w-full rounded-lg border border-dashed border-line py-6 text-sm text-muted hover:border-brand-teal hover:text-brand-teal transition-colors"
+              className="w-full rounded-lg border border-dashed border-line py-6 text-sm text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
             >
               <Plus className="h-5 w-5 mx-auto mb-1" />
               {t.markets.addArticle}
@@ -206,7 +206,7 @@ export default function NewMarketPage() {
                       type="text"
                       value={item.name}
                       onChange={(e) => updateQuickItem(index, "name", e.target.value)}
-                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                       placeholder={t.markets.articleName}
                     />
                   </div>
@@ -216,7 +216,7 @@ export default function NewMarketPage() {
                       inputMode="decimal"
                       value={item.price}
                       onChange={(e) => updateQuickItem(index, "price", e.target.value)}
-                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors text-right"
+                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors text-right"
                       placeholder="0,00 €"
                     />
                   </div>

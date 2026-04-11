@@ -156,7 +156,7 @@ export default function EditOrderPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold font-display text-primary">
+        <h1 className="text-2xl font-bold text-primary">
           {t.orders.editOrder}
         </h1>
       </div>
@@ -176,7 +176,7 @@ export default function EditOrderPage() {
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               placeholder={t.orders.customerName}
             />
           </div>
@@ -189,7 +189,7 @@ export default function EditOrderPage() {
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               placeholder={t.orders.email}
             />
           </div>
@@ -202,7 +202,7 @@ export default function EditOrderPage() {
               type="text"
               value={customerStreet}
               onChange={(e) => setCustomerStreet(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               placeholder={t.orders.streetPlaceholder}
             />
           </div>
@@ -216,7 +216,7 @@ export default function EditOrderPage() {
                 type="text"
                 value={customerZip}
                 onChange={(e) => setCustomerZip(e.target.value)}
-                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                 placeholder={t.orders.zipPlaceholder}
               />
             </div>
@@ -228,7 +228,7 @@ export default function EditOrderPage() {
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
-                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                 placeholder={t.orders.cityPlaceholder}
               />
             </div>
@@ -242,7 +242,7 @@ export default function EditOrderPage() {
               type="text"
               value={customerCountry}
               onChange={(e) => setCustomerCountry(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               placeholder={t.orders.country}
             />
           </div>
@@ -255,7 +255,7 @@ export default function EditOrderPage() {
               type="date"
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
             />
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function EditOrderPage() {
                     type="text"
                     value={item.name}
                     onChange={(e) => updateItem(index, "name", e.target.value)}
-                    className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                    className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                     placeholder={t.orders.itemName}
                   />
                   <div className="flex gap-2">
@@ -302,7 +302,7 @@ export default function EditOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "quantity", e.target.value)
                         }
-                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                       />
                     </div>
                     <div className="flex-1">
@@ -316,7 +316,7 @@ export default function EditOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "price", e.target.value)
                         }
-                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors"
+                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
                         placeholder="0,00"
                       />
                     </div>
@@ -340,7 +340,7 @@ export default function EditOrderPage() {
             <span className="text-sm font-medium text-secondary">
               {t.orders.total}
             </span>
-            <span className="text-lg font-bold font-display text-brand-tealDark">
+            <span className="text-lg font-bold text-green-600">
               {formatCurrency(total)}
             </span>
           </div>
@@ -355,7 +355,7 @@ export default function EditOrderPage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal transition-colors resize-none"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
             placeholder={t.orders.additionalNotes}
           />
         </div>

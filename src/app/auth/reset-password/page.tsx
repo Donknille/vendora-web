@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-brand-primary/10 border border-brand-teal/20 rounded-xl p-8">
+          <div className="bg-brand-primary/10 border border-brand-primary/20 rounded-xl p-8">
             <h2 className="text-xl font-bold text-primary mb-2">E-Mail gesendet</h2>
             <p className="text-faint">
               Prüfe dein E-Mail-Postfach für einen Link zum Zurücksetzen deines Passworts.
@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-teal transition"
+              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
               placeholder="deine@email.de"
               required
             />

@@ -261,7 +261,7 @@ export default function OrderDetailPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold font-display text-primary">
+          <h1 className="text-2xl font-bold text-primary">
             {t.orders.orderDetails}
           </h1>
         </div>
@@ -367,7 +367,7 @@ export default function OrderDetailPage() {
         {/* Total */}
         <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
           <span className="font-medium text-secondary">{t.orders.total}</span>
-          <span className="text-lg font-bold font-display text-brand-tealDark">
+          <span className="text-lg font-bold text-green-600">
             {formatCurrency(total)}
           </span>
         </div>

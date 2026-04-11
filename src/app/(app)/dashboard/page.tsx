@@ -234,7 +234,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-display text-primary">{t.dashboard.overview}</h1>
+        <h1 className="text-2xl font-bold text-primary">{t.dashboard.overview}</h1>
         <button
           onClick={handleExportGuV}
           className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
@@ -248,7 +248,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
       {!orders?.length && !markets?.length && !expenses?.length && (
         <Card>
           <div className="text-center py-4">
-            <h2 className="text-lg font-semibold font-display text-primary mb-2">
+            <h2 className="text-lg font-semibold text-primary mb-2">
               {language === "de" ? "Willkommen bei Vendora!" : "Welcome to Vendora!"}
             </h2>
             <p className="text-sm text-muted mb-4 max-w-md mx-auto">
@@ -260,7 +260,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
               <a href="/orders/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
                 {t.orders.newOrder}
               </a>
-              <a href="/markets/new" className="inline-flex items-center gap-2 rounded-lg border border-brand-teal text-brand-teal px-4 py-2.5 text-sm font-medium hover:bg-brand-teal/5 transition-colors">
+              <a href="/markets/new" className="inline-flex items-center gap-2 rounded-lg border border-brand-primary text-brand-primary px-4 py-2.5 text-sm font-medium hover:bg-brand-primary/5 transition-colors">
                 {t.markets.newMarket}
               </a>
             </div>
@@ -302,7 +302,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
         {/* Revenue */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.revenue}</p>
-          <p className="mt-1 text-2xl font-bold font-display text-brand-tealDark">
+          <p className="mt-1 text-2xl font-bold text-green-600">
             {formatCurrency(totalRevenue)}
           </p>
         </Card>
@@ -310,7 +310,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
         {/* Expenses */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.expenses}</p>
-          <p className="mt-1 text-2xl font-bold font-display text-brand-primary">
+          <p className="mt-1 text-2xl font-bold text-brand-primary">
             {formatCurrency(totalExpenses)}
           </p>
         </Card>
@@ -319,8 +319,8 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
         <Card>
           <p className="text-sm text-faint">{t.dashboard.netProfit}</p>
           <p
-            className={`mt-1 text-2xl font-bold font-display ${
-              netProfit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
+            className={`mt-1 text-2xl font-bold ${
+              netProfit >= 0 ? "text-green-600" : "text-brand-primary"
             }`}
           >
             {formatCurrency(netProfit)}
@@ -331,17 +331,17 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="text-center">
-          <p className="text-2xl font-bold font-display text-primary">{openOrdersCount}</p>
+          <p className="text-2xl font-bold text-primary">{openOrdersCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.openOrders}</p>
         </Card>
 
         <Card className="text-center">
-          <p className="text-2xl font-bold font-display text-primary">{paidOrdersCount}</p>
+          <p className="text-2xl font-bold text-primary">{paidOrdersCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.paidOrders}</p>
         </Card>
 
         <Card className="text-center">
-          <p className="text-2xl font-bold font-display text-primary">{marketsCount}</p>
+          <p className="text-2xl font-bold text-primary">{marketsCount}</p>
           <p className="mt-0.5 text-xs text-muted">{t.dashboard.markets}</p>
         </Card>
       </div>
@@ -374,7 +374,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
                     <td className="py-2.5 pr-4 text-secondary">
                       {t.months[row.monthIndex]} {row.year}
                     </td>
-                    <td className="py-2.5 pr-4 text-right text-brand-tealDark">
+                    <td className="py-2.5 pr-4 text-right text-green-600">
                       {formatCurrency(row.revenue)}
                     </td>
                     <td className="py-2.5 pr-4 text-right text-brand-primary">
@@ -382,7 +382,7 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
                     </td>
                     <td
                       className={`py-2.5 text-right font-medium ${
-                        row.profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"
+                        row.profit >= 0 ? "text-green-600" : "text-brand-primary"
                       }`}
                     >
                       {formatCurrency(row.profit)}

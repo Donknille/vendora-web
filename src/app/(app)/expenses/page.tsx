@@ -91,7 +91,7 @@ export default function ExpensesPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   if (isLoading) {
     return (
@@ -105,7 +105,7 @@ export default function ExpensesPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-display text-primary">
+        <h1 className="text-2xl font-bold text-primary">
           {t.expenses.title}
         </h1>
         {!isSubscriptionInactive && (

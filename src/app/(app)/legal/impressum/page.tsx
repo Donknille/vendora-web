@@ -14,7 +14,7 @@ export default function ImpressumPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold font-display text-primary">Impressum</h1>
+        <h1 className="text-2xl font-bold text-primary">Impressum</h1>
       </div>
 
       <Card>

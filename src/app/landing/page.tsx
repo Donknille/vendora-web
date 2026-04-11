@@ -20,7 +20,7 @@ export default function LandingPage() {
           <Image src="/Vendora.png" alt="Vendora" width={200} height={52} className="h-14 w-auto" priority />
         </div>
 
-        <h1 className="font-display text-4xl md:text-5xl text-primary leading-tight max-w-2xl mx-auto">
+        <h1 className="text-4xl md:text-5xl text-primary leading-tight max-w-2xl mx-auto">
           Dein Business. <br className="hidden md:block" />
           <span className="text-brand-primary">Einfach verwaltet.</span>
         </h1>
@@ -56,12 +56,12 @@ export default function LandingPage() {
             return (
               <div
                 key={feature.title}
-                className="rounded-xl border border-line bg-surface p-6 hover:border-brand-teal/30 transition-colors"
+                className="rounded-xl border border-line bg-surface p-6 hover:border-brand-primary/30 transition-colors"
               >
-                <div className="h-10 w-10 rounded-lg bg-brand-tealLt flex items-center justify-center mb-4">
-                  <Icon className="h-5 w-5 text-brand-tealDark" />
+                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                  <Icon className="h-5 w-5 text-green-600" />
                 </div>
-                <h3 className="font-display text-lg text-primary mb-1">{feature.title}</h3>
+                <h3 className="text-lg text-primary mb-1">{feature.title}</h3>
                 <p className="text-sm text-muted leading-relaxed">{feature.desc}</p>
               </div>
             );
@@ -71,19 +71,19 @@ export default function LandingPage() {
 
       {/* Pricing */}
       <section className="mx-auto max-w-5xl px-6 py-12">
-        <div className="mx-auto max-w-md rounded-2xl border border-brand-teal/20 bg-surface p-8 text-center">
-          <p className="text-sm font-medium text-brand-teal uppercase tracking-wider mb-2">Ein Plan. Alles drin.</p>
+        <div className="mx-auto max-w-md rounded-2xl border border-brand-primary/20 bg-surface p-8 text-center">
+          <p className="text-sm font-medium text-brand-primary uppercase tracking-wider mb-2">Ein Plan. Alles drin.</p>
           <div className="flex items-baseline justify-center gap-1 mb-4">
-            <span className="font-display text-5xl text-primary">2,99 €</span>
+            <span className="text-5xl text-primary">2,99 €</span>
             <span className="text-muted">/Monat</span>
           </div>
           <ul className="space-y-2 text-sm text-secondary text-left mb-6">
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Unbegrenzte Aufträge & Rechnungen</li>
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Unbegrenzte Märkte & Verkäufe</li>
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Ausgabenverwaltung</li>
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Dashboard & GuV-Export</li>
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Backup & Restore</li>
-            <li className="flex items-center gap-2"><span className="text-brand-teal">✓</span> Deutsch & Englisch</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Unbegrenzte Aufträge & Rechnungen</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Unbegrenzte Märkte & Verkäufe</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Ausgabenverwaltung</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Dashboard & GuV-Export</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Backup & Restore</li>
+            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Deutsch & Englisch</li>
           </ul>
           <Link
             href="/auth/register"

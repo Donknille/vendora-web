@@ -35,7 +35,7 @@ export default function ChangelogPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl font-bold font-display text-primary">Changelog</h1>
+        <h1 className="text-2xl font-bold text-primary">Changelog</h1>
       </div>
 
       {releases.map((release) => (
@@ -49,7 +49,7 @@ export default function ChangelogPage() {
           <ul className="space-y-1.5">
             {release.changes.map((change, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-secondary">
-                <span className="text-brand-teal mt-0.5">+</span>
+                <span className="text-brand-primary mt-0.5">+</span>
                 <span>{change}</span>
               </li>
             ))}

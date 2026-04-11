@@ -138,7 +138,7 @@ export default function MarketDetailPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal transition-colors";
+    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -151,7 +151,7 @@ export default function MarketDetailPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold font-display text-primary">
+          <h1 className="text-2xl font-bold text-primary">
             {t.markets.marketDetails}
           </h1>
         </div>
@@ -234,12 +234,12 @@ export default function MarketDetailPage() {
                   key={idx}
                   onClick={() => handleQuickSale(item)}
                   disabled={createSale.isPending}
-                  className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-teal hover:bg-brand-teal/5 active:scale-95 transition-all disabled:opacity-50"
+                  className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <span className="text-sm font-semibold text-primary truncate w-full text-center">
                     {item.name}
                   </span>
-                  <span className="text-lg font-bold font-display text-brand-tealDark">
+                  <span className="text-lg font-bold text-green-600">
                     {formatCurrency(item.price)}
                   </span>
                   {soldCount > 0 && (
@@ -262,7 +262,7 @@ export default function MarketDetailPage() {
           </h3>
           <button
             onClick={() => setShowAddSale(!showAddSale)}
-            className="rounded-lg p-1.5 text-brand-teal hover:bg-elevated transition-colors"
+            className="rounded-lg p-1.5 text-brand-primary hover:bg-elevated transition-colors"
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -277,7 +277,7 @@ export default function MarketDetailPage() {
               <input type="number" min="1" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
-              <button type="submit" disabled={createSale.isPending} className="flex-1 rounded-lg bg-brand-teal py-2 text-sm font-medium text-white hover:bg-brand-teal/90 disabled:opacity-50 transition-colors">
+              <button type="submit" disabled={createSale.isPending} className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">
                 {createSale.isPending ? t.common.loading : t.common.save}
               </button>
               <button type="button" onClick={() => setShowAddSale(false)} className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors">
@@ -303,7 +303,7 @@ export default function MarketDetailPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-brand-tealDark">
+                  <span className="text-sm font-medium text-green-600">
                     {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
                   </span>
                   <button onClick={() => setConfirmDeleteSaleId(sale.id)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
@@ -319,7 +319,7 @@ export default function MarketDetailPage() {
         {sales && sales.length > 0 && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
-            <span className="text-brand-tealDark">{formatCurrency(totalSales)}</span>
+            <span className="text-green-600">{formatCurrency(totalSales)}</span>
           </div>
         )}
       </Card>
@@ -328,7 +328,7 @@ export default function MarketDetailPage() {
       <Card>
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.profit}</h3>
-          <span className={`text-xl font-bold font-display ${profit >= 0 ? "text-brand-tealDark" : "text-brand-primary"}`}>
+          <span className={`text-xl font-bold ${profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
             {formatCurrency(profit)}
           </span>
         </div>
