@@ -244,6 +244,30 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
         </button>
       </div>
 
+      {/* Onboarding — only if no data at all */}
+      {!orders?.length && !markets?.length && !expenses?.length && (
+        <Card>
+          <div className="text-center py-4">
+            <h2 className="text-lg font-semibold font-display text-primary mb-2">
+              {language === "de" ? "Willkommen bei Vendora!" : "Welcome to Vendora!"}
+            </h2>
+            <p className="text-sm text-muted mb-4 max-w-md mx-auto">
+              {language === "de"
+                ? "Starte jetzt: Erstelle deinen ersten Auftrag, lege einen Markt an oder erfasse eine Ausgabe."
+                : "Get started: Create your first order, set up a market, or track an expense."}
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a href="/orders/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
+                {t.orders.newOrder}
+              </a>
+              <a href="/markets/new" className="inline-flex items-center gap-2 rounded-lg border border-brand-teal text-brand-teal px-4 py-2.5 text-sm font-medium hover:bg-brand-teal/5 transition-colors">
+                {t.markets.newMarket}
+              </a>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Year filter */}
       {availableYears.length > 0 && (
         <div className="flex flex-wrap gap-2">

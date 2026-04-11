@@ -36,10 +36,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to login (except auth pages)
-  if (!user && !pathname.startsWith("/auth") && pathname !== "/") {
+  // Redirect unauthenticated users to landing (except auth + landing + legal pages)
+  if (
+    !user &&
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/landing") &&
+    !pathname.startsWith("/legal") &&
+    pathname !== "/"
+  ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/landing";
     return NextResponse.redirect(url);
   }
 
@@ -53,7 +59,7 @@ export async function updateSession(request: NextRequest) {
   // Redirect root
   if (pathname === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = user ? "/dashboard" : "/auth/login";
+    url.pathname = user ? "/dashboard" : "/landing";
     return NextResponse.redirect(url);
   }
 
