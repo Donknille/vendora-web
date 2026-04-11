@@ -48,11 +48,9 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-6 py-5 border-b border-line">
-          <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <span className="text-xl font-semibold tracking-tight text-primary">Vendora</span>
+        <div className="flex items-center px-5 py-4 border-b border-line">
+          <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-9 w-auto block dark:hidden" />
+          <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-9 w-auto hidden dark:block" />
         </div>
 
         {/* Navigation */}

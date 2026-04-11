@@ -39,11 +39,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2.5">
-            <div className="h-10 w-10 rounded-lg bg-brand-primary flex items-center justify-center">
-              <span className="text-white font-bold">V</span>
-            </div>
-            <span className="text-2xl font-semibold tracking-tight text-primary">Vendora</span>
+          <div className="flex justify-center">
+            <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-12 w-auto block dark:hidden" />
+            <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-12 w-auto hidden dark:block" />
           </div>
           <p className="text-faint mt-2">Melde dich bei deinem Konto an</p>
         </div>
