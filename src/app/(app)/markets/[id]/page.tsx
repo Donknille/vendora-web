@@ -36,6 +36,8 @@ export default function MarketDetailPage() {
   const deleteSale = useDeleteMarketSale();
   const copyMarket = useCopyMarket();
 
+  const [error, setError] = useState("");
+
   // Add-sale form state
   const [saleDescription, setSaleDescription] = useState("");
   const [saleAmount, setSaleAmount] = useState("");
@@ -73,43 +75,60 @@ export default function MarketDetailPage() {
   const profit = totalSales - standFee - travelCost;
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
-    await createSale.mutateAsync({
-      marketId,
-      description: item.name,
-      amount: item.price,
-      quantity: 1,
-    });
+    setError("");
+    try {
+      await createSale.mutateAsync({ marketId, description: item.name, amount: item.price, quantity: 1 });
+    } catch {
+      setError("Verkauf konnte nicht gespeichert werden.");
+    }
   };
 
   const handleAddSale = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!saleDescription.trim() || !saleAmount.trim()) return;
 
-    await createSale.mutateAsync({
-      marketId,
-      description: saleDescription.trim(),
-      amount: parseAmount(saleAmount),
-      quantity: parseInt(saleQuantity, 10) || 1,
-    });
-
-    setSaleDescription("");
-    setSaleAmount("");
-    setSaleQuantity("1");
-    setShowAddSale(false);
+    try {
+      await createSale.mutateAsync({
+        marketId,
+        description: saleDescription.trim(),
+        amount: parseAmount(saleAmount),
+        quantity: parseInt(saleQuantity, 10) || 1,
+      });
+      setSaleDescription("");
+      setSaleAmount("");
+      setSaleQuantity("1");
+      setShowAddSale(false);
+    } catch {
+      setError("Verkauf konnte nicht gespeichert werden.");
+    }
   };
 
   const handleDeleteMarket = async () => {
-    await deleteMarket.mutateAsync(marketId);
-    router.push("/markets");
+    try {
+      await deleteMarket.mutateAsync(marketId);
+      router.push("/markets");
+    } catch {
+      setError("Markt konnte nicht gelöscht werden.");
+    }
   };
 
   const handleDeleteSale = async (saleId: string) => {
-    await deleteSale.mutateAsync(saleId);
+    try {
+      await deleteSale.mutateAsync(saleId);
+    } catch {
+      setError("Verkauf konnte nicht gelöscht werden.");
+    }
   };
 
   const handleCopy = async () => {
-    const copied = await copyMarket.mutateAsync(marketId);
-    router.push(`/markets/${copied.id}/edit`);
+    setError("");
+    try {
+      const copied = await copyMarket.mutateAsync(marketId);
+      router.push(`/markets/${copied.id}/edit`);
+    } catch {
+      setError("Markt konnte nicht kopiert werden.");
+    }
   };
 
   const getSoldCount = (itemName: string, itemPrice: number) => {
@@ -151,6 +170,12 @@ export default function MarketDetailPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
 
       {/* Market Info */}
       <Card>

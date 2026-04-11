@@ -32,6 +32,7 @@ export default function EditMarketPage() {
   const [notes, setNotes] = useState("");
   const [quickItems, setQuickItems] = useState<QuickItem[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (market && !initialized) {
@@ -93,24 +94,28 @@ export default function EditMarketPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!name.trim()) return;
 
     const validItems = quickItems
       .filter((item) => item.name.trim())
       .map((item) => ({ name: item.name.trim(), price: parseAmount(item.price) }));
 
-    await updateMarket.mutateAsync({
-      id: marketId,
-      name: name.trim(),
-      date,
-      location: location.trim(),
-      standFee: parseAmount(standFee),
-      travelCost: parseAmount(travelCost),
-      notes: notes.trim(),
-      quickItems: validItems,
-    });
-
-    router.push(`/markets/${marketId}`);
+    try {
+      await updateMarket.mutateAsync({
+        id: marketId,
+        name: name.trim(),
+        date,
+        location: location.trim(),
+        standFee: parseAmount(standFee),
+        travelCost: parseAmount(travelCost),
+        notes: notes.trim(),
+        quickItems: validItems,
+      });
+      router.push(`/markets/${marketId}`);
+    } catch {
+      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+    }
   };
 
   const inputClass =
@@ -206,6 +211,8 @@ export default function EditMarketPage() {
           <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.notes}</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputClass} resize-none`} rows={3} placeholder={t.markets.additionalNotes} />
         </div>
+
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
         {/* Submit */}
         <button type="submit" disabled={updateMarket.isPending || !name.trim()} className="w-full rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">

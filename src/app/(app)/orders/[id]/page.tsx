@@ -46,6 +46,7 @@ export default function OrderDetailPage() {
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [error, setError] = useState("");
 
   const order = orders?.find((o) => o.id === id);
 
@@ -74,12 +75,21 @@ export default function OrderDetailPage() {
 
   const handleStatusChange = async (newStatus: string) => {
     setShowStatusMenu(false);
-    await updateOrder.mutateAsync({ id: order.id, status: newStatus });
+    setError("");
+    try {
+      await updateOrder.mutateAsync({ id: order.id, status: newStatus });
+    } catch {
+      setError("Status konnte nicht geändert werden.");
+    }
   };
 
   const handleDelete = async () => {
-    await deleteOrder.mutateAsync(order.id);
-    router.push("/orders");
+    try {
+      await deleteOrder.mutateAsync(order.id);
+      router.push("/orders");
+    } catch {
+      setError("Auftrag konnte nicht gelöscht werden.");
+    }
   };
 
   const handleCreateInvoice = () => {
@@ -262,6 +272,10 @@ export default function OrderDetailPage() {
           <Pencil className="h-5 w-5" />
         </Link>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">{error}</div>
+      )}
 
       {/* Customer Card */}
       <Card>

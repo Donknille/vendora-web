@@ -94,21 +94,28 @@ export default function SettingsPage() {
     router.push("/auth/login");
   };
 
+  const [profileError, setProfileError] = useState("");
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile.mutateAsync({
-      name: companyName.trim(),
-      address: address.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      taxNote: taxNote.trim(),
-      smallBusinessNote: smallBusinessNote.trim(),
-      defaultShippingCost: defaultShippingCost
-        ? parseFloat(defaultShippingCost.replace(",", ".")) || 0
-        : 0,
-    });
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 2000);
+    setProfileError("");
+    try {
+      await updateProfile.mutateAsync({
+        name: companyName.trim(),
+        address: address.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        taxNote: taxNote.trim(),
+        smallBusinessNote: smallBusinessNote.trim(),
+        defaultShippingCost: defaultShippingCost
+          ? parseFloat(defaultShippingCost.replace(",", ".")) || 0
+          : 0,
+      });
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch {
+      setProfileError("Profil konnte nicht gespeichert werden.");
+    }
   };
 
   const handleExport = async () => {
@@ -359,6 +366,7 @@ export default function SettingsPage() {
                 ? t.common.save + " ✓"
                 : t.common.save}
           </button>
+          {profileError && <p className="mt-2 text-sm text-red-400">{profileError}</p>}
         </form>
       </Card>
 
