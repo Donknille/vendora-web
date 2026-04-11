@@ -37,11 +37,11 @@
   --color-brand-primary: #D4AF37;
   --color-brand-primaryLt: rgba(212, 175, 55, 0.12);
 
-  --color-page: #121212;
-  --color-surface: #1E1E1E;
-  --color-elevated: #2C2C2C;
-  --color-hover: #3C3C3C;
-  --color-input: #2C2C2C;
+  --color-page: #0F1522;
+  --color-surface: #101624;
+  --color-elevated: #182030;
+  --color-hover: #1F2940;
+  --color-input: #182030;
 
   --color-line: rgba(255, 255, 255, 0.08);
   --color-line-hover: rgba(255, 255, 255, 0.12);
