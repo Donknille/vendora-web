@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -49,8 +48,11 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
         {/* Logo */}
-        <div className="flex items-center px-6 py-4 border-b border-line">
-          <Image src="/Vendora.png" alt="Vendora" width={140} height={36} className="h-9 w-auto" priority />
+        <div className="flex items-center gap-2.5 px-6 py-5 border-b border-line">
+          <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
+            <span className="text-white font-bold text-sm">V</span>
+          </div>
+          <span className="text-xl font-semibold tracking-tight text-primary">Vendora</span>
         </div>
 
         {/* Navigation */}

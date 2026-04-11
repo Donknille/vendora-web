@@ -80,7 +80,12 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/Vendora.png" alt="Vendora" className="h-12 w-auto mx-auto" />
+          <div className="flex items-center justify-center gap-2.5">
+            <div className="h-10 w-10 rounded-lg bg-brand-primary flex items-center justify-center">
+              <span className="text-white font-bold">V</span>
+            </div>
+            <span className="text-2xl font-semibold tracking-tight text-primary">Vendora</span>
+          </div>
           <p className="text-faint mt-2">Erstelle dein Konto</p>
         </div>
 

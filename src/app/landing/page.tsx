@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Store, Receipt, BarChart3, FileText, Shield } from "lucide-react";
 
@@ -16,8 +15,11 @@ export default function LandingPage() {
     <div className="min-h-screen bg-page">
       {/* Hero */}
       <header className="mx-auto max-w-5xl px-6 pt-16 pb-12 text-center">
-        <div className="inline-flex items-center mb-6">
-          <Image src="/Vendora.png" alt="Vendora" width={200} height={52} className="h-14 w-auto" priority />
+        <div className="inline-flex items-center gap-3 mb-6">
+          <div className="h-12 w-12 rounded-xl bg-brand-primary flex items-center justify-center">
+            <span className="text-white font-bold text-xl">V</span>
+          </div>
+          <span className="text-3xl font-semibold tracking-tight text-primary">Vendora</span>
         </div>
 
         <h1 className="text-4xl md:text-5xl text-primary leading-tight max-w-2xl mx-auto">
