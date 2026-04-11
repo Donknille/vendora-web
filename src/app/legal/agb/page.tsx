@@ -9,7 +9,7 @@ export default function AGBPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
         <Link
-          href="/settings"
+          href="javascript:void(0)" onClick={() => window.history.back()}
           className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
