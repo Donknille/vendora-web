@@ -82,7 +82,7 @@ export default function UpdatePasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-primary font-medium py-3 rounded-lg transition"
+            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
             {loading ? "Wird gespeichert..." : "Passwort ändern"}
           </button>

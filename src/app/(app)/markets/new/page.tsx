@@ -40,14 +40,18 @@ export default function NewMarketPage() {
     setQuickItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!name.trim()) return;
 
     const validItems = quickItems
       .filter((item) => item.name.trim())
       .map((item) => ({ name: item.name.trim(), price: parseAmount(item.price) }));
 
+    try {
     await createMarket.mutateAsync({
       name: name.trim(),
       date,
@@ -59,6 +63,9 @@ export default function NewMarketPage() {
     });
 
     router.push("/markets");
+    } catch {
+      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+    }
   };
 
   const inputClass =
@@ -239,6 +246,8 @@ export default function NewMarketPage() {
             placeholder={t.markets.additionalNotes}
           />
         </div>
+
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
         {/* Submit */}
         <button

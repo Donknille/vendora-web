@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useTheme } from "@/lib/context/ThemeContext";
@@ -25,6 +26,7 @@ import { useAppSettings, useUpdateSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -55,6 +57,9 @@ export default function SettingsPage() {
   const [exportStatus, setExportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete account
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
   // Load user email
   useEffect(() => {
@@ -488,6 +493,12 @@ export default function SettingsPage() {
             Datenschutzerklärung →
           </Link>
           <Link
+            href="/legal/agb"
+            className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+          >
+            AGB →
+          </Link>
+          <Link
             href="/legal/impressum"
             className="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
           >
@@ -501,6 +512,50 @@ export default function SettingsPage() {
           </Link>
         </div>
       </Card>
+
+      {/* ───────── Danger Zone ───────── */}
+      <Card>
+        <div className="flex items-center gap-3 mb-4">
+          <Trash2 className="h-5 w-5 text-red-400" />
+          <h2 className="text-base font-semibold text-primary">
+            {language === "de" ? "Konto löschen" : "Delete Account"}
+          </h2>
+        </div>
+        <p className="text-sm text-faint mb-4">
+          {language === "de"
+            ? "Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+            : "All your data will be permanently deleted. This action cannot be undone."}
+        </p>
+        <button
+          onClick={() => setShowDeleteAccount(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          <Trash2 className="h-4 w-4" />
+          {language === "de" ? "Konto und alle Daten löschen" : "Delete account and all data"}
+        </button>
+      </Card>
+
+      {/* Delete Account Dialog */}
+      <ConfirmDialog
+        open={showDeleteAccount}
+        onClose={() => setShowDeleteAccount(false)}
+        onConfirm={async () => {
+          try {
+            await fetch("/api/account", { method: "DELETE" });
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            router.push("/auth/login");
+          } catch {
+            // ignore
+          }
+        }}
+        title={language === "de" ? "Konto löschen" : "Delete Account"}
+        message={language === "de"
+          ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht."
+          : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted."}
+        confirmText={language === "de" ? "Endgültig löschen" : "Delete permanently"}
+        cancelText={t.common.cancel}
+      />
     </div>
   );
 }
