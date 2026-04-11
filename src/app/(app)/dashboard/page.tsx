@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { Card } from "@/components/ui/Card";
+import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -166,16 +167,18 @@ export default function DashboardPage() {
   }, [paidOrders, filteredSales, filteredExpenses]);
 
   // ----- Loading state -----
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-hover border-t-brand-primary" />
-          <span className="text-sm text-muted">{t.common.loading}</span>
-        </div>
+  if (isLoading) return (
+    <div className="mx-auto max-w-5xl space-y-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardSkeleton /><CardSkeleton /><CardSkeleton />
       </div>
-    );
-  }
+      <div className="grid grid-cols-3 gap-4">
+        <CardSkeleton /><CardSkeleton /><CardSkeleton />
+      </div>
+      <CardSkeleton />
+    </div>
+  );
 
   // ----- GuV Export -----
   const handleExportGuV = () => {

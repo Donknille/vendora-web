@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 
 const CATEGORIES = [
   "Materials",
@@ -93,13 +94,7 @@ export default function ExpensesPage() {
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

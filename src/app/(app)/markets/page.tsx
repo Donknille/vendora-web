@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Store, MapPin, Calendar } from "lucide-react";
+import { Plus, Store, MapPin, Calendar, Search } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
@@ -9,11 +10,23 @@ import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
+import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 
 export default function MarketsPage() {
   const { t, language } = useLanguage();
   const { data: markets, isLoading } = useMarkets();
   const { data: allSales } = useAllMarketSales();
+  const [search, setSearch] = useState("");
+
+  const filteredMarkets = useMemo(() => {
+    if (!search.trim()) return markets ?? [];
+    const q = search.toLowerCase();
+    return (markets ?? []).filter(
+      (m: any) =>
+        m.name?.toLowerCase().includes(q) ||
+        m.location?.toLowerCase().includes(q)
+    );
+  }, [markets, search]);
 
   // Group sales by marketId for quick lookup
   const salesByMarket: Record<string, any[]> = {};
@@ -25,13 +38,7 @@ export default function MarketsPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -49,6 +56,20 @@ export default function MarketsPage() {
 
       <SubscriptionBanner />
 
+      {/* Search */}
+      {markets && markets.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-line bg-input pl-10 pr-4 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder={language === "de" ? "Suchen..." : "Search..."}
+          />
+        </div>
+      )}
+
       {/* Markets list */}
       {!markets || markets.length === 0 ? (
         <EmptyState
@@ -56,9 +77,15 @@ export default function MarketsPage() {
           title={t.markets.noMarkets}
           subtitle={t.markets.noMarketsSub}
         />
+      ) : filteredMarkets.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted text-sm">
+            {language === "de" ? "Keine Ergebnisse gefunden." : "No results found."}
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {markets
+          {filteredMarkets
             .sort((a: any, b: any) => (b.date || "").localeCompare(a.date || ""))
             .map((market: any) => {
               const marketSales = salesByMarket[market.id] || [];

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useCreateOrder } from "@/lib/hooks/useOrders";
+import { useCreateOrder, useCustomers } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
 

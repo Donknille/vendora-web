@@ -64,3 +64,14 @@ export function useDeleteOrder() {
     },
   });
 }
+
+export function useCustomers() {
+  return useQuery<{
+    customerName: string;
+    customerEmail: string;
+    customerStreet: string;
+    customerZip: string;
+    customerCity: string;
+    customerCountry: string;
+  }[]>({ queryKey: ["/api/customers"], staleTime: 10 * 60 * 1000 });
+}

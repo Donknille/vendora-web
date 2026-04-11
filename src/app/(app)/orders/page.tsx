@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, ShoppingCart, Calendar, Package } from "lucide-react";
+import { Plus, ShoppingCart, Calendar, Package, Search } from "lucide-react";
 import { useOrders } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
@@ -9,18 +10,41 @@ import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
+import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
+
+const statusOptions: { value: string | null; en: string; de: string }[] = [
+  { value: null, en: "All", de: "Alle" },
+  { value: "open", en: "Open", de: "Offen" },
+  { value: "paid", en: "Paid", de: "Bezahlt" },
+  { value: "shipped", en: "Shipped", de: "Versendet" },
+  { value: "delivered", en: "Delivered", de: "Geliefert" },
+  { value: "cancelled", en: "Cancelled", de: "Storniert" },
+];
 
 export default function OrdersPage() {
   const { t, language } = useLanguage();
   const { data: orders, isLoading } = useOrders();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
-    );
-  }
+  const filteredOrders = useMemo(() => {
+    let result = orders ?? [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (o: any) =>
+          o.customerName?.toLowerCase().includes(q) ||
+          o.invoiceNumber?.toLowerCase().includes(q) ||
+          o.notes?.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter) {
+      result = result.filter((o: any) => o.status === statusFilter);
+    }
+    return result;
+  }, [orders, search, statusFilter]);
+
+  if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -38,6 +62,37 @@ export default function OrdersPage() {
 
       <SubscriptionBanner />
 
+      {/* Search & Filter */}
+      {orders && orders.length > 0 && (
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-line bg-input pl-10 pr-4 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder={language === "de" ? "Suchen..." : "Search..."}
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value ?? "all"}
+                onClick={() => setStatusFilter(opt.value)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  statusFilter === opt.value
+                    ? "bg-brand-primary text-white"
+                    : "bg-elevated text-muted hover:text-primary"
+                }`}
+              >
+                {language === "de" ? opt.de : opt.en}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Orders list */}
       {!orders || orders.length === 0 ? (
         <EmptyState
@@ -45,9 +100,15 @@ export default function OrdersPage() {
           title={t.orders.noOrders}
           subtitle={t.orders.noOrdersSub}
         />
+      ) : filteredOrders.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted text-sm">
+            {language === "de" ? "Keine Ergebnisse gefunden." : "No results found."}
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {[...orders]
+          {[...filteredOrders]
             .sort((a: any, b: any) => {
               const dateA = a.orderDate || a.createdAt || "";
               const dateB = b.orderDate || b.createdAt || "";
