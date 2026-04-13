@@ -24,6 +24,7 @@ import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
 import { useAppSettings, useUpdateSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
+import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: settings, isLoading: loadingSettings } = useAppSettings();
   const { data: sub } = useSubscription();
+  const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
 
   const updateProfile = useUpdateProfile();
   const updateSettings = useUpdateSettings();
@@ -240,6 +242,16 @@ export default function SettingsPage() {
               {subscriptionLabel}
             </span>
           </div>
+
+          {sub && (sub.status === "expired" || sub.status === "cancelled" || sub.status === "trial") && (
+            <button
+              onClick={handleSubscribe}
+              disabled={subscribeLoading}
+              className="w-full rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {subscribeLoading ? t.common.loading : t.subscription.upgradeButton}
+            </button>
+          )}
         </div>
 
         <button
