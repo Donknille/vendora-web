@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-export const STRIPE_PRICE_ID = "price_1TLMvBRuExfV3pRvytt2kAIV";
+export const STRIPE_PRICE_ID = "price_1TLMf7RvBVbOJnhsnhujvSmR";
 
 let _stripe: Stripe | null = null;
 
