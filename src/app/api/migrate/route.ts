@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { getUser, getSubscriptionStatus } from "@/lib/server/storage";
 import { db } from "@/lib/server/db";
 import {
   orders, orderItems, marketEvents, marketSales,
@@ -107,8 +108,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const subError = await requireActiveSubscription(userId);
-    if (subError) return subError;
+    // Only paying subscribers can import — prevents trial-abuse via account-hopping
+    const user = await getUser(userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+    const sub = getSubscriptionStatus(user);
+    if (sub.status !== "active") {
+      return NextResponse.json(
+        { message: "Import requires an active subscription", code: "SUBSCRIPTION_REQUIRED" },
+        { status: 403 }
+      );
+    }
 
     const raw = await request.json();
     const parsed = migrateSchema.safeParse(raw);
