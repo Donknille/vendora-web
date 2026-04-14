@@ -3,13 +3,18 @@ import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
+// Defense-in-depth: reject strings that look like HTML/script injection
+const noHtml = (val: string) => !/<script|<\/script|<iframe|<object|<embed|javascript:/i.test(val);
+
+const safeStr = (max: number) => z.string().max(max).refine(noHtml, { message: "HTML tags are not allowed" });
+
 const updateProfileSchema = z.object({
-  name: z.string().max(200).default(""),
-  address: z.string().max(500).default(""),
-  email: z.string().max(254).default(""),
-  phone: z.string().max(50).default(""),
-  taxNote: z.string().max(500).default(""),
-  smallBusinessNote: z.string().max(500).optional(),
+  name: safeStr(200).default(""),
+  address: safeStr(500).default(""),
+  email: safeStr(254).default(""),
+  phone: safeStr(50).default(""),
+  taxNote: safeStr(500).default(""),
+  smallBusinessNote: safeStr(500).optional(),
   defaultShippingCost: z.number().min(0).max(99999.99).optional(),
 });
 

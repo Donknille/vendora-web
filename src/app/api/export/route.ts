@@ -21,6 +21,7 @@ export async function GET() {
       ]);
 
     return NextResponse.json({
+      schemaVersion: 1,
       exportedAt: new Date().toISOString(),
       orders,
       markets,

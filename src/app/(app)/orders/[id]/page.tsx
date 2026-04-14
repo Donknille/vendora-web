@@ -24,14 +24,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+import { escapeHtml } from "@/lib/escapeHtml";
 
 export default function OrderDetailPage() {
   const { t, language } = useLanguage();
