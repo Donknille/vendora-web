@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { FileDown } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency } from "@/lib/formatCurrency";
@@ -212,8 +213,8 @@ export default function DashboardPage() {
 
 <h2>${isDE ? "Zusammenfassung" : "Summary"}</h2>
 <div class="summary" style="background:#f9fafb;border:1px solid #e5e7eb;">
-<div class="summary-row"><span>${isDE ? "Umsatz (Aufträge)" : "Revenue (Orders)"}</span><span style="color:#047857">${formatCurrency(paidOrders.reduce((s: number, o: any) => s + (Number(o.total) || 0), 0))}</span></div>
-<div class="summary-row"><span>${isDE ? "Umsatz (Marktverkäufe)" : "Revenue (Market Sales)"}</span><span style="color:#047857">${formatCurrency(filteredSales.reduce((s: number, sa: any) => s + (Number(sa.amount) || 0) * (Number(sa.quantity) || 1), 0))}</span></div>
+<div class="summary-row"><span>${isDE ? "Umsatz (Aufträge)" : "Revenue (Orders)"}</span><span style="color:#047857">${formatCurrency(paidOrders.reduce((s: number, o: Order) => s + (Number(o.total) || 0), 0))}</span></div>
+<div class="summary-row"><span>${isDE ? "Umsatz (Marktverkäufe)" : "Revenue (Market Sales)"}</span><span style="color:#047857">${formatCurrency(filteredSales.reduce((s: number, sa: MarketSale) => s + (Number(sa.amount) || 0) * (Number(sa.quantity) || 1), 0))}</span></div>
 <div class="summary-row" style="border-top:1px solid #e5e7eb;padding-top:8px;font-weight:600"><span>${isDE ? "Gesamtumsatz" : "Total Revenue"}</span><span style="color:#047857">${formatCurrency(totalRevenue)}</span></div>
 <div class="summary-row" style="margin-top:12px"><span>${isDE ? "Gesamtausgaben" : "Total Expenses"}</span><span style="color:#dc2626">${formatCurrency(totalExpenses)}</span></div>
 <div class="summary-row total"><span>${isDE ? "Nettogewinn" : "Net Profit"}</span><span style="color:${netProfit >= 0 ? "#047857" : "#dc2626"}">${formatCurrency(netProfit)}</span></div>
@@ -261,12 +262,12 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
                 : "Get started: Create your first order, set up a market, or track an expense."}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a href="/orders/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
+              <Link href="/orders/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
                 {t.orders.newOrder}
-              </a>
-              <a href="/markets/new" className="inline-flex items-center gap-2 rounded-lg border border-brand-primary text-brand-primary px-4 py-2.5 text-sm font-medium hover:bg-brand-primary/5 transition-colors">
+              </Link>
+              <Link href="/markets/new" className="inline-flex items-center gap-2 rounded-lg border border-brand-primary text-brand-primary px-4 py-2.5 text-sm font-medium hover:bg-brand-primary/5 transition-colors">
                 {t.markets.newMarket}
-              </a>
+              </Link>
             </div>
           </div>
         </Card>

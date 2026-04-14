@@ -40,7 +40,8 @@ export default function EditOrderPage() {
 
   const order = orders?.find((o) => o.id === id);
 
-  // Pre-fill form with existing order data
+  // Pre-fill form when server data arrives (sync from external system)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (order && !initialized) {
       setCustomerName(order.customerName || "");
@@ -67,6 +68,7 @@ export default function EditOrderPage() {
       setInitialized(true);
     }
   }, [order, initialized]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateItem = (index: number, field: keyof OrderItem, value: string) => {
     setItems((prev) =>

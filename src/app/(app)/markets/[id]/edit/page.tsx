@@ -34,6 +34,8 @@ export default function EditMarketPage() {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState("");
 
+  // Populate form when server data arrives (sync from external system)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (market && !initialized) {
       setName(market.name || "");
@@ -61,6 +63,7 @@ export default function EditMarketPage() {
       setInitialized(true);
     }
   }, [market, initialized]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const addQuickItem = () => {
     setQuickItems((prev) => [...prev, { name: "", price: "" }]);

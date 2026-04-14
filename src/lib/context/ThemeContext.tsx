@@ -13,12 +13,11 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-
-  useEffect(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "system";
     const saved = localStorage.getItem("vendora_theme") as Theme | null;
-    if (saved) setThemeState(saved);
-  }, []);
+    return saved || "system";
+  });
 
   useEffect(() => {
     const root = document.documentElement;

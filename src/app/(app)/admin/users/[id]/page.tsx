@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Shield, Mail, Calendar, ShoppingCart, Store, Receipt, Clock, Ban, CheckCircle, Plus } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -44,7 +44,6 @@ const statusColors: Record<string, string> = {
 
 export default function AdminUserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const [user, setUser] = useState<UserDetail | null>(null);
@@ -53,7 +52,7 @@ export default function AdminUserDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const [userData, usersData] = await Promise.all([
         fetch(`/api/admin/users/${id}`).then((r) => r.json()),
@@ -66,9 +65,10 @@ export default function AdminUserDetailPage() {
       // ignore
     }
     setLoading(false);
-  };
+  }, [id]);
 
-  useEffect(() => { fetchUser(); }, [id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchUser(); }, [fetchUser]);
 
   const handleAction = async (body: Record<string, unknown>) => {
     setActionLoading(true);

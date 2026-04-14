@@ -41,8 +41,8 @@ describe("2.2 — escapeHtml prevents XSS", () => {
     expect(escapeHtml("Musterstraße 1, 12345 Berlin")).toBe("Musterstraße 1, 12345 Berlin");
   });
 
-  it("profile validation rejects script tags", () => {
-    const { z } = require("zod");
+  it("profile validation rejects script tags", async () => {
+    const { z } = await import("zod");
     const noHtml = (val: string) => !/<script|<\/script|<iframe|<object|<embed|javascript:/i.test(val);
     const safeStr = z.string().max(200).refine(noHtml, { message: "HTML tags are not allowed" });
 

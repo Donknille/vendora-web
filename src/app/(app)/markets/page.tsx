@@ -7,6 +7,7 @@ import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
+import type { MarketSale } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
@@ -29,7 +30,7 @@ export default function MarketsPage() {
   }, [markets, search]);
 
   // Group sales by marketId for quick lookup
-  const salesByMarket: Record<string, any[]> = {};
+  const salesByMarket: Record<string, MarketSale[]> = {};
   if (allSales) {
     for (const sale of allSales) {
       const mid = sale.marketId;

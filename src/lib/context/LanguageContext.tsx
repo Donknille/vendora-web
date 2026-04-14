@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { type Language, getDeviceLanguage, getTranslations, type Translations } from "@/lib/i18n";
 
 interface LanguageContextType {
@@ -12,12 +12,11 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("de");
-
-  useEffect(() => {
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === "undefined") return "de";
     const saved = localStorage.getItem("vendora_language") as Language | null;
-    setLanguageState(saved || getDeviceLanguage());
-  }, []);
+    return saved || getDeviceLanguage();
+  });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

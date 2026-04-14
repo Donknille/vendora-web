@@ -20,9 +20,9 @@ export default function AGBPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">§ 1 Geltungsbereich</h2>
         <p className="text-sm text-secondary leading-relaxed">
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Web-Anwendung „Vendora"
-          (nachfolgend „Dienst"), betrieben von Sebastian Grüber, DigitalFlowSolutions,
-          Falkenweg 6, 38820 Halberstadt (nachfolgend „Anbieter"). Mit der Registrierung
+          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Web-Anwendung &bdquo;Vendora&ldquo;
+          (nachfolgend &bdquo;Dienst&ldquo;), betrieben von Sebastian Grüber, DigitalFlowSolutions,
+          Falkenweg 6, 38820 Halberstadt (nachfolgend &bdquo;Anbieter&ldquo;). Mit der Registrierung
           akzeptiert der Nutzer diese AGB.
         </p>
       </Card>

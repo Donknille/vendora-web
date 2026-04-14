@@ -8,6 +8,7 @@ import {
   boolean,
   timestamp,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -28,7 +29,9 @@ export const users = pgTable("users", {
   // Admin
   isBlocked: boolean("is_blocked").default(false),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  index("idx_users_stripe_customer_id").on(t.stripeCustomerId),
+]);
 
 export type User = typeof users.$inferSelect;
 
@@ -59,7 +62,9 @@ export const orders = pgTable("orders", {
   comment: text("comment"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-});
+}, (t) => [
+  index("idx_orders_user_id").on(t.userId),
+]);
 
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
@@ -80,7 +85,9 @@ export const orderItems = pgTable("order_items", {
   price: numeric("price").notNull().default("0"),
   processingStatus: text("processing_status"),
   comment: text("comment"),
-});
+}, (t) => [
+  index("idx_order_items_order_id").on(t.orderId),
+]);
 
 export type SelectOrderItem = typeof orderItems.$inferSelect;
 
@@ -103,7 +110,9 @@ export const marketEvents = pgTable("market_events", {
   status: text("status").default("open"),
   quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(),
   createdAt: text("created_at").notNull(),
-});
+}, (t) => [
+  index("idx_market_events_user_id").on(t.userId),
+]);
 
 export type SelectMarketEvent = typeof marketEvents.$inferSelect;
 
@@ -124,7 +133,10 @@ export const marketSales = pgTable("market_sales", {
   amount: numeric("amount").notNull().default("0"),
   quantity: integer("quantity").notNull().default(1),
   createdAt: text("created_at").notNull(),
-});
+}, (t) => [
+  index("idx_market_sales_user_id").on(t.userId),
+  index("idx_market_sales_market_id").on(t.marketId),
+]);
 
 export type SelectMarketSale = typeof marketSales.$inferSelect;
 
@@ -143,7 +155,9 @@ export const expenses = pgTable("expenses", {
   category: text("category").notNull().default(""),
   expenseDate: text("expense_date").notNull(),
   createdAt: text("created_at").notNull(),
-});
+}, (t) => [
+  index("idx_expenses_user_id").on(t.userId),
+]);
 
 export type SelectExpense = typeof expenses.$inferSelect;
 

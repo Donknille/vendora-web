@@ -22,7 +22,7 @@ import {
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
-import { useAppSettings, useUpdateSettings } from "@/lib/hooks/useSettings";
+import { useAppSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { createClient } from "@/lib/supabase/client";
@@ -36,7 +36,7 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
-  const { data: settings, isLoading: loadingSettings } = useAppSettings();
+  const { isLoading: loadingSettings } = useAppSettings();
   const { data: sub } = useSubscription();
   const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
@@ -55,8 +55,6 @@ export default function SettingsPage() {
   };
 
   const updateProfile = useUpdateProfile();
-  const updateSettings = useUpdateSettings();
-
   // Profile form state
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");

@@ -1,4 +1,4 @@
-name: Security Check
+name: Security & Quality Check
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
     - cron: "0 8 * * 1" # Every Monday at 8:00 UTC
 
 jobs:
-  audit:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,3 +26,12 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
