@@ -51,10 +51,9 @@ export async function DELETE() {
       );
     }
 
-    // Step 3: Soft-delete the user record (cascade deletes all related data)
-    // Mark as deleted first, then hard-delete
+    // Step 3: Soft-delete the user record
+    // Keep the record with deletedAt set to prevent re-registration with the same email
     await db.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
-    await db.delete(users).where(eq(users.id, userId));
 
     return NextResponse.json({ message: "Account and all data deleted successfully" });
   } catch (error) {

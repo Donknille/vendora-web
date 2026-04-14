@@ -42,14 +42,18 @@ export async function POST(request: Request) {
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30);
 
-          await storage.updateSubscription(userId, {
-            subscriptionStatus: "active",
-            subscriptionExpiresAt: expiresAt,
-            stripeSubscriptionId: subscriptionId,
-            stripeCustomerId: obj.customer as string,
-          });
-
-          console.log(`[STRIPE] Subscription activated for user ${userId}, expires ${expiresAt.toISOString()}`);
+          // Idempotent: only update if new expiration is later than current
+          const currentUser = await storage.getUser(userId);
+          const currentExpiry = currentUser?.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
+          if (!currentExpiry || expiresAt > currentExpiry) {
+            await storage.updateSubscription(userId, {
+              subscriptionStatus: "active",
+              subscriptionExpiresAt: expiresAt,
+              stripeSubscriptionId: subscriptionId,
+              stripeCustomerId: obj.customer as string,
+            });
+            console.log(`[STRIPE] Subscription activated for user ${userId}, expires ${expiresAt.toISOString()}`);
+          }
         }
         break;
       }
@@ -68,11 +72,15 @@ export async function POST(request: Request) {
             .where(eq(users.stripeCustomerId, customerId));
 
           if (user) {
-            await storage.updateSubscription(user.id, {
-              subscriptionStatus: "active",
-              subscriptionExpiresAt: expiresAt,
-            });
-            console.log(`[STRIPE] Subscription renewed for user ${user.id}, expires ${expiresAt.toISOString()}`);
+            // Idempotent: only extend if new expiration is later than current
+            const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
+            if (!currentExpiry || expiresAt > currentExpiry) {
+              await storage.updateSubscription(user.id, {
+                subscriptionStatus: "active",
+                subscriptionExpiresAt: expiresAt,
+              });
+              console.log(`[STRIPE] Subscription renewed for user ${user.id}, expires ${expiresAt.toISOString()}`);
+            }
           }
         }
         break;
