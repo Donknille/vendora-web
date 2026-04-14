@@ -14,39 +14,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Missing signature" }, { status: 400 });
     }
 
-    let event;
-
-    // Verify webhook signature if secret is configured
+    // Fail-closed: reject all events if webhook secret is not configured
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      try {
-        event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
-      } catch {
-        console.error("Webhook signature verification failed");
-        return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
-      }
-    } else {
-      // In development, accept without verification
-      event = JSON.parse(body);
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET is not configured — rejecting webhook");
+      return NextResponse.json({ message: "Webhook not configured" }, { status: 500 });
     }
+
+    let event;
+    try {
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
+    } catch {
+      console.error("Webhook signature verification failed");
+      return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
+    }
+
+    // Use Record type for event data — Stripe v22 types are overly strict
+    // for constructEvent which returns generic Stripe.Event
+    const obj = event.data.object as unknown as Record<string, unknown>;
 
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object;
-        const userId = session.metadata?.vendora_user_id;
-        const subscriptionId = session.subscription;
+        const userId = (obj.metadata as Record<string, string>)?.vendora_user_id;
+        const subscriptionId = obj.subscription as string | undefined;
 
         if (userId && subscriptionId) {
-          // Get subscription details from Stripe
-          // Set subscription active for 30 days (Stripe manages actual period)
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30);
 
           await storage.updateSubscription(userId, {
             subscriptionStatus: "active",
             subscriptionExpiresAt: expiresAt,
-            stripeSubscriptionId: subscriptionId as string,
-            stripeCustomerId: session.customer as string,
+            stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: obj.customer as string,
           });
 
           console.log(`[STRIPE] Subscription activated for user ${userId}, expires ${expiresAt.toISOString()}`);
@@ -55,16 +55,13 @@ export async function POST(request: Request) {
       }
 
       case "invoice.payment_succeeded": {
-        // Recurring payment — extend subscription
-        const invoice = event.data.object;
-        const subscriptionId = invoice.subscription;
+        const subscriptionId = obj.subscription as string | undefined;
 
         if (subscriptionId) {
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30);
-          const customerId = invoice.customer as string;
+          const customerId = obj.customer as string;
 
-          // Find user by Stripe customer ID
           const [user] = await db
             .select()
             .from(users)
@@ -82,9 +79,7 @@ export async function POST(request: Request) {
       }
 
       case "customer.subscription.deleted": {
-        // Subscription cancelled
-        const subscription = event.data.object;
-        const customerId = subscription.customer as string;
+        const customerId = obj.customer as string;
 
         const [user] = await db
           .select()

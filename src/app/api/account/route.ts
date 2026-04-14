@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/server/storage";
+import { getAdminClient } from "@/lib/supabase/admin";
+import { getStripe } from "@/lib/server/stripe";
 import { db } from "@/lib/server/db";
 import { users } from "@/lib/server/schema";
 import { eq } from "drizzle-orm";
@@ -12,17 +14,47 @@ export async function DELETE() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Delete user record from our DB (cascade deletes all related data:
-    // orders, order_items, market_events, market_sales, expenses,
-    // company_profiles, app_settings, invoice_counters)
+    const user = await getUser(userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Step 1: Delete Stripe customer (external, do before DB changes)
+    if (user.stripeCustomerId) {
+      try {
+        await getStripe().customers.del(user.stripeCustomerId);
+      } catch (error) {
+        console.error("Failed to delete Stripe customer:", error);
+        return NextResponse.json(
+          { message: "Failed to delete payment data. Please try again or contact support." },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Step 2: Delete Supabase Auth user (external, do before DB changes)
+    try {
+      const adminClient = getAdminClient();
+      const { error } = await adminClient.auth.admin.deleteUser(userId);
+      if (error) {
+        console.error("Failed to delete Supabase auth user:", error);
+        return NextResponse.json(
+          { message: "Failed to delete authentication data. Please try again or contact support." },
+          { status: 500 }
+        );
+      }
+    } catch (error) {
+      console.error("Failed to delete Supabase auth user:", error);
+      return NextResponse.json(
+        { message: "Failed to delete authentication data. Please try again or contact support." },
+        { status: 500 }
+      );
+    }
+
+    // Step 3: Soft-delete the user record (cascade deletes all related data)
+    // Mark as deleted first, then hard-delete
+    await db.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
     await db.delete(users).where(eq(users.id, userId));
-
-    // Sign out the user from Supabase Auth
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-
-    // Note: Supabase Auth user must be deleted via Supabase Admin API
-    // or manually in the dashboard. The app data is fully deleted above.
 
     return NextResponse.json({ message: "Account and all data deleted successfully" });
   } catch (error) {

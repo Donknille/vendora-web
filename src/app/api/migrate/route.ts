@@ -24,12 +24,25 @@ const migrateOrderSchema = z.object({
 });
 
 const migrateMarketSchema = z.object({
+  id: z.string().optional(), // used for marketSales mapping
   name: z.string().max(200).optional(),
   date: z.string().max(50).optional(),
   location: z.string().max(300).optional(),
   standFee: z.union([z.number(), z.string()]).optional(),
   travelCost: z.union([z.number(), z.string()]).optional(),
   notes: z.string().max(5000).optional(),
+  status: z.string().max(50).optional(),
+  quickItems: z.array(z.object({
+    name: z.string().max(200),
+    price: z.number().min(0).max(999999.99),
+  })).max(50).optional(),
+});
+
+const migrateMarketSaleSchema = z.object({
+  marketId: z.string(),
+  description: z.string().max(200).optional(),
+  amount: z.union([z.number(), z.string()]).optional(),
+  quantity: z.number().int().min(1).max(9999).optional(),
 });
 
 const migrateExpenseSchema = z.object({
@@ -50,11 +63,19 @@ const migrateProfileSchema = z.object({
   defaultShippingCost: z.number().min(0).max(99999.99).optional(),
 }).optional();
 
+const migrateSettingsSchema = z.object({
+  theme: z.string().max(50).optional(),
+  currency: z.string().max(10).optional(),
+}).optional();
+
 const migrateSchema = z.object({
   orders: z.array(migrateOrderSchema).max(500).optional(),
   markets: z.array(migrateMarketSchema).max(200).optional(),
+  marketSales: z.array(migrateMarketSaleSchema).max(5000).optional(),
   expenses: z.array(migrateExpenseSchema).max(2000).optional(),
   profile: migrateProfileSchema,
+  settings: migrateSettingsSchema,
+  invoiceCounter: z.number().int().min(0).max(999999).optional(),
 });
 
 function toNum(val: unknown): number {
@@ -81,6 +102,12 @@ export async function POST(request: Request) {
 
     const data = parsed.data;
 
+    // Delete all existing user data before restoring
+    await storage.deleteAllUserData(userId);
+
+    // Track old market ID → new market ID mapping (for marketSales)
+    const marketIdMap = new Map<string, string>();
+
     // Import orders
     if (data.orders) {
       for (const order of data.orders) {
@@ -106,14 +133,35 @@ export async function POST(request: Request) {
     // Import markets
     if (data.markets) {
       for (const market of data.markets) {
-        await storage.createMarket(userId, {
+        const created = await storage.createMarket(userId, {
           name: market.name || "",
           date: market.date || new Date().toISOString().split("T")[0],
           location: market.location || "",
           standFee: toNum(market.standFee),
           travelCost: toNum(market.travelCost),
           notes: market.notes || "",
+          status: market.status,
+          quickItems: market.quickItems,
         });
+        // Map old ID to new ID for marketSales
+        if (market.id) {
+          marketIdMap.set(market.id, created.id);
+        }
+      }
+    }
+
+    // Import market sales
+    if (data.marketSales) {
+      for (const sale of data.marketSales) {
+        const newMarketId = marketIdMap.get(sale.marketId);
+        if (newMarketId) {
+          await storage.createMarketSale(userId, {
+            marketId: newMarketId,
+            description: sale.description || "",
+            amount: toNum(sale.amount),
+            quantity: sale.quantity || 1,
+          });
+        }
       }
     }
 
@@ -140,6 +188,19 @@ export async function POST(request: Request) {
         smallBusinessNote: data.profile.smallBusinessNote,
         defaultShippingCost: data.profile.defaultShippingCost,
       });
+    }
+
+    // Import settings
+    if (data.settings) {
+      await storage.upsertSettings(userId, {
+        theme: data.settings.theme || "system",
+        currency: data.settings.currency || "€",
+      });
+    }
+
+    // Import invoice counter
+    if (data.invoiceCounter != null && data.invoiceCounter > 0) {
+      await storage.setInvoiceCounter(userId, data.invoiceCounter);
     }
 
     return NextResponse.json({ message: "Import successful" });

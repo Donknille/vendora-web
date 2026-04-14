@@ -111,6 +111,7 @@ export default function MarketDetailPage() {
     } catch {
       setError("Markt konnte nicht gelöscht werden.");
     }
+    setConfirmDeleteMarket(false);
   };
 
   const handleDeleteSale = async (saleId: string) => {
@@ -366,7 +367,7 @@ export default function MarketDetailPage() {
       <ConfirmDialog
         open={!!confirmDeleteSaleId}
         onClose={() => setConfirmDeleteSaleId(null)}
-        onConfirm={() => { if (confirmDeleteSaleId) handleDeleteSale(confirmDeleteSaleId); }}
+        onConfirm={() => { if (confirmDeleteSaleId) { handleDeleteSale(confirmDeleteSaleId); setConfirmDeleteSaleId(null); } }}
         title={t.markets.deleteSale}
         message={t.markets.removeSale}
         confirmText={t.markets.deleteAction}

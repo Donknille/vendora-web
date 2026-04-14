@@ -27,6 +27,7 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   // Admin
   isBlocked: boolean("is_blocked").default(false),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export type User = typeof users.$inferSelect;

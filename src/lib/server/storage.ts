@@ -480,6 +480,24 @@ export async function upsertSettings(
 
 // ── Invoice Counter ────────────────────────────────────────
 
+export async function getInvoiceCounter(userId: string): Promise<number> {
+  const [row] = await db
+    .select()
+    .from(invoiceCounters)
+    .where(eq(invoiceCounters.userId, userId));
+  return row?.counter ?? 0;
+}
+
+export async function setInvoiceCounter(userId: string, counter: number): Promise<void> {
+  await db
+    .insert(invoiceCounters)
+    .values({ userId, counter })
+    .onConflictDoUpdate({
+      target: invoiceCounters.userId,
+      set: { counter },
+    });
+}
+
 export async function getNextInvoiceNumber(userId: string): Promise<string> {
   const [result] = await db
     .insert(invoiceCounters)
@@ -492,6 +510,25 @@ export async function getNextInvoiceNumber(userId: string): Promise<string> {
 
   const year = new Date().getFullYear().toString().slice(-2);
   return `${year}-${result.counter.toString().padStart(3, "0")}`;
+}
+
+// ── Delete All User Data (for backup restore) ────────────
+
+export async function deleteAllUserData(userId: string): Promise<void> {
+  // Delete in correct order due to foreign keys
+  // market_sales → references market_events
+  await db.delete(marketSales).where(eq(marketSales.userId, userId));
+  // order_items → references orders (cascade handles this, but explicit is safer)
+  const userOrders = await db.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
+  if (userOrders.length > 0) {
+    await db.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
+  }
+  await db.delete(orders).where(eq(orders.userId, userId));
+  await db.delete(marketEvents).where(eq(marketEvents.userId, userId));
+  await db.delete(expenses).where(eq(expenses.userId, userId));
+  await db.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
+  await db.delete(appSettings).where(eq(appSettings.userId, userId));
+  await db.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 }
 
 // ── Subscription ───────────────────────────────────────────

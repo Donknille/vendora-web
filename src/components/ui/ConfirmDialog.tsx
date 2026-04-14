@@ -53,10 +53,7 @@ export function ConfirmDialog({
             {cancelText}
           </button>
           <button
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
+            onClick={onConfirm}
             className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
           >
             {confirmText}

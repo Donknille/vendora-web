@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const [orders, markets, marketSales, expenses, profile, settings] =
+    const [orders, markets, marketSales, expenses, profile, settings, invoiceCounter] =
       await Promise.all([
         storage.getOrders(userId),
         storage.getMarkets(userId),
@@ -17,6 +17,7 @@ export async function GET() {
         storage.getExpenses(userId),
         storage.getProfile(userId),
         storage.getSettings(userId),
+        storage.getInvoiceCounter(userId),
       ]);
 
     return NextResponse.json({
@@ -27,6 +28,7 @@ export async function GET() {
       expenses,
       profile,
       settings,
+      invoiceCounter,
     });
   } catch (error) {
     console.error("GET /api/export error:", error);

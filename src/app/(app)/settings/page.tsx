@@ -26,6 +26,7 @@ import { useAppSettings, useUpdateSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { createClient } from "@/lib/supabase/client";
+import { queryClient } from "@/lib/api-client";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -73,9 +74,12 @@ export default function SettingsPage() {
   const [exportStatus, setExportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
 
   // Delete account
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Load user email
   useEffect(() => {
@@ -105,6 +109,7 @@ export default function SettingsPage() {
   }, [profile]);
 
   const handleLogout = async () => {
+    queryClient.clear();
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/auth/login");
@@ -159,12 +164,20 @@ export default function SettingsPage() {
     }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPendingImportFile(file);
+    setShowImportConfirm(true);
+    // Reset file input so the same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleImportConfirm = async () => {
+    if (!pendingImportFile) return;
     setImportStatus("loading");
     try {
-      const text = await file.text();
+      const text = await pendingImportFile.text();
       const data = JSON.parse(text);
       const res = await fetch("/api/migrate", {
         method: "POST",
@@ -178,8 +191,8 @@ export default function SettingsPage() {
       setImportStatus("error");
       setTimeout(() => setImportStatus("idle"), 3000);
     }
-    // Reset file input
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setPendingImportFile(null);
+    setShowImportConfirm(false);
   };
 
   const subscriptionLabel = (() => {
@@ -510,7 +523,7 @@ export default function SettingsPage() {
             ref={fileInputRef}
             type="file"
             accept=".json"
-            onChange={handleImport}
+            onChange={handleFileSelect}
             className="hidden"
           />
         </div>
@@ -579,24 +592,53 @@ export default function SettingsPage() {
         </button>
       </Card>
 
+      {/* Import Confirm Dialog */}
+      <ConfirmDialog
+        open={showImportConfirm}
+        onClose={() => {
+          setShowImportConfirm(false);
+          setPendingImportFile(null);
+        }}
+        onConfirm={handleImportConfirm}
+        title={language === "de" ? "Backup wiederherstellen" : "Restore Backup"}
+        message={language === "de"
+          ? "Alle bestehenden Daten (Aufträge, Märkte, Ausgaben, etc.) werden gelöscht und durch das Backup ersetzt. Diese Aktion kann nicht rückgängig gemacht werden."
+          : "All existing data (orders, markets, expenses, etc.) will be deleted and replaced with the backup. This action cannot be undone."}
+        confirmText={language === "de" ? "Wiederherstellen" : "Restore"}
+        cancelText={t.common.cancel}
+      />
+
       {/* Delete Account Dialog */}
       <ConfirmDialog
         open={showDeleteAccount}
-        onClose={() => setShowDeleteAccount(false)}
+        onClose={() => {
+          setShowDeleteAccount(false);
+          setDeleteError("");
+        }}
         onConfirm={async () => {
+          setDeleteError("");
           try {
-            await fetch("/api/account", { method: "DELETE" });
+            const res = await fetch("/api/account", { method: "DELETE" });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              setDeleteError(data.message || (language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account."));
+              return;
+            }
+            queryClient.clear();
             const supabase = createClient();
             await supabase.auth.signOut();
             router.push("/auth/login");
           } catch {
-            // ignore
+            setDeleteError(language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.");
           }
         }}
         title={language === "de" ? "Konto löschen" : "Delete Account"}
-        message={language === "de"
-          ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht."
-          : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted."}
+        message={
+          (deleteError ? deleteError + "\n\n" : "") +
+          (language === "de"
+            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht."
+            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted.")
+        }
         confirmText={language === "de" ? "Endgültig löschen" : "Delete permanently"}
         cancelText={t.common.cancel}
       />

@@ -231,7 +231,7 @@ export default function AdminUserDetailPage() {
       <ConfirmDialog
         open={showBlockDialog}
         onClose={() => setShowBlockDialog(false)}
-        onConfirm={() => handleAction({ action: "block" })}
+        onConfirm={() => { handleAction({ action: "block" }); setShowBlockDialog(false); }}
         title="User sperren"
         message={`${user.email} wird gesperrt. Der User kann sich weiterhin einloggen, aber keine Aktionen mehr durchführen.`}
         confirmText="Sperren"

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { createClient } from "@/lib/supabase/client";
+import { queryClient } from "@/lib/api-client";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -35,6 +36,7 @@ export function Sidebar() {
   const isAdmin = adminData?.isAdmin === true;
 
   const handleLogout = async () => {
+    queryClient.clear();
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/auth/login");

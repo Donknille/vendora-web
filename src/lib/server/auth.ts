@@ -7,33 +7,24 @@ import { getUser, getSubscriptionStatus } from "./storage";
 
 /**
  * Gets the authenticated user ID from the Supabase session.
- * Fast — no DB query, only checks Supabase session cookie.
- * Use for read-only endpoints.
+ * Also checks if the user is blocked in the DB.
+ * Returns null if unauthenticated or blocked.
  */
 export async function getAuthUserId(): Promise<string | null> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
-
-/**
- * Gets the authenticated user ID AND checks if user is blocked.
- * Slower — makes an additional DB query.
- * Use for write endpoints (POST, PUT, DELETE).
- */
-export async function getAuthUserIdStrict(): Promise<string | null> {
-  const userId = await getAuthUserId();
-  if (!userId) return null;
+  if (!user?.id) return null;
 
   const [dbUser] = await db
-    .select({ isBlocked: users.isBlocked })
+    .select({ isBlocked: users.isBlocked, deletedAt: users.deletedAt })
     .from(users)
-    .where(eq(users.id, userId));
+    .where(eq(users.id, user.id));
 
-  if (dbUser?.isBlocked) return null;
-  return userId;
+  if (dbUser?.isBlocked || dbUser?.deletedAt) return null;
+
+  return user.id;
 }
 
 /**
@@ -58,10 +49,26 @@ export async function requireActiveSubscription(userId: string): Promise<NextRes
 /**
  * Ensures a user record exists in our users table.
  * Called after Supabase Auth signup/login.
+ * Rejects previously deleted accounts (soft-delete guard).
  */
 export async function ensureUserRecord(id: string, email: string) {
   const [existing] = await db.select().from(users).where(eq(users.id, id));
+
+  // Block re-creation of deleted accounts
+  if (existing?.deletedAt) {
+    return null;
+  }
+
   if (existing) return existing;
+
+  // Also check if this email was previously used by a deleted account
+  const [deletedByEmail] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email));
+  if (deletedByEmail?.deletedAt) {
+    return null;
+  }
 
   // Set trial period: 6 weeks from now
   const trialEndsAt = new Date();
