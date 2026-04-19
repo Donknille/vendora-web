@@ -102,3 +102,29 @@ input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px var(--color-autofill-bg) inset !important;
   -webkit-text-fill-color: var(--color-autofill-text) !important;
 }
+
+/* ── Landing page animations ── */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; transform: translate(-50%, -33%) scale(1); }
+  50%      { opacity: 0.6; transform: translate(-50%, -33%) scale(1.05); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-20px, 20px); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(15px, -15px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+  50%      { box-shadow: 0 0 40px 4px rgba(212, 175, 55, 0.15); }
+}
+
+.animate-pulse-slow  { animation: pulse-slow  8s ease-in-out infinite; }
+.animate-float-slow  { animation: float-slow  10s ease-in-out infinite; }
+.animate-float-slower { animation: float-slower 14s ease-in-out infinite; }
+.animate-glow-pulse  { animation: glow-pulse  3s ease-in-out infinite; }

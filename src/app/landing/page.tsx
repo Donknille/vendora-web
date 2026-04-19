@@ -1,29 +1,20 @@
 import Link from "next/link";
-import { ShoppingCart, Store, Receipt, BarChart3, FileText, Shield } from "lucide-react";
-
-const features = [
-  { icon: ShoppingCart, title: "Aufträge verwalten", desc: "Kunden, Positionen, Status-Tracking von offen bis geliefert." },
-  { icon: FileText, title: "Rechnungen erstellen", desc: "Automatische Rechnungsnummern, PDF-Export mit deinem Firmenprofil." },
-  { icon: Store, title: "Märkte tracken", desc: "Standgebühren, Fahrtkosten, Schnellverkauf per Tap — Gewinn live berechnet." },
-  { icon: Receipt, title: "Ausgaben erfassen", desc: "7 Kategorien, Monatsübersicht, alles an einem Ort." },
-  { icon: BarChart3, title: "Dashboard & GuV", desc: "Umsatz, Ausgaben, Nettogewinn — Jahresfilter und PDF-Export." },
-  { icon: Shield, title: "Sicher & privat", desc: "Deine Daten gehören dir. Kein Tracking, keine Werbung, DSGVO-konform." },
-];
+import { AnimatedLogo } from "./_components/AnimatedLogo";
+import { HeroHeadline } from "./_components/HeroHeadline";
+import { MeshGradient } from "./_components/MeshGradient";
+import { FeatureGrid } from "./_components/FeatureGrid";
+import { PricingBox } from "./_components/PricingBox";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-page">
       {/* Hero */}
-      <header className="mx-auto max-w-5xl px-6 pt-16 pb-12 text-center">
-        <div className="inline-flex items-center mb-6">
-          <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-14 w-auto block dark:hidden" />
-          <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-14 w-auto hidden dark:block" />
-        </div>
+      <header className="relative mx-auto max-w-5xl px-6 pt-16 pb-12 text-center">
+        <MeshGradient />
 
-        <h1 className="text-4xl md:text-5xl text-primary leading-tight max-w-2xl mx-auto">
-          Dein Business. <br className="hidden md:block" />
-          <span className="text-brand-primary">Einfach verwaltet.</span>
-        </h1>
+        <AnimatedLogo />
+
+        <HeroHeadline />
 
         <p className="mt-4 text-lg text-muted max-w-xl mx-auto">
           Aufträge, Rechnungen, Marktverkäufe und Ausgaben — alles an einem Ort.
@@ -50,49 +41,12 @@ export default function LandingPage() {
 
       {/* Features Grid */}
       <section className="mx-auto max-w-5xl px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={feature.title}
-                className="rounded-xl border border-line bg-surface p-6 hover:border-brand-primary/30 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center mb-4">
-                  <Icon className="h-5 w-5 text-green-600" />
-                </div>
-                <h3 className="text-lg text-primary mb-1">{feature.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{feature.desc}</p>
-              </div>
-            );
-          })}
-        </div>
+        <FeatureGrid />
       </section>
 
       {/* Pricing */}
       <section className="mx-auto max-w-5xl px-6 py-12">
-        <div className="mx-auto max-w-md rounded-2xl border border-brand-primary/20 bg-surface p-8 text-center">
-          <p className="text-sm font-medium text-brand-primary uppercase tracking-wider mb-2">Ein Plan. Alles drin.</p>
-          <div className="flex items-baseline justify-center gap-1 mb-4">
-            <span className="text-5xl text-primary">2,99 €</span>
-            <span className="text-muted">/Monat</span>
-          </div>
-          <ul className="space-y-2 text-sm text-secondary text-left mb-6">
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Unbegrenzte Aufträge & Rechnungen</li>
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Unbegrenzte Märkte & Verkäufe</li>
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Ausgabenverwaltung</li>
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Dashboard & GuV-Export</li>
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Backup & Restore</li>
-            <li className="flex items-center gap-2"><span className="text-brand-primary">✓</span> Deutsch & Englisch</li>
-          </ul>
-          <Link
-            href="/auth/register"
-            className="block w-full rounded-xl bg-brand-primary px-6 py-3 text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
-          >
-            6 Wochen kostenlos testen
-          </Link>
-          <p className="mt-2 text-xs text-faint">Jederzeit kündbar. Keine versteckten Kosten.</p>
-        </div>
+        <PricingBox />
       </section>
 
       {/* Footer */}
