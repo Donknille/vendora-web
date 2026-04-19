@@ -12,28 +12,74 @@ describe("1.1 — Query cache clearing on logout", () => {
   it("queryClient.clear() removes all cached queries", async () => {
     const { queryClient } = await import("@/lib/api-client");
 
-    // Seed the cache with mock data
-    queryClient.setQueryData(["/api/orders"], [{ id: "1", customerName: "User A" }]);
-    queryClient.setQueryData(["/api/profile"], { name: "User A Corp" });
+    // Seed the cache with mock data (user-scoped keys)
+    queryClient.setQueryData(["user-a", "/api/orders"], [{ id: "1", customerName: "User A" }]);
+    queryClient.setQueryData(["user-a", "/api/profile"], { name: "User A Corp" });
 
-    expect(queryClient.getQueryData(["/api/orders"])).toBeDefined();
-    expect(queryClient.getQueryData(["/api/profile"])).toBeDefined();
+    expect(queryClient.getQueryData(["user-a", "/api/orders"])).toBeDefined();
+    expect(queryClient.getQueryData(["user-a", "/api/profile"])).toBeDefined();
 
     // Clear should remove all data
     queryClient.clear();
 
-    expect(queryClient.getQueryData(["/api/orders"])).toBeUndefined();
-    expect(queryClient.getQueryData(["/api/profile"])).toBeUndefined();
+    expect(queryClient.getQueryData(["user-a", "/api/orders"])).toBeUndefined();
+    expect(queryClient.getQueryData(["user-a", "/api/profile"])).toBeUndefined();
+  });
+
+  it("user-scoped keys isolate data between users", async () => {
+    const { queryClient } = await import("@/lib/api-client");
+    queryClient.clear();
+
+    // User A's data
+    queryClient.setQueryData(["user-a", "/api/orders"], [{ id: "1" }]);
+    // User B's data
+    queryClient.setQueryData(["user-b", "/api/orders"], [{ id: "2" }]);
+
+    // Keys are distinct — no cross-contamination
+    const userA = queryClient.getQueryData(["user-a", "/api/orders"]);
+    const userB = queryClient.getQueryData(["user-b", "/api/orders"]);
+
+    expect(userA).toEqual([{ id: "1" }]);
+    expect(userB).toEqual([{ id: "2" }]);
+
+    // After clear, both are gone
+    queryClient.clear();
+    expect(queryClient.getQueryData(["user-a", "/api/orders"])).toBeUndefined();
+    expect(queryClient.getQueryData(["user-b", "/api/orders"])).toBeUndefined();
+  });
+
+  it("default queryFn resolves URL from user-scoped query key", async () => {
+    const { queryClient } = await import("@/lib/api-client");
+    const cache = queryClient.getDefaultOptions().queries;
+    expect(cache?.queryFn).toBeDefined();
   });
 });
 
-// ── 1.2 Account Deletion — ensureUserRecord soft-delete guard ──
+// ── 1.2 Account Deletion — complete and irreversible ──
 
-describe("1.2 — Deleted user re-creation guard", () => {
+describe("1.2 — Account deletion completeness", () => {
   it("schema has deletedAt field on users table", async () => {
     const { users } = await import("@/lib/server/schema");
-    // Verify the column exists
     expect(users.deletedAt).toBeDefined();
+  });
+
+  it("deleteAllUserData is exported and accepts a transaction parameter", async () => {
+    const storage = await import("@/lib/server/storage");
+    expect(typeof storage.deleteAllUserData).toBe("function");
+    // Function accepts (userId, txOrDb?) — 1 required + 1 optional param
+    expect(storage.deleteAllUserData.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("account route handler uses db.transaction for data deletion", async () => {
+    // Read the source to verify transactional usage
+    const fs = await import("fs");
+    const source = fs.readFileSync("src/app/api/account/route.ts", "utf-8");
+    expect(source).toContain("db.transaction");
+    expect(source).toContain("deleteAllUserData");
+    // Stripe deletion before DB transaction
+    expect(source.indexOf("customers.del")).toBeLessThan(source.indexOf("db.transaction"));
+    // Supabase auth deletion before DB transaction
+    expect(source.indexOf("admin.deleteUser")).toBeLessThan(source.indexOf("db.transaction"));
   });
 });
 

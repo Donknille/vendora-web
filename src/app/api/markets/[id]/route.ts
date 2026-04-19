@@ -62,7 +62,10 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await storage.deleteMarket(userId, id);
+    const deleted = await storage.deleteMarket(userId, id);
+    if (!deleted) {
+      return NextResponse.json({ message: "Market not found" }, { status: 404 });
+    }
     return NextResponse.json({ message: "Market deleted" });
   } catch (error) {
     console.error("DELETE /api/markets/[id] error:", error);

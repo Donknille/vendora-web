@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { getUser } from "@/lib/server/storage";
+import { getUser, deleteAllUserData } from "@/lib/server/storage";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/server/stripe";
 import { db } from "@/lib/server/db";
@@ -51,9 +51,13 @@ export async function DELETE() {
       );
     }
 
-    // Step 3: Soft-delete the user record
-    // Keep the record with deletedAt set to prevent re-registration with the same email
-    await db.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
+    // Step 3: Delete all user data + soft-delete user record in a transaction
+    await db.transaction(async (tx) => {
+      // Delete all user data (orders, markets, expenses, profile, settings, etc.)
+      await deleteAllUserData(userId, tx);
+      // Soft-delete the user record to prevent re-registration with the same email
+      await tx.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
+    });
 
     return NextResponse.json({ message: "Account and all data deleted successfully" });
   } catch (error) {

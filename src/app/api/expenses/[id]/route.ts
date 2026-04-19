@@ -13,7 +13,10 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await storage.deleteExpense(userId, id);
+    const deleted = await storage.deleteExpense(userId, id);
+    if (!deleted) {
+      return NextResponse.json({ message: "Expense not found" }, { status: 404 });
+    }
     return NextResponse.json({ message: "Expense deleted" });
   } catch (error) {
     console.error("DELETE /api/expenses/[id] error:", error);

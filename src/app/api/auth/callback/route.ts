@@ -18,10 +18,14 @@ export async function GET(request: Request) {
 
       if (data.user) {
         try {
-          await ensureUserRecord(data.user.id, data.user.email!);
+          const record = await ensureUserRecord(data.user.id, data.user.email!);
+          if (!record) {
+            // Deleted account attempted re-registration
+            return NextResponse.redirect(`${origin}/auth/login?error=account_deleted`);
+          }
         } catch (dbError) {
           console.error("Auth callback - ensureUserRecord error:", dbError);
-          // Continue anyway — user is authenticated, DB record can be created later
+          return NextResponse.redirect(`${origin}/auth/login?error=setup_failed`);
         }
         return NextResponse.redirect(`${origin}/dashboard`);
       }

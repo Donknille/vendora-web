@@ -21,11 +21,14 @@ export async function POST(request: Request) {
     let customerId = user.stripeCustomerId;
 
     if (!customerId) {
-      // Create a new Stripe customer
-      const customer = await getStripe().customers.create({
-        email: user.email,
-        metadata: { vendora_user_id: userId },
-      });
+      // Create a new Stripe customer (idempotency key prevents duplicates on parallel requests)
+      const customer = await getStripe().customers.create(
+        {
+          email: user.email,
+          metadata: { vendora_user_id: userId },
+        },
+        { idempotencyKey: `customer-create-${userId}` },
+      );
       customerId = customer.id;
 
       // Save Stripe customer ID to our DB

@@ -72,7 +72,10 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await storage.deleteOrder(userId, id);
+    const deleted = await storage.deleteOrder(userId, id);
+    if (!deleted) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
+    }
     return NextResponse.json({ message: "Order deleted" });
   } catch (error) {
     console.error("DELETE /api/orders/[id] error:", error);

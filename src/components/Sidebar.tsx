@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { queryClient } from "@/lib/api-client";
 import {
@@ -29,9 +30,11 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
+  const userId = useCurrentUserId();
   const { data: adminData } = useQuery<{ isAdmin: boolean }>({
-    queryKey: ["/api/admin/check"],
+    queryKey: [userId, "/api/admin/check"],
     staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!userId,
   });
   const isAdmin = adminData?.isAdmin === true;
 

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { FileDown } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { escapeHtml } from "@/lib/escapeHtml";
 import { useProfile } from "@/lib/hooks/useProfile";
@@ -39,6 +40,7 @@ function monthKey(dateStr: string | undefined | null): string | null {
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
+  const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   // Single batched API call instead of 4 separate ones
   const { data, isLoading } = useQuery<{
@@ -46,7 +48,7 @@ export default function DashboardPage() {
     expenses: Expense[];
     markets: MarketEvent[];
     marketSales: MarketSale[];
-  }>({ queryKey: ["/api/dashboard"] });
+  }>({ queryKey: [userId, "/api/dashboard"], enabled: !!userId });
 
   const orders = data?.orders;
   const expenses = data?.expenses;

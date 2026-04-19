@@ -1,1 +1,1 @@
-(function(){try{var t=localStorage.getItem('vendora_theme');var d=t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})()
+(function(){try{var t=localStorage.getItem('vendora_theme');var d=t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(_){}})()

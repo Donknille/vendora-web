@@ -36,7 +36,7 @@ const migrateOrderSchema = z.object({
   total: z.union([z.number(), z.string()]).optional(),
   processingStatus: z.string().max(50).nullable().optional(),
   comment: z.string().max(5000).nullable().optional(),
-  items: z.array(migrateItemSchema).max(100).optional(),
+  items: z.array(migrateItemSchema).max(50).optional(),
 });
 
 const migrateMarketSchema = z.object({
@@ -86,10 +86,10 @@ const migrateSettingsSchema = z.object({
 
 const migrateSchema = z.object({
   schemaVersion: z.number().int().min(1).max(CURRENT_SCHEMA_VERSION).optional(),
-  orders: z.array(migrateOrderSchema).max(500).optional(),
-  markets: z.array(migrateMarketSchema).max(200).optional(),
-  marketSales: z.array(migrateMarketSaleSchema).max(5000).optional(),
-  expenses: z.array(migrateExpenseSchema).max(2000).optional(),
+  orders: z.array(migrateOrderSchema).max(200).optional(),
+  markets: z.array(migrateMarketSchema).max(100).optional(),
+  marketSales: z.array(migrateMarketSaleSchema).max(2000).optional(),
+  expenses: z.array(migrateExpenseSchema).max(1000).optional(),
   profile: migrateProfileSchema,
   settings: migrateSettingsSchema,
   invoiceCounter: z.number().int().min(0).max(999999).optional(),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Providers } from "@/components/Providers";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function RootLayout({
         <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="font-body antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </Providers>
       </body>
     </html>
   );

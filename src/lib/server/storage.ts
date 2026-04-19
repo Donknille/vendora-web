@@ -230,30 +230,35 @@ export async function updateOrder(
   if (fields.processingStatus !== undefined) dbUpdates.processingStatus = fields.processingStatus;
   if (fields.comment !== undefined) dbUpdates.comment = fields.comment;
 
-  if (newItems) {
-    const total = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    dbUpdates.total = total.toString();
-    await db.delete(orderItems).where(eq(orderItems.orderId, id));
-    if (newItems.length > 0) {
-      await db.insert(orderItems).values(
-        newItems.map((item) => ({
-          orderId: id,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price.toString(),
-          processingStatus: item.processingStatus,
-          comment: item.comment,
-        }))
-      );
+  // Wrap item replacement + order update in a transaction to prevent data loss
+  await db.transaction(async (tx) => {
+    if (newItems) {
+      const total = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      dbUpdates.total = total.toString();
+      await tx.delete(orderItems).where(eq(orderItems.orderId, id));
+      if (newItems.length > 0) {
+        await tx.insert(orderItems).values(
+          newItems.map((item) => ({
+            orderId: id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price.toString(),
+            processingStatus: item.processingStatus,
+            comment: item.comment,
+          }))
+        );
+      }
     }
-  }
 
-  await db.update(orders).set(dbUpdates).where(and(eq(orders.id, id), eq(orders.userId, userId)));
+    await tx.update(orders).set(dbUpdates).where(and(eq(orders.id, id), eq(orders.userId, userId)));
+  });
+
   return getOrder(userId, id);
 }
 
-export async function deleteOrder(userId: string, id: string): Promise<void> {
-  await db.delete(orders).where(and(eq(orders.id, id), eq(orders.userId, userId)));
+export async function deleteOrder(userId: string, id: string): Promise<boolean> {
+  const [deleted] = await db.delete(orders).where(and(eq(orders.id, id), eq(orders.userId, userId))).returning({ id: orders.id });
+  return !!deleted;
 }
 
 // ── Markets ────────────────────────────────────────────────
@@ -323,8 +328,9 @@ export async function updateMarket(
   return getMarket(userId, id);
 }
 
-export async function deleteMarket(userId: string, id: string): Promise<void> {
-  await db.delete(marketEvents).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId)));
+export async function deleteMarket(userId: string, id: string): Promise<boolean> {
+  const [deleted] = await db.delete(marketEvents).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId))).returning({ id: marketEvents.id });
+  return !!deleted;
 }
 
 // ── Market Sales ───────────────────────────────────────────
@@ -369,8 +375,9 @@ export async function createMarketSale(
   return toSaleResponse(sale);
 }
 
-export async function deleteMarketSale(userId: string, id: string): Promise<void> {
-  await db.delete(marketSales).where(and(eq(marketSales.id, id), eq(marketSales.userId, userId)));
+export async function deleteMarketSale(userId: string, id: string): Promise<boolean> {
+  const [deleted] = await db.delete(marketSales).where(and(eq(marketSales.id, id), eq(marketSales.userId, userId))).returning({ id: marketSales.id });
+  return !!deleted;
 }
 
 // ── Expenses ───────────────────────────────────────────────
@@ -407,8 +414,9 @@ export async function createExpense(
   return toExpenseResponse(expense);
 }
 
-export async function deleteExpense(userId: string, id: string): Promise<void> {
-  await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+export async function deleteExpense(userId: string, id: string): Promise<boolean> {
+  const [deleted] = await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId))).returning({ id: expenses.id });
+  return !!deleted;
 }
 
 // ── Profile ────────────────────────────────────────────────
@@ -512,23 +520,23 @@ export async function getNextInvoiceNumber(userId: string): Promise<string> {
   return `${year}-${result.counter.toString().padStart(3, "0")}`;
 }
 
-// ── Delete All User Data (for backup restore) ────────────
+// ── Delete All User Data (for backup restore or account deletion) ────────────
 
-export async function deleteAllUserData(userId: string): Promise<void> {
+export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, "delete" | "select"> = db): Promise<void> {
   // Delete in correct order due to foreign keys
   // market_sales → references market_events
-  await db.delete(marketSales).where(eq(marketSales.userId, userId));
+  await txOrDb.delete(marketSales).where(eq(marketSales.userId, userId));
   // order_items → references orders (cascade handles this, but explicit is safer)
-  const userOrders = await db.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
+  const userOrders = await txOrDb.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
   if (userOrders.length > 0) {
-    await db.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
+    await txOrDb.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
   }
-  await db.delete(orders).where(eq(orders.userId, userId));
-  await db.delete(marketEvents).where(eq(marketEvents.userId, userId));
-  await db.delete(expenses).where(eq(expenses.userId, userId));
-  await db.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-  await db.delete(appSettings).where(eq(appSettings.userId, userId));
-  await db.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
+  await txOrDb.delete(orders).where(eq(orders.userId, userId));
+  await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
+  await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
+  await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
+  await txOrDb.delete(appSettings).where(eq(appSettings.userId, userId));
+  await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 }
 
 // ── Subscription ───────────────────────────────────────────

@@ -8,7 +8,10 @@ export const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
       queryFn: async ({ queryKey }) => {
-        const url = queryKey[0] as string;
+        // Support user-scoped keys like [userId, "/api/orders"] — find the URL element
+        const url = queryKey.find(
+          (k): k is string => typeof k === "string" && k.startsWith("/api/")
+        ) as string;
         const res = await fetch(url);
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
