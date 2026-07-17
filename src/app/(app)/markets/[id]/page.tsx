@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -22,6 +22,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { requestPersistentStorage } from "@/lib/offline/persist";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
@@ -37,6 +38,12 @@ export default function MarketDetailPage() {
   const copyMarket = useCopyMarket();
 
   const [error, setError] = useState("");
+
+  // Market-mode start (Phase 3.5): best-effort request for persistent storage
+  // so the offline queue is less likely to be evicted. Result is logged only.
+  useEffect(() => {
+    void requestPersistentStorage();
+  }, []);
 
   // Add-sale form state
   const [saleDescription, setSaleDescription] = useState("");

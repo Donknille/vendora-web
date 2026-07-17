@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline · Vendora</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --surface: #ffffff;
+        --text: #000000;
+        --muted: rgba(0, 0, 0, 0.55);
+        --brand: #d4af37;
+        --line: rgba(0, 0, 0, 0.08);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1522;
+          --surface: #101624;
+          --text: #ffffff;
+          --muted: rgba(255, 255, 255, 0.6);
+          --line: rgba(255, 255, 255, 0.1);
+        }
+      }
+      * { box-sizing: border-box; margin: 0; }
+      html, body { height: 100%; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100dvh;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .card {
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 40px 28px;
+      }
+      img { width: 88px; height: 88px; border-radius: 20px; }
+      h1 { font-size: 20px; font-weight: 700; margin-top: 20px; }
+      p { font-size: 14px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+      button {
+        margin-top: 24px;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1300;
+        background: var(--brand);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+      button:active { opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <img src="/icon-192.png" alt="Vendora" />
+      <h1>Keine Internetverbindung</h1>
+      <p>
+        Diese Seite ist offline nicht verfügbar. Bereits geöffnete Seiten und der
+        Marktmodus funktionieren weiterhin — erfasste Verkäufe werden gespeichert
+        und automatisch synchronisiert, sobald du wieder online bist.
+      </p>
+      <button type="button" onclick="location.reload()">Erneut versuchen</button>
+    </div>
+  </body>
+</html>
