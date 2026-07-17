@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Shield, Mail, Calendar, ShoppingCart, Store, Receipt, Clock, Ban, CheckCircle, Plus } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -44,7 +44,6 @@ const statusColors: Record<string, string> = {
 
 export default function AdminUserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const [user, setUser] = useState<UserDetail | null>(null);
@@ -68,6 +67,9 @@ export default function AdminUserDetailPage() {
     setLoading(false);
   };
 
+  // On-mount / id-change data fetch. State is set inside fetchUser after the
+  // awaited requests resolve (async), not synchronously in the effect body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchUser(); }, [id]);
 
   const handleAction = async (body: Record<string, unknown>) => {

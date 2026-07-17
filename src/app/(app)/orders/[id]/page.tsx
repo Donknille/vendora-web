@@ -12,7 +12,6 @@ import {
   Calendar,
   Mail,
   MapPin,
-  User,
 } from "lucide-react";
 import { useOrders, useUpdateOrder, useDeleteOrder } from "@/lib/hooks/useOrders";
 import { useProfile } from "@/lib/hooks/useProfile";

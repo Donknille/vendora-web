@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { type Language, getDeviceLanguage, getTranslations, type Translations } from "@/lib/i18n";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 
 interface LanguageContextType {
   language: Language;
@@ -12,17 +13,13 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("de");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("vendora_language") as Language | null;
-    setLanguageState(saved || getDeviceLanguage());
-  }, []);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem("vendora_language", lang);
-  };
+  // SSR renders "de"; the client reconciles to the stored language (or the
+  // device language when unset) after hydration via useSyncExternalStore.
+  const [language, setLanguage] = usePersistentState<Language>(
+    "vendora_language",
+    "de",
+    getDeviceLanguage
+  );
 
   const t = getTranslations(language);
 

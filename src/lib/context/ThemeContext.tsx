@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 
 type Theme = "light" | "dark" | "system";
 
@@ -13,12 +14,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("vendora_theme") as Theme | null;
-    if (saved) setThemeState(saved);
-  }, []);
+  // SSR renders "system"; the client reconciles to the stored theme after
+  // hydration via useSyncExternalStore (no setState-in-effect needed).
+  const [theme, setTheme] = usePersistentState<Theme>("vendora_theme", "system");
 
   useEffect(() => {
     const root = document.documentElement;
@@ -40,11 +38,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return () => mql.removeEventListener("change", handler);
     }
   }, [theme]);
-
-  const setTheme = (t: Theme) => {
-    setThemeState(t);
-    localStorage.setItem("vendora_theme", t);
-  };
 
   const isDark =
     theme === "dark" ||

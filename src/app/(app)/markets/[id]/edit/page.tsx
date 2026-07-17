@@ -34,6 +34,10 @@ export default function EditMarketPage() {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState("");
 
+  // One-time pre-fill of the editable form from async-loaded market data,
+  // guarded by `initialized`. A genuine effect use; the setState calls run
+  // once when the query resolves, not on every render.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (market && !initialized) {
       setName(market.name || "");
@@ -61,6 +65,7 @@ export default function EditMarketPage() {
       setInitialized(true);
     }
   }, [market, initialized]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const addQuickItem = () => {
     setQuickItems((prev) => [...prev, { name: "", price: "" }]);

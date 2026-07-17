@@ -29,7 +29,7 @@ export default function MarketsPage() {
   }, [markets, search]);
 
   // Group sales by marketId for quick lookup
-  const salesByMarket: Record<string, any[]> = {};
+  const salesByMarket: Record<string, NonNullable<typeof allSales>> = {};
   if (allSales) {
     for (const sale of allSales) {
       const mid = sale.marketId;

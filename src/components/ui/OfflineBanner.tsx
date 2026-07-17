@@ -1,25 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { WifiOff } from "lucide-react";
 
+function subscribeOnlineStatus(onChange: () => void) {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
 export function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    const handleOffline = () => setIsOffline(true);
-    const handleOnline = () => setIsOffline(false);
-
-    // Check initial state
-    setIsOffline(!navigator.onLine);
-
-    window.addEventListener("offline", handleOffline);
-    window.addEventListener("online", handleOnline);
-    return () => {
-      window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("online", handleOnline);
-    };
-  }, []);
+  // Read connectivity from the browser via useSyncExternalStore: the server
+  // snapshot assumes online, the client reads navigator.onLine. Avoids the
+  // setState-in-effect hydration pattern.
+  const isOffline = useSyncExternalStore(
+    subscribeOnlineStatus,
+    () => !navigator.onLine,
+    () => false
+  );
 
   if (!isOffline) return null;
 

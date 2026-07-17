@@ -40,7 +40,9 @@ export default function EditOrderPage() {
 
   const order = orders?.find((o) => o.id === id);
 
-  // Pre-fill form with existing order data
+  // Pre-fill form with existing order data — a one-time init from async-loaded
+  // data, guarded by `initialized` (runs once when the query resolves).
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (order && !initialized) {
       setCustomerName(order.customerName || "");
@@ -67,6 +69,7 @@ export default function EditOrderPage() {
       setInitialized(true);
     }
   }, [order, initialized]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateItem = (index: number, field: keyof OrderItem, value: string) => {
     setItems((prev) =>
