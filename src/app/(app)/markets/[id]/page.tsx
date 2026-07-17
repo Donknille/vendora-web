@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Pencil,
@@ -11,39 +12,77 @@ import {
   MapPin,
   Calendar,
   Copy,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { useMarkets, useDeleteMarket, useCopyMarket } from "@/lib/hooks/useMarkets";
-import {
-  useMarketSales,
-  useCreateMarketSale,
-  useDeleteMarketSale,
-} from "@/lib/hooks/useMarketSales";
+import { useMarketSales } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { requestPersistentStorage } from "@/lib/offline/persist";
+import {
+  recordSale,
+  removeSale,
+  preloadMarket,
+  subscribeQueue,
+} from "@/lib/offline/queue";
+import {
+  useMarketQueueOps,
+  mergeMarketSales,
+  type DisplaySale,
+} from "@/lib/offline/useOfflineQueue";
+import { useWakeLock } from "@/lib/offline/useWakeLock";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const marketId = params.id as string;
+  const queryClient = useQueryClient();
 
   const { data: markets, isLoading } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
   const deleteMarket = useDeleteMarket();
-  const createSale = useCreateMarketSale();
-  const deleteSale = useDeleteMarketSale();
   const copyMarket = useCopyMarket();
+  const queueOps = useMarketQueueOps(marketId);
 
   const [error, setError] = useState("");
 
-  // Market-mode start (Phase 3.5): best-effort request for persistent storage
-  // so the offline queue is less likely to be evicted. Result is logged only.
+  const market = markets?.find((m) => m.id === marketId);
+
+  // Keep the screen awake while the market mode is open (Phase 5.3).
+  useWakeLock(!!market);
+
+  // Market-mode start (Phase 3.5): best-effort request for persistent storage.
   useEffect(() => {
     void requestPersistentStorage();
   }, []);
+
+  // Preload market + quickItems into IndexedDB so the sell screen can start
+  // offline (Phase 4.6).
+  useEffect(() => {
+    if (!market) return;
+    void preloadMarket({
+      id: market.id,
+      name: market.name,
+      date: market.date,
+      location: market.location,
+      quickItems: market.quickItems ?? [],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on market id; other fields are snapshotted at preload time
+  }, [market?.id]);
+
+  // Refetch server sales whenever the queue changes, so a synced sale replaces
+  // its optimistic local counterpart (deduped by clientId).
+  useEffect(() => {
+    return subscribeQueue(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/markets", marketId, "sales"],
+      });
+    });
+  }, [queryClient, marketId]);
 
   // Add-sale form state
   const [saleDescription, setSaleDescription] = useState("");
@@ -53,9 +92,12 @@ export default function MarketDetailPage() {
 
   // Confirm dialogs
   const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(false);
-  const [confirmDeleteSaleId, setConfirmDeleteSaleId] = useState<string | null>(null);
+  const [confirmDeleteSale, setConfirmDeleteSale] = useState<DisplaySale | null>(null);
 
-  const market = markets?.find((m) => m.id === marketId);
+  const displayedSales = useMemo(
+    () => mergeMarketSales(sales ?? [], queueOps),
+    [sales, queueOps]
+  );
 
   if (isLoading) {
     return (
@@ -75,16 +117,17 @@ export default function MarketDetailPage() {
 
   const standFee = Number(market.standFee) || 0;
   const travelCost = Number(market.travelCost) || 0;
-  const totalSales = (sales || []).reduce(
-    (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
+  const totalSales = displayedSales.reduce(
+    (sum, s) => sum + s.amount * s.quantity,
     0
   );
   const profit = totalSales - standFee - travelCost;
 
+  // Optimistic (Phase 5.4): the sale is confirmed from the local queue at once.
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");
     try {
-      await createSale.mutateAsync({ marketId, description: item.name, amount: item.price, quantity: 1 });
+      await recordSale({ marketId, description: item.name, amount: item.price, quantity: 1 });
     } catch {
       setError("Verkauf konnte nicht gespeichert werden.");
     }
@@ -96,7 +139,7 @@ export default function MarketDetailPage() {
     if (!saleDescription.trim() || !saleAmount.trim()) return;
 
     try {
-      await createSale.mutateAsync({
+      await recordSale({
         marketId,
         description: saleDescription.trim(),
         amount: parseAmount(saleAmount),
@@ -120,9 +163,9 @@ export default function MarketDetailPage() {
     }
   };
 
-  const handleDeleteSale = async (saleId: string) => {
+  const handleDeleteSale = async (sale: DisplaySale) => {
     try {
-      await deleteSale.mutateAsync(saleId);
+      await removeSale({ clientId: sale.clientId, marketId, serverId: sale.serverId });
     } catch {
       setError("Verkauf konnte nicht gelöscht werden.");
     }
@@ -139,9 +182,9 @@ export default function MarketDetailPage() {
   };
 
   const getSoldCount = (itemName: string, itemPrice: number) => {
-    return (sales ?? [])
-      .filter((s) => s.description === itemName && Number(s.amount) === itemPrice)
-      .reduce((sum, s) => sum + Number(s.quantity), 0);
+    return displayedSales
+      .filter((s) => s.description === itemName && s.amount === itemPrice)
+      .reduce((sum, s) => sum + s.quantity, 0);
   };
 
   const inputClass =
@@ -240,8 +283,7 @@ export default function MarketDetailPage() {
                 <button
                   key={idx}
                   onClick={() => handleQuickSale(item)}
-                  disabled={createSale.isPending}
-                  className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all disabled:opacity-50"
+                  className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all"
                 >
                   <span className="text-sm font-semibold text-primary truncate w-full text-center">
                     {item.name}
@@ -284,8 +326,8 @@ export default function MarketDetailPage() {
               <input type="number" min="1" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
-              <button type="submit" disabled={createSale.isPending} className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">
-                {createSale.isPending ? t.common.loading : t.common.save}
+              <button type="submit" className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
+                {t.common.save}
               </button>
               <button type="button" onClick={() => setShowAddSale(false)} className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors">
                 {t.common.cancel}
@@ -295,25 +337,33 @@ export default function MarketDetailPage() {
         )}
 
         {/* Sales List */}
-        {!sales || sales.length === 0 ? (
+        {displayedSales.length === 0 ? (
           <p className="text-sm text-muted">{t.markets.noSales}</p>
         ) : (
           <div className="space-y-2">
-            {sales.map((sale) => (
-              <div key={sale.id} className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5">
+            {displayedSales.map((sale) => (
+              <div key={sale.clientId} className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-secondary truncate">{sale.description}</p>
+                  <p className="flex items-center gap-1.5 text-sm font-medium text-secondary truncate">
+                    <span className="truncate">{sale.description}</span>
+                    {(sale.status === "pending" || sale.status === "syncing") && (
+                      <Clock className="h-3 w-3 shrink-0 text-muted" aria-label="Wird synchronisiert" />
+                    )}
+                    {sale.status === "failed" && (
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500" aria-label="Synchronisierung fehlgeschlagen" />
+                    )}
+                  </p>
                   <p className="text-xs text-muted">
-                    {Number(sale.quantity) > 1
-                      ? `${sale.quantity} × ${formatCurrency(Number(sale.amount))}`
-                      : formatCurrency(Number(sale.amount))}
+                    {sale.quantity > 1
+                      ? `${sale.quantity} × ${formatCurrency(sale.amount)}`
+                      : formatCurrency(sale.amount)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-green-600">
-                    {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
+                    {formatCurrency(sale.amount * sale.quantity)}
                   </span>
-                  <button onClick={() => setConfirmDeleteSaleId(sale.id)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
+                  <button onClick={() => setConfirmDeleteSale(sale)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -323,7 +373,7 @@ export default function MarketDetailPage() {
         )}
 
         {/* Sales Total */}
-        {sales && sales.length > 0 && (
+        {displayedSales.length > 0 && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
             <span className="text-green-600">{formatCurrency(totalSales)}</span>
@@ -371,9 +421,9 @@ export default function MarketDetailPage() {
         cancelText={t.markets.deleteCancel}
       />
       <ConfirmDialog
-        open={!!confirmDeleteSaleId}
-        onClose={() => setConfirmDeleteSaleId(null)}
-        onConfirm={() => { if (confirmDeleteSaleId) handleDeleteSale(confirmDeleteSaleId); }}
+        open={!!confirmDeleteSale}
+        onClose={() => setConfirmDeleteSale(null)}
+        onConfirm={() => { if (confirmDeleteSale) handleDeleteSale(confirmDeleteSale); }}
         title={t.markets.deleteSale}
         message={t.markets.removeSale}
         confirmText={t.markets.deleteAction}

@@ -189,8 +189,34 @@ export const idbStore: QueueStore = {
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
+// Synchronous snapshots so UI hooks can use useSyncExternalStore. The caches
+// are refreshed from IndexedDB after every mutation, then listeners fire.
+export const EMPTY_STATS: QueueStats = {
+  pending: 0,
+  syncing: 0,
+  failed: 0,
+  synced: 0,
+  open: 0,
+  lastSyncAt: null,
+  subscriptionRequired: false,
+};
+export const EMPTY_OPS: QueuedOp[] = [];
+
+let statsCache: QueueStats = EMPTY_STATS;
+let opsCache: QueuedOp[] = EMPTY_OPS;
+
+export function getStatsSnapshot(): QueueStats {
+  return statsCache;
+}
+
+export function getOpsSnapshot(): QueuedOp[] {
+  return opsCache;
+}
+
 export function subscribeQueue(listener: Listener): () => void {
   listeners.add(listener);
+  // Ensure a freshly-mounted observer gets current data.
+  if (typeof window !== "undefined") void refreshAndNotify();
   return () => {
     listeners.delete(listener);
   };
@@ -209,6 +235,34 @@ function notify() {
   }
 }
 
+async function refreshCaches(): Promise<void> {
+  const ops = await idbStore.getAllOps();
+  opsCache = ops;
+  const countBy = (state: SaleState) =>
+    ops.filter((op) => op.state === state).length;
+  const pending = countBy("pending");
+  const syncing = countBy("syncing");
+  statsCache = {
+    pending,
+    syncing,
+    failed: countBy("failed"),
+    synced: countBy("synced"),
+    open: pending + syncing,
+    lastSyncAt: (await idbStore.getMeta<string>(META_LAST_SYNC)) ?? null,
+    subscriptionRequired:
+      (await idbStore.getMeta<boolean>(META_SUBSCRIPTION_REQUIRED)) === true,
+  };
+}
+
+async function refreshAndNotify(): Promise<void> {
+  try {
+    await refreshCaches();
+  } catch {
+    // cache refresh failure must not break the mutation
+  }
+  notify();
+}
+
 // ── Public queue API ───────────────────────────────────────
 
 /** Records a new sale locally (state `pending`). Does not send by itself. */
@@ -224,7 +278,7 @@ export async function enqueueSale(payload: MarketSalePayload): Promise<QueuedOp>
     nextAttemptAt: 0,
   };
   await idbStore.putOp(op);
-  notify();
+  await refreshAndNotify();
   return op;
 }
 
@@ -249,7 +303,69 @@ export async function correctSale(clientId: string): Promise<void> {
   } else {
     await idbStore.deleteOp(clientId);
   }
-  notify();
+  await refreshAndNotify();
+}
+
+/**
+ * Records a sale from the UI: assigns the client UUID (V1) and client sale time
+ * (V2), enqueues it, and kicks a drain (Phase 4.4 "after each sale"). The op is
+ * persisted before the drain, so the optimistic UI shows it immediately.
+ */
+export async function recordSale(input: {
+  marketId: string;
+  description: string;
+  amount: number;
+  quantity: number;
+}): Promise<QueuedOp> {
+  const op = await enqueueSale({
+    clientId: crypto.randomUUID(),
+    marketId: input.marketId,
+    description: input.description,
+    amount: input.amount,
+    quantity: input.quantity,
+    createdAt: new Date().toISOString(),
+  });
+  void drain();
+  return op;
+}
+
+/**
+ * Removes a sale from the UI. A sale tracked by the local queue goes through
+ * `correctSale` (drop-if-unsynced / enqueue-delete-if-synced). A server-only
+ * sale (e.g. created in a previous session) gets a fresh delete op keyed by its
+ * clientId and targeting its server id.
+ */
+export async function removeSale(sale: {
+  clientId: string;
+  marketId: string;
+  serverId?: string;
+}): Promise<void> {
+  const existing = await idbStore.getOp(sale.clientId);
+  if (existing) {
+    await correctSale(sale.clientId);
+  } else if (sale.serverId) {
+    const nowIso = new Date().toISOString();
+    await idbStore.putOp({
+      clientId: sale.clientId,
+      marketId: sale.marketId,
+      op: "delete",
+      payload: {
+        clientId: sale.clientId,
+        marketId: sale.marketId,
+        description: "",
+        amount: 0,
+        quantity: 0,
+        createdAt: nowIso,
+        serverId: sale.serverId,
+      },
+      state: "pending",
+      attempts: 0,
+      createdAt: nowIso,
+      nextAttemptAt: 0,
+    });
+    await refreshAndNotify();
+  }
+  void drain();
 }
 
 export async function getOpsForMarket(marketId: string): Promise<QueuedOp[]> {
@@ -294,7 +410,7 @@ export async function retryFailed(): Promise<void> {
     }
   }
   await idbStore.setMeta(META_SUBSCRIPTION_REQUIRED, false);
-  notify();
+  await refreshAndNotify();
   void drain();
 }
 
@@ -435,7 +551,7 @@ async function performDrain(deps: DrainDeps): Promise<void> {
     await setState(deps.store, batch.ops, "syncing");
     const stopped = await sendCreateBatch(batch, deps, refreshedRef);
     if (stopped) {
-      notify();
+      await refreshAndNotify();
       return; // V4: 403 stops the drain; remaining ops stay untouched.
     }
   }
@@ -444,12 +560,12 @@ async function performDrain(deps: DrainDeps): Promise<void> {
   for (const op of due.filter((o) => o.op === "delete")) {
     const stopped = await sendDelete(op, deps, refreshedRef);
     if (stopped) {
-      notify();
+      await refreshAndNotify();
       return;
     }
   }
 
-  notify();
+  await refreshAndNotify();
 }
 
 /** Returns true when the drain must stop entirely (subscription required). */
@@ -630,6 +746,7 @@ export async function initOfflineSync(): Promise<() => void> {
     if (stats.open > 0) void drain();
   }, DRAIN_INTERVAL_MS);
 
+  await refreshAndNotify();
   void drain();
 
   return () => {
