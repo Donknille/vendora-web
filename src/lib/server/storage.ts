@@ -351,26 +351,106 @@ export async function getAllMarketSales(userId: string): Promise<MarketSaleRespo
   return rows.map(toSaleResponse);
 }
 
-export async function createMarketSale(
-  userId: string,
-  data: { marketId: string; description: string; amount: number; quantity: number }
-): Promise<MarketSaleResponse> {
-  const [sale] = await db
-    .insert(marketSales)
-    .values({
-      userId,
-      marketId: data.marketId,
-      description: data.description,
-      amount: data.amount.toString(),
-      quantity: data.quantity,
-      createdAt: new Date().toISOString(),
-    })
-    .returning();
-  return toSaleResponse(sale);
+export interface MarketSaleWriteInput {
+  clientId: string;
+  description: string;
+  amount: number;
+  quantity: number;
+  createdAt: string; // ISO-8601 sale time from the client (V2)
 }
 
-export async function deleteMarketSale(userId: string, id: string): Promise<void> {
-  await db.delete(marketSales).where(and(eq(marketSales.id, id), eq(marketSales.userId, userId)));
+// Columns returned to the client. The server-generated `id` and `receivedAt`
+// are included; `receivedAt` is set by the DB default on insert and never
+// touched on replay (see below).
+const marketSaleReturning = {
+  id: marketSales.id,
+  userId: marketSales.userId,
+  marketId: marketSales.marketId,
+  clientId: marketSales.clientId,
+  description: marketSales.description,
+  amount: marketSales.amount,
+  quantity: marketSales.quantity,
+  createdAt: marketSales.createdAt,
+  receivedAt: marketSales.receivedAt,
+};
+
+function toSaleValues(userId: string, marketId: string, data: MarketSaleWriteInput) {
+  return {
+    userId,
+    marketId,
+    clientId: data.clientId,
+    description: data.description,
+    amount: data.amount.toString(),
+    quantity: data.quantity,
+    createdAt: data.createdAt,
+    // receivedAt is left to the DB default (server time, V2).
+  };
+}
+
+/**
+ * V1: idempotent insert keyed on (user_id, client_id). The onConflictDoUpdate
+ * with a no-op set on client_id returns the row on both the first insert and a
+ * replay, so no second SELECT is needed. `inserted` distinguishes a fresh
+ * insert from a replay via the xmax system column (0 for a freshly inserted
+ * tuple, non-zero for the on-conflict update path) so the route can answer 201
+ * vs 200.
+ */
+export async function upsertMarketSale(
+  userId: string,
+  marketId: string,
+  data: MarketSaleWriteInput
+): Promise<{ row: MarketSaleResponse; inserted: boolean }> {
+  const [result] = await db
+    .insert(marketSales)
+    .values(toSaleValues(userId, marketId, data))
+    .onConflictDoUpdate({
+      target: [marketSales.userId, marketSales.clientId],
+      set: { clientId: data.clientId },
+    })
+    .returning({
+      ...marketSaleReturning,
+      inserted: sql<boolean>`(xmax::text::bigint = 0)`,
+    });
+  const { inserted, ...row } = result;
+  return { row: toSaleResponse(row), inserted };
+}
+
+/**
+ * Multi-row variant of the idempotent upsert for the batch route. Uses
+ * `excluded.client_id` for the no-op set so every conflicting row keeps its own
+ * value (a per-row no-op) instead of being clobbered with a single literal.
+ * Callers must dedupe by clientId first — Postgres rejects a batch that would
+ * touch the same conflict target twice.
+ */
+export async function upsertMarketSalesBatch(
+  userId: string,
+  marketId: string,
+  entries: MarketSaleWriteInput[]
+): Promise<MarketSaleResponse[]> {
+  if (entries.length === 0) return [];
+  const rows = await db
+    .insert(marketSales)
+    .values(entries.map((e) => toSaleValues(userId, marketId, e)))
+    .onConflictDoUpdate({
+      target: [marketSales.userId, marketSales.clientId],
+      set: { clientId: sql`excluded.client_id` },
+    })
+    .returning(marketSaleReturning);
+  return rows.map(toSaleResponse);
+}
+
+/**
+ * Deletes a sale by its server id, scoped to the user. Idempotent /
+ * replay-safe: deleting an already-deleted (or synced-then-removed) booking
+ * returns `false` without erroring, so a repeated delete op from the offline
+ * queue never turns into a hard failure.
+ */
+export async function deleteMarketSale(userId: string, id: string): Promise<boolean> {
+  const deleted = await db
+    .delete(marketSales)
+    .where(and(eq(marketSales.id, id), eq(marketSales.userId, userId)))
+    .returning({ id: marketSales.id });
+  return deleted.length > 0;
 }
 
 // ── Expenses ───────────────────────────────────────────────

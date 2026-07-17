@@ -13,8 +13,11 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await storage.deleteMarketSale(userId, id);
-    return NextResponse.json({ message: "Market sale deleted" });
+    // Idempotent: deleting an already-removed (or synced-then-deleted) booking
+    // still returns 200 so a replayed delete op from the offline queue never
+    // becomes a hard failure. `deleted` reports whether a row was removed.
+    const deleted = await storage.deleteMarketSale(userId, id);
+    return NextResponse.json({ message: "Market sale deleted", deleted });
   } catch (error) {
     console.error("DELETE /api/market-sales/[id] error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

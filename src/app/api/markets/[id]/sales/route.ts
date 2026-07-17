@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
-import { z } from "zod";
-
-const createMarketSaleSchema = z.object({
-  description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().min(0).max(999999.99),
-  quantity: z.number().int().min(1).max(9999).default(1),
-});
+import {
+  marketSaleInputSchema,
+  checkCreatedAtPlausible,
+} from "@/lib/markets/saleValidation";
 
 export async function GET(
   _request: Request,
@@ -50,7 +47,7 @@ export async function POST(
     if (subCheck) return subCheck;
 
     const body = await request.json();
-    const parsed = createMarketSaleSchema.safeParse(body);
+    const parsed = marketSaleInputSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
@@ -58,11 +55,20 @@ export async function POST(
       );
     }
 
-    const sale = await storage.createMarketSale(userId, {
+    // V2: reject implausible sale times outright (400, no retry on the client).
+    const plausible = checkCreatedAtPlausible(parsed.data.createdAt);
+    if (!plausible.ok) {
+      return NextResponse.json({ message: plausible.message }, { status: 400 });
+    }
+
+    // V1: idempotent upsert. 201 on first insert, 200 on replay; the full row
+    // is returned in both cases.
+    const { row, inserted } = await storage.upsertMarketSale(
+      userId,
       marketId,
-      ...parsed.data,
-    });
-    return NextResponse.json(sale, { status: 201 });
+      parsed.data
+    );
+    return NextResponse.json(row, { status: inserted ? 201 : 200 });
   } catch (error) {
     console.error("POST /api/markets/[id]/sales error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
