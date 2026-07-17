@@ -8,6 +8,7 @@ import {
   boolean,
   timestamp,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -109,21 +110,35 @@ export type SelectMarketEvent = typeof marketEvents.$inferSelect;
 // ============================================================
 // Market Sales
 // ============================================================
-export const marketSales = pgTable("market_sales", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  marketId: varchar("market_id")
-    .notNull()
-    .references(() => marketEvents.id, { onDelete: "cascade" }),
-  description: text("description").notNull().default(""),
-  amount: numeric("amount").notNull().default("0"),
-  quantity: integer("quantity").notNull().default(1),
-  createdAt: text("created_at").notNull(),
-});
+export const marketSales = pgTable(
+  "market_sales",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    marketId: varchar("market_id")
+      .notNull()
+      .references(() => marketEvents.id, { onDelete: "cascade" }),
+    // Client-generated UUID v4 for idempotent offline sync (see V1).
+    clientId: varchar("client_id").notNull(),
+    description: text("description").notNull().default(""),
+    amount: numeric("amount").notNull().default("0"),
+    quantity: integer("quantity").notNull().default(1),
+    // Sale time — sent by the client as an ISO-8601 string (see V2).
+    createdAt: text("created_at").notNull(),
+    // Server receive time — never evaluated for business logic (see V2).
+    receivedAt: timestamp("received_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("market_sales_user_id_client_id_unique").on(
+      t.userId,
+      t.clientId
+    ),
+  ]
+);
 
 export type SelectMarketSale = typeof marketSales.$inferSelect;
 
