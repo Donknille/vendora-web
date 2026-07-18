@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { aj, ajAuth, ajWrite } from "@/lib/server/arcjet";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Rate limiting — fail-closed in production
   if (process.env.ARCJET_KEY) {
     const { pathname } = request.nextUrl;

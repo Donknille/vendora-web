@@ -120,7 +120,7 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 
 - Direkte Postgres-Verbindung via Drizzle (db.ts) gegen Neon. Auth-Tabellen (`user`/`session`/`account`/`verification`) verwaltet Better Auth (auth-schema.ts); die App-`users`-Tabelle ist das Profil, gekeyt auf `better-auth user.id`.
 - Settings clientseitig in localStorage (LanguageContext, ThemeContext). Serverseitige Settings-Route und `app_settings`-Tabelle weitgehend ungenutzt.
-- middleware.ts ist laut Next.js 16 deprecated, Migration auf proxy.ts steht aus.
+- Proxy-Konvention `src/proxy.ts` (Next.js 16, Node.js-Runtime → kein 1-MB-Edge-Limit) statt der deprecateten `middleware.ts`. Enthält Arcjet-Rate-Limiting + optimistischen Better-Auth-Cookie-Check (echte Session-Validierung passiert in Routen/Layout).
 
 ## Weiterführende Docs
 
