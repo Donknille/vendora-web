@@ -27,6 +27,7 @@ import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/lib/api-client";
+import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -99,7 +100,7 @@ export default function SettingsPage() {
       setSmallBusinessNote(profile.smallBusinessNote ?? "");
       setDefaultShippingCost(
         profile.defaultShippingCost != null
-          ? String(profile.defaultShippingCost)
+          ? formatAmountInput(profile.defaultShippingCost)
           : ""
       );
     }
@@ -125,7 +126,7 @@ export default function SettingsPage() {
         taxNote: taxNote.trim(),
         smallBusinessNote: smallBusinessNote.trim(),
         defaultShippingCost: defaultShippingCost
-          ? parseFloat(defaultShippingCost.replace(",", ".")) || 0
+          ? parseAmount(defaultShippingCost)
           : 0,
       });
       setProfileSaved(true);

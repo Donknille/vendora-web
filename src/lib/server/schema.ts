@@ -4,9 +4,9 @@ import {
   text,
   varchar,
   integer,
-  numeric,
   boolean,
   timestamp,
+  date,
   jsonb,
   index,
   check,
@@ -61,14 +61,14 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("open"),
   invoiceNumber: text("invoice_number").notNull().default(""),
   notes: text("notes").notNull().default(""),
-  orderDate: text("order_date").notNull(),
-  serviceDate: text("service_date"),
-  shippingCost: numeric("shipping_cost"),
-  total: numeric("total").notNull().default("0"),
+  orderDate: date("order_date").notNull(),
+  serviceDate: date("service_date"),
+  shippingCost: integer("shipping_cost"), // cents
+  total: integer("total").notNull().default(0), // cents
   processingStatus: text("processing_status"),
   comment: text("comment"),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_orders_user_id").on(t.userId),
   index("idx_orders_user_status").on(t.userId, t.status),
@@ -94,7 +94,7 @@ export const orderItems = pgTable("order_items", {
     .references(() => orders.id, { onDelete: "cascade" }),
   name: text("name").notNull().default(""),
   quantity: integer("quantity").notNull().default(1),
-  price: numeric("price").notNull().default("0"),
+  price: integer("price").notNull().default(0), // cents
   processingStatus: text("processing_status"),
   comment: text("comment"),
 }, (t) => [
@@ -114,14 +114,14 @@ export const marketEvents = pgTable("market_events", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull().default(""),
-  date: text("date").notNull(),
+  date: date("date").notNull(),
   location: text("location").notNull().default(""),
-  standFee: numeric("stand_fee").notNull().default("0"),
-  travelCost: numeric("travel_cost").notNull().default("0"),
+  standFee: integer("stand_fee").notNull().default(0), // cents
+  travelCost: integer("travel_cost").notNull().default(0), // cents
   notes: text("notes").notNull().default(""),
   status: text("status").default("open"),
-  quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(),
-  createdAt: text("created_at").notNull(),
+  quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(), // price in cents
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_events_user_id").on(t.userId),
   check(
@@ -146,9 +146,9 @@ export const marketSales = pgTable("market_sales", {
     .notNull()
     .references(() => marketEvents.id, { onDelete: "cascade" }),
   description: text("description").notNull().default(""),
-  amount: numeric("amount").notNull().default("0"),
+  amount: integer("amount").notNull().default(0), // cents
   quantity: integer("quantity").notNull().default(1),
-  createdAt: text("created_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_sales_user_id").on(t.userId),
   index("idx_market_sales_market_id").on(t.marketId),
@@ -167,10 +167,10 @@ export const expenses = pgTable("expenses", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   description: text("description").notNull().default(""),
-  amount: numeric("amount").notNull().default("0"),
+  amount: integer("amount").notNull().default(0), // cents
   category: text("category").notNull().default(""),
-  expenseDate: text("expense_date").notNull(),
-  createdAt: text("created_at").notNull(),
+  expenseDate: date("expense_date").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_expenses_user_id").on(t.userId),
 ]);
@@ -194,7 +194,7 @@ export const companyProfiles = pgTable("company_profiles", {
   phone: text("phone").notNull().default(""),
   taxNote: text("tax_note").notNull().default(""),
   smallBusinessNote: text("small_business_note"),
-  defaultShippingCost: numeric("default_shipping_cost"),
+  defaultShippingCost: integer("default_shipping_cost"), // cents
 });
 
 export type SelectCompanyProfile = typeof companyProfiles.$inferSelect;

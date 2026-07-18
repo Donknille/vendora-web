@@ -5,15 +5,15 @@ import { z } from "zod";
 
 const quickItemSchema = z.object({
   name: z.string().min(1).max(200),
-  price: z.number().min(0).max(999999.99),
+  price: z.number().int().min(0).max(99999999), // cents
 });
 
 const updateMarketSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   date: z.string().max(50).optional(),
   location: z.string().max(300).optional(),
-  standFee: z.number().min(0).max(99999.99).optional(),
-  travelCost: z.number().min(0).max(99999.99).optional(),
+  standFee: z.number().int().min(0).max(9999999).optional(), // cents
+  travelCost: z.number().int().min(0).max(9999999).optional(), // cents
   notes: z.string().max(5000).optional(),
   status: z.string().max(50).optional(),
   quickItems: z.array(quickItemSchema).max(50).optional(),

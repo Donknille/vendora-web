@@ -21,7 +21,7 @@ export async function GET() {
       ]);
 
     return NextResponse.json({
-      schemaVersion: 1,
+      schemaVersion: 2, // money as integer cents
       exportedAt: new Date().toISOString(),
       orders,
       markets,

@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useOrders, useUpdateOrder } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 
 interface OrderItem {
   name: string;
@@ -61,7 +61,7 @@ export default function EditOrderPage() {
           order.items.map((item) => ({
             name: item.name || "",
             quantity: String(item.quantity || 1),
-            price: item.price ? Number(item.price).toFixed(2).replace(".", ",") : "",
+            price: item.price ? formatAmountInput(item.price) : "",
           }))
         );
       }

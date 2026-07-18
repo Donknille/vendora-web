@@ -6,7 +6,7 @@ import { z } from "zod";
 const orderItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(200),
   quantity: z.number().int().min(1).max(9999),
-  price: z.number().min(0).max(999999.99),
+  price: z.number().int().min(0).max(99999999), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
 });
@@ -22,7 +22,7 @@ const createOrderSchema = z.object({
   notes: z.string().max(5000).default(""),
   orderDate: z.string().min(1, "Order date is required").max(50),
   serviceDate: z.string().max(50).optional(),
-  shippingCost: z.number().min(0).max(99999.99).optional(),
+  shippingCost: z.number().int().min(0).max(9999999).optional(), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required").max(100),

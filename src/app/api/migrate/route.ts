@@ -9,7 +9,8 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-const CURRENT_SCHEMA_VERSION = 1;
+// v1: money as euro decimals. v2: money as integer cents.
+const CURRENT_SCHEMA_VERSION = 2;
 
 const migrateItemSchema = z.object({
   name: z.string().max(200).optional(),
@@ -50,7 +51,8 @@ const migrateMarketSchema = z.object({
   status: z.string().max(50).nullable().optional(),
   quickItems: z.array(z.object({
     name: z.string().max(200),
-    price: z.number().min(0).max(999999.99),
+    // accepts both euro decimals (v1) and integer cents (v2)
+    price: z.number().min(0).max(99999999),
   })).max(50).nullable().optional(),
 });
 
@@ -95,10 +97,17 @@ const migrateSchema = z.object({
   invoiceCounter: z.number().int().min(0).max(999999).optional(),
 });
 
-function toNum(val: unknown): number {
-  if (typeof val === "number") return Math.min(val, 999999.99);
-  if (typeof val === "string") return Math.min(parseFloat(val) || 0, 999999.99);
-  return 0;
+const MAX_CENTS = 99999999; // €999.999,99
+
+// Normalizes a backup amount to integer cents. Legacy (schemaVersion < 2)
+// backups store euro decimals and are multiplied by 100; v2+ backups already
+// store integer cents.
+function toCents(val: unknown, fromEuros: boolean): number {
+  let num = 0;
+  if (typeof val === "number") num = val;
+  else if (typeof val === "string") num = parseFloat(val) || 0;
+  const cents = fromEuros ? Math.round(num * 100) : Math.round(num);
+  return Math.max(0, Math.min(cents, MAX_CENTS));
 }
 
 export async function POST(request: Request) {
@@ -131,6 +140,8 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
+    // Legacy backups (no version, or < 2) store money as euro decimals.
+    const fromEuros = (data.schemaVersion ?? 1) < 2;
 
     // Entire restore runs in a single transaction — rollback on any failure
     await db.transaction(async (tx) => {
@@ -148,11 +159,12 @@ export async function POST(request: Request) {
       await tx.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 
       // Step 2: Import orders (with original invoice numbers preserved)
-      const now = new Date().toISOString();
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
       if (data.orders) {
         for (const order of data.orders) {
           const total = (order.items || []).reduce(
-            (sum, item) => sum + toNum(item.price) * (item.quantity || 1), 0
+            (sum, item) => sum + toCents(item.price, fromEuros) * (item.quantity || 1), 0
           );
           const [inserted] = await tx.insert(orders).values({
             userId,
@@ -165,10 +177,10 @@ export async function POST(request: Request) {
             status: order.status || "open",
             invoiceNumber: order.invoiceNumber || "",
             notes: order.notes || "",
-            orderDate: order.orderDate || now.split("T")[0],
-            serviceDate: order.serviceDate,
-            shippingCost: order.shippingCost?.toString(),
-            total: total.toString(),
+            orderDate: order.orderDate || today,
+            serviceDate: order.serviceDate || null,
+            shippingCost: order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null,
+            total,
             processingStatus: order.processingStatus,
             comment: order.comment,
             createdAt: now,
@@ -182,7 +194,7 @@ export async function POST(request: Request) {
                 orderId: inserted.id,
                 name: item.name || "",
                 quantity: item.quantity || 1,
-                price: toNum(item.price).toString(),
+                price: toCents(item.price, fromEuros),
                 processingStatus: item.processingStatus,
                 comment: item.comment,
               }))
@@ -198,13 +210,16 @@ export async function POST(request: Request) {
           const [inserted] = await tx.insert(marketEvents).values({
             userId,
             name: market.name || "",
-            date: market.date || now.split("T")[0],
+            date: market.date || today,
             location: market.location || "",
-            standFee: toNum(market.standFee).toString(),
-            travelCost: toNum(market.travelCost).toString(),
+            standFee: toCents(market.standFee, fromEuros),
+            travelCost: toCents(market.travelCost, fromEuros),
             notes: market.notes || "",
             status: market.status || "open",
-            quickItems: market.quickItems,
+            quickItems: market.quickItems?.map((q) => ({
+              name: q.name,
+              price: toCents(q.price, fromEuros),
+            })),
             createdAt: now,
           }).returning();
 
@@ -223,7 +238,7 @@ export async function POST(request: Request) {
               userId,
               marketId: newMarketId,
               description: sale.description || "",
-              amount: toNum(sale.amount).toString(),
+              amount: toCents(sale.amount, fromEuros),
               quantity: sale.quantity || 1,
               createdAt: now,
             });
@@ -237,9 +252,9 @@ export async function POST(request: Request) {
           await tx.insert(expenses).values({
             userId,
             description: expense.description || "",
-            amount: toNum(expense.amount).toString(),
+            amount: toCents(expense.amount, fromEuros),
             category: expense.category || "Other",
-            expenseDate: expense.expenseDate || expense.date || now.split("T")[0],
+            expenseDate: expense.expenseDate || expense.date || today,
             createdAt: now,
           });
         }
@@ -255,7 +270,9 @@ export async function POST(request: Request) {
           phone: data.profile.phone || "",
           taxNote: data.profile.taxNote || "",
           smallBusinessNote: data.profile.smallBusinessNote ?? undefined,
-          defaultShippingCost: data.profile.defaultShippingCost?.toString(),
+          defaultShippingCost: data.profile.defaultShippingCost != null
+            ? toCents(data.profile.defaultShippingCost, fromEuros)
+            : null,
         });
       }
 

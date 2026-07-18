@@ -5,10 +5,12 @@ import { describe, it, expect } from "vitest";
 describe("2.1 — Backup schema version and transactional restore", () => {
   it("export route includes schemaVersion", async () => {
     const { z } = await import("zod");
-    const schemaVersion = z.number().int().min(1).max(1);
+    // v2 is the current version (money as integer cents); v1 legacy is still accepted.
+    const schemaVersion = z.number().int().min(1).max(2);
     expect(schemaVersion.safeParse(1).success).toBe(true);
+    expect(schemaVersion.safeParse(2).success).toBe(true);
     expect(schemaVersion.safeParse(0).success).toBe(false);
-    expect(schemaVersion.safeParse(2).success).toBe(false);
+    expect(schemaVersion.safeParse(3).success).toBe(false);
   });
 
   it("migrate route uses db.transaction for the entire restore", async () => {
@@ -47,7 +49,7 @@ describe("2.1 — Backup schema version and transactional restore", () => {
 
     // The import schema should accept this payload (imported dynamically to match actual code)
     const migrateSchema = z.object({
-      schemaVersion: z.number().int().min(1).max(1).optional(),
+      schemaVersion: z.number().int().min(1).max(2).optional(),
       orders: z.array(z.object({
         customerName: z.string().max(200).optional(),
         customerEmail: z.string().max(254).optional(),

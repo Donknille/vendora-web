@@ -20,33 +20,31 @@ import {
   type SelectAppSettings,
 } from "./schema";
 
-// Response types with numeric conversion
-export interface OrderWithItems extends Omit<SelectOrder, "total" | "shippingCost"> {
-  total: number;
-  shippingCost: number | null;
+// Response types. All money fields are integer cents (no conversion needed —
+// the columns are `integer`). createdAt/updatedAt are timestamptz `Date`s in the
+// DB; the mappers serialize them to ISO strings so the JSON/API contract stays
+// string-typed for the client.
+export interface OrderWithItems extends Omit<SelectOrder, "createdAt" | "updatedAt"> {
+  createdAt: string;
+  updatedAt: string;
   items: OrderItemResponse[];
 }
 
-export interface OrderItemResponse extends Omit<SelectOrderItem, "price"> {
-  price: number;
+export type OrderItemResponse = SelectOrderItem;
+
+export interface MarketEventResponse extends Omit<SelectMarketEvent, "createdAt"> {
+  createdAt: string;
 }
 
-export interface MarketEventResponse extends Omit<SelectMarketEvent, "standFee" | "travelCost"> {
-  standFee: number;
-  travelCost: number;
+export interface MarketSaleResponse extends Omit<SelectMarketSale, "createdAt"> {
+  createdAt: string;
 }
 
-export interface MarketSaleResponse extends Omit<SelectMarketSale, "amount"> {
-  amount: number;
+export interface ExpenseResponse extends Omit<SelectExpense, "createdAt"> {
+  createdAt: string;
 }
 
-export interface ExpenseResponse extends Omit<SelectExpense, "amount"> {
-  amount: number;
-}
-
-export interface CompanyProfileResponse extends Omit<SelectCompanyProfile, "defaultShippingCost"> {
-  defaultShippingCost: number | null;
-}
+export type CompanyProfileResponse = SelectCompanyProfile;
 
 export interface SubscriptionInfo {
   status: "trial" | "active" | "expired" | "cancelled";
@@ -54,14 +52,6 @@ export interface SubscriptionInfo {
   trialEndsAt: string | null;
   subscriptionExpiresAt: string | null;
   daysRemaining: number | null;
-}
-
-function toNumber(val: string | null | undefined): number {
-  return val ? parseFloat(val) : 0;
-}
-
-function toNumberOrNull(val: string | null | undefined): number | null {
-  return val != null ? parseFloat(val) : null;
 }
 
 // ── Users ──────────────────────────────────────────────────
@@ -76,9 +66,9 @@ export async function getUser(id: string): Promise<User | undefined> {
 function buildOrderWithItems(order: SelectOrder, items: SelectOrderItem[]): OrderWithItems {
   return {
     ...order,
-    total: toNumber(order.total),
-    shippingCost: toNumberOrNull(order.shippingCost),
-    items: items.map((i) => ({ ...i, price: toNumber(i.price) })),
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+    items,
   };
 }
 
@@ -138,8 +128,10 @@ export async function createOrder(
   }
 ): Promise<OrderWithItems> {
   const invoiceNumber = await getNextInvoiceNumber(userId);
+  // All amounts are integer cents — pure integer arithmetic, no floats.
   const total = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const now = new Date().toISOString();
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
 
   const [order] = await db
     .insert(orders)
@@ -154,10 +146,10 @@ export async function createOrder(
       status: data.status,
       invoiceNumber,
       notes: data.notes,
-      orderDate: data.orderDate || now,
-      serviceDate: data.serviceDate,
-      shippingCost: data.shippingCost?.toString(),
-      total: total.toString(),
+      orderDate: data.orderDate || today,
+      serviceDate: data.serviceDate || null,
+      shippingCost: data.shippingCost ?? null,
+      total,
       processingStatus: data.processingStatus,
       comment: data.comment,
       createdAt: now,
@@ -174,7 +166,7 @@ export async function createOrder(
               orderId: order.id,
               name: item.name,
               quantity: item.quantity,
-              price: item.price.toString(),
+              price: item.price,
               processingStatus: item.processingStatus,
               comment: item.comment,
             }))
@@ -182,12 +174,7 @@ export async function createOrder(
           .returning()
       : [];
 
-  return {
-    ...order,
-    total,
-    shippingCost: data.shippingCost ?? null,
-    items: insertedItems.map((i) => ({ ...i, price: toNumber(i.price) })),
-  };
+  return buildOrderWithItems(order, insertedItems);
 }
 
 export async function updateOrder(
@@ -214,7 +201,7 @@ export async function updateOrder(
   if (!existing) return undefined;
 
   const { items: newItems, ...fields } = updates;
-  const dbUpdates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  const dbUpdates: Record<string, unknown> = { updatedAt: new Date() };
 
   if (fields.customerName !== undefined) dbUpdates.customerName = fields.customerName;
   if (fields.customerEmail !== undefined) dbUpdates.customerEmail = fields.customerEmail;
@@ -225,8 +212,8 @@ export async function updateOrder(
   if (fields.status !== undefined) dbUpdates.status = fields.status;
   if (fields.notes !== undefined) dbUpdates.notes = fields.notes;
   if (fields.orderDate !== undefined) dbUpdates.orderDate = fields.orderDate;
-  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate;
-  if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost.toString();
+  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate || null;
+  if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost;
   if (fields.processingStatus !== undefined) dbUpdates.processingStatus = fields.processingStatus;
   if (fields.comment !== undefined) dbUpdates.comment = fields.comment;
 
@@ -234,7 +221,7 @@ export async function updateOrder(
   await db.transaction(async (tx) => {
     if (newItems) {
       const total = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      dbUpdates.total = total.toString();
+      dbUpdates.total = total;
       await tx.delete(orderItems).where(eq(orderItems.orderId, id));
       if (newItems.length > 0) {
         await tx.insert(orderItems).values(
@@ -242,7 +229,7 @@ export async function updateOrder(
             orderId: id,
             name: item.name,
             quantity: item.quantity,
-            price: item.price.toString(),
+            price: item.price,
             processingStatus: item.processingStatus,
             comment: item.comment,
           }))
@@ -264,7 +251,7 @@ export async function deleteOrder(userId: string, id: string): Promise<boolean> 
 // ── Markets ────────────────────────────────────────────────
 
 function toMarketResponse(m: SelectMarketEvent): MarketEventResponse {
-  return { ...m, standFee: toNumber(m.standFee), travelCost: toNumber(m.travelCost) };
+  return { ...m, createdAt: m.createdAt.toISOString() };
 }
 
 export async function getMarkets(userId: string): Promise<MarketEventResponse[]> {
@@ -295,12 +282,12 @@ export async function createMarket(
       name: data.name,
       date: data.date,
       location: data.location,
-      standFee: data.standFee.toString(),
-      travelCost: data.travelCost.toString(),
+      standFee: data.standFee,
+      travelCost: data.travelCost,
       notes: data.notes,
       status: data.status || "open",
       quickItems: data.quickItems,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     })
     .returning();
   return toMarketResponse(market);
@@ -318,8 +305,8 @@ export async function updateMarket(
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.date !== undefined) dbUpdates.date = updates.date;
   if (updates.location !== undefined) dbUpdates.location = updates.location;
-  if (updates.standFee !== undefined) dbUpdates.standFee = updates.standFee.toString();
-  if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost.toString();
+  if (updates.standFee !== undefined) dbUpdates.standFee = updates.standFee;
+  if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.quickItems !== undefined) dbUpdates.quickItems = updates.quickItems;
@@ -336,7 +323,7 @@ export async function deleteMarket(userId: string, id: string): Promise<boolean>
 // ── Market Sales ───────────────────────────────────────────
 
 function toSaleResponse(s: SelectMarketSale): MarketSaleResponse {
-  return { ...s, amount: toNumber(s.amount) };
+  return { ...s, createdAt: s.createdAt.toISOString() };
 }
 
 export async function getMarketSales(userId: string, marketId: string): Promise<MarketSaleResponse[]> {
@@ -367,9 +354,9 @@ export async function createMarketSale(
       userId,
       marketId: data.marketId,
       description: data.description,
-      amount: data.amount.toString(),
+      amount: data.amount,
       quantity: data.quantity,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     })
     .returning();
   return toSaleResponse(sale);
@@ -383,7 +370,7 @@ export async function deleteMarketSale(userId: string, id: string): Promise<bool
 // ── Expenses ───────────────────────────────────────────────
 
 function toExpenseResponse(e: SelectExpense): ExpenseResponse {
-  return { ...e, amount: toNumber(e.amount) };
+  return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
 export async function getExpenses(userId: string): Promise<ExpenseResponse[]> {
@@ -399,15 +386,15 @@ export async function createExpense(
   userId: string,
   data: { description: string; amount: number; category: string; expenseDate: string }
 ): Promise<ExpenseResponse> {
-  const now = new Date().toISOString();
+  const now = new Date();
   const [expense] = await db
     .insert(expenses)
     .values({
       userId,
       description: data.description,
-      amount: data.amount.toString(),
+      amount: data.amount,
       category: data.category,
-      expenseDate: data.expenseDate || now.split("T")[0],
+      expenseDate: data.expenseDate || now.toISOString().slice(0, 10),
       createdAt: now,
     })
     .returning();
@@ -421,13 +408,9 @@ export async function deleteExpense(userId: string, id: string): Promise<boolean
 
 // ── Profile ────────────────────────────────────────────────
 
-function toProfileResponse(p: SelectCompanyProfile): CompanyProfileResponse {
-  return { ...p, defaultShippingCost: toNumberOrNull(p.defaultShippingCost) };
-}
-
 export async function getProfile(userId: string): Promise<CompanyProfileResponse> {
   const [profile] = await db.select().from(companyProfiles).where(eq(companyProfiles.userId, userId));
-  if (profile) return toProfileResponse(profile);
+  if (profile) return profile;
   return { id: "", userId, name: "", address: "", email: "", phone: "", taxNote: "", smallBusinessNote: null, defaultShippingCost: null };
 }
 
@@ -445,7 +428,7 @@ export async function upsertProfile(
       phone: data.phone,
       taxNote: data.taxNote,
       smallBusinessNote: data.smallBusinessNote,
-      defaultShippingCost: data.defaultShippingCost?.toString(),
+      defaultShippingCost: data.defaultShippingCost ?? null,
     })
     .onConflictDoUpdate({
       target: companyProfiles.userId,
@@ -456,11 +439,11 @@ export async function upsertProfile(
         phone: data.phone,
         taxNote: data.taxNote,
         smallBusinessNote: data.smallBusinessNote,
-        defaultShippingCost: data.defaultShippingCost?.toString(),
+        defaultShippingCost: data.defaultShippingCost ?? null,
       },
     })
     .returning();
-  return toProfileResponse(profile);
+  return profile;
 }
 
 // ── Settings ───────────────────────────────────────────────
