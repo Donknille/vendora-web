@@ -9,14 +9,13 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const [orders, markets, marketSales, expenses, profile, settings, invoiceCounter] =
+    const [orders, markets, marketSales, expenses, profile, invoiceCounter] =
       await Promise.all([
         storage.getOrders(userId),
         storage.getMarkets(userId),
         storage.getAllMarketSales(userId),
         storage.getExpenses(userId),
         storage.getProfile(userId),
-        storage.getSettings(userId),
         storage.getInvoiceCounter(userId),
       ]);
 
@@ -28,7 +27,6 @@ export async function GET() {
       marketSales,
       expenses,
       profile,
-      settings,
       invoiceCounter,
     });
   } catch (error) {

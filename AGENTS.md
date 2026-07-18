@@ -25,8 +25,9 @@ Stack: Next.js 16, Better Auth, Neon Postgres, Drizzle ORM, Stripe, Vercel.
 
 ## Struktur-Referenz
 
-- Schema: `src/lib/schema.ts`
-- Auth: `src/lib/server/auth.ts`
+- Schema: `src/lib/server/schema.ts`
+- Auth: `src/lib/server/auth.ts` (+ Better-Auth-Instanz `src/lib/auth.ts`)
 - DB-Queries: `src/lib/server/storage.ts`
 - API: `src/app/api/`
-- Docs: `docs/` (bei Bedarf lesen)
+- Migrationen: `drizzle/` (versioniert)
+- Docs: `docs/REBUILD-PLAN.md`, `SETUP.md`

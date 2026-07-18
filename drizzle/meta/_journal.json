@@ -15,6 +15,13 @@
       "when": 1784406349448,
       "tag": "0001_webhook_events",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784406689472,
+      "tag": "0002_drop_app_settings",
+      "breakpoints": true
     }
   ]
 }

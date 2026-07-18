@@ -4,7 +4,7 @@ import { getUser, getSubscriptionStatus } from "@/lib/server/storage";
 import { db } from "@/lib/server/db";
 import {
   orders, orderItems, marketEvents, marketSales,
-  expenses, companyProfiles, appSettings, invoiceCounters,
+  expenses, companyProfiles, invoiceCounters,
 } from "@/lib/server/schema";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -81,11 +81,6 @@ const migrateProfileSchema = z.object({
   defaultShippingCost: z.union([z.number(), z.null()]).optional(),
 }).nullable().optional();
 
-const migrateSettingsSchema = z.object({
-  theme: z.string().max(50).optional(),
-  currency: z.string().max(10).optional(),
-}).nullable().optional();
-
 const migrateSchema = z.object({
   schemaVersion: z.number().int().min(1).max(CURRENT_SCHEMA_VERSION).optional(),
   orders: z.array(migrateOrderSchema).max(200).optional(),
@@ -93,7 +88,6 @@ const migrateSchema = z.object({
   marketSales: z.array(migrateMarketSaleSchema).max(2000).optional(),
   expenses: z.array(migrateExpenseSchema).max(1000).optional(),
   profile: migrateProfileSchema,
-  settings: migrateSettingsSchema,
   invoiceCounter: z.number().int().min(0).max(999999).optional(),
 });
 
@@ -155,7 +149,6 @@ export async function POST(request: Request) {
       await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
       await tx.delete(expenses).where(eq(expenses.userId, userId));
       await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-      await tx.delete(appSettings).where(eq(appSettings.userId, userId));
       await tx.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 
       // Step 2: Import orders (with original invoice numbers preserved)
@@ -276,16 +269,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // Step 7: Import settings
-      if (data.settings) {
-        await tx.insert(appSettings).values({
-          userId,
-          theme: data.settings.theme || "system",
-          currency: data.settings.currency || "€",
-        });
-      }
-
-      // Step 8: Import invoice counter
+      // Step 7: Import invoice counter
       if (data.invoiceCounter != null && data.invoiceCounter > 0) {
         await tx.insert(invoiceCounters).values({
           userId,

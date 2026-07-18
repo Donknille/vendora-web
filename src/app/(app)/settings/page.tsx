@@ -22,7 +22,6 @@ import {
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
-import { useAppSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { authClient } from "@/lib/auth-client";
@@ -37,7 +36,6 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
-  const { isLoading: loadingSettings } = useAppSettings();
   const { data: sub } = useSubscription();
   const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
@@ -226,7 +224,7 @@ export default function SettingsPage() {
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
-  const isLoading = loadingProfile || loadingSettings;
+  const isLoading = loadingProfile;
 
   if (isLoading) {
     return (

@@ -200,23 +200,6 @@ export const companyProfiles = pgTable("company_profiles", {
 export type SelectCompanyProfile = typeof companyProfiles.$inferSelect;
 
 // ============================================================
-// App Settings (1:1 per user)
-// ============================================================
-export const appSettings = pgTable("app_settings", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
-    .notNull()
-    .unique()
-    .references(() => users.id, { onDelete: "cascade" }),
-  theme: text("theme").notNull().default("system"),
-  currency: text("currency").notNull().default("€"),
-});
-
-export type SelectAppSettings = typeof appSettings.$inferSelect;
-
-// ============================================================
 // Invoice Counters (1:1 per user)
 // ============================================================
 export const invoiceCounters = pgTable("invoice_counters", {

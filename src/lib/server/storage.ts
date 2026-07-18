@@ -9,7 +9,6 @@ import {
   marketSales,
   expenses,
   companyProfiles,
-  appSettings,
   invoiceCounters,
   type User,
   type SelectOrder,
@@ -18,7 +17,6 @@ import {
   type SelectMarketSale,
   type SelectExpense,
   type SelectCompanyProfile,
-  type SelectAppSettings,
 } from "./schema";
 
 // Response types. All money fields are integer cents (no conversion needed —
@@ -464,29 +462,6 @@ export async function upsertProfile(
   return profile;
 }
 
-// ── Settings ───────────────────────────────────────────────
-
-export async function getSettings(userId: string): Promise<SelectAppSettings> {
-  const [settings] = await db.select().from(appSettings).where(eq(appSettings.userId, userId));
-  if (settings) return settings;
-  return { id: "", userId, theme: "system", currency: "€" };
-}
-
-export async function upsertSettings(
-  userId: string,
-  data: { theme: string; currency: string }
-): Promise<SelectAppSettings> {
-  const [settings] = await db
-    .insert(appSettings)
-    .values({ userId, theme: data.theme, currency: data.currency })
-    .onConflictDoUpdate({
-      target: appSettings.userId,
-      set: { theme: data.theme, currency: data.currency },
-    })
-    .returning();
-  return settings;
-}
-
 // ── Invoice Counter ────────────────────────────────────────
 
 export async function getInvoiceCounter(userId: string): Promise<number> {
@@ -536,7 +511,6 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
   await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-  await txOrDb.delete(appSettings).where(eq(appSettings.userId, userId));
   await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 }
 

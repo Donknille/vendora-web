@@ -43,7 +43,6 @@ describe("2.1 — Backup schema version and transactional restore", () => {
       marketSales: [{ id: "s1", userId: "u1", marketId: "m1", description: "Sale", amount: 30, quantity: 1, createdAt: "2025-06-01T10:00:00Z" }],
       expenses: [{ id: "e1", userId: "u1", description: "Material", amount: 15, category: "Material", expenseDate: "2025-03-10", createdAt: "2025-03-10T10:00:00Z" }],
       profile: { id: "p1", userId: "u1", name: "Test GmbH", address: "Str 1", email: "test@test.de", phone: "+49", taxNote: "USt", smallBusinessNote: null, defaultShippingCost: 4.99 },
-      settings: { id: "s1", userId: "u1", theme: "dark", currency: "€" },
       invoiceCounter: 1,
     };
 
@@ -70,7 +69,6 @@ describe("2.1 — Backup schema version and transactional restore", () => {
         description: z.string().max(200).optional(),
       }).passthrough()).max(2000).optional(),
       profile: z.object({}).passthrough().nullable().optional(),
-      settings: z.object({}).passthrough().nullable().optional(),
       invoiceCounter: z.number().int().min(0).max(999999).optional(),
     });
 

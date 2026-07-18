@@ -2,7 +2,7 @@
 
 # Vendora – Marktplatz-SaaS für Händler
 
-Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler (Bestellverwaltung, Produktkatalog, Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase.
+Vendora ist eine Multi-Tenant SaaS-Plattform für Markthändler:innen (Auftrags- & Rechnungsverwaltung, Marktmodus, EÜR-/Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase. Die geplante Neuausrichtung ist in `docs/REBUILD-PLAN.md` dokumentiert.
 
 ## Stack
 
@@ -17,29 +17,38 @@ Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler (Bestellve
 ## Projektstruktur
 
 ```
+drizzle/                 # Versionierte SQL-Migrationen (db:generate)
 src/
 ├── app/
+│   ├── (app)/          # Eingeloggter Bereich (Route-Group, Server-Layout mit Session-Gate)
+│   │   ├── dashboard/  # Finanz-Dashboard + GuV
+│   │   ├── orders/     # Auftragsverwaltung + Rechnung
+│   │   ├── markets/    # Marktmodus (Quick-Sale, Live-Gewinn)
+│   │   ├── expenses/   # Ausgabenerfassung
+│   │   ├── admin/      # Admin-Panel (ADMIN_EMAILS-Gate)
+│   │   └── settings/   # Firmenprofil + Account-Löschung + Backup
 │   ├── api/            # Route Handlers (REST)
-│   │   ├── account/    # Account CRUD + Löschung
+│   │   ├── account/    # Account-Löschung (DSGVO Art. 17)
 │   │   ├── orders/     # Bestell-Endpoints
-│   │   ├── markets/    # Marktplatz-Endpoints
-│   │   ├── products/   # Produkt-Endpoints
-│   │   ├── profile/    # Profil-Endpoints
-│   │   ├── stripe/     # Webhook + Checkout
+│   │   ├── markets/    # Markt-Endpoints (+ [id]/sales, [id]/copy)
+│   │   ├── market-sales/ # Alle Marktverkäufe (Dashboard)
+│   │   ├── expenses/   # Ausgaben-Endpoints
+│   │   ├── profile/    # Firmenprofil
+│   │   ├── stripe/     # Webhook + Checkout + Portal
 │   │   ├── export/     # Datenexport (DSGVO Art. 20)
-│   │   └── migrate/    # Backup Import/Export
-│   ├── dashboard/      # Finanz-Dashboard + GuV
-│   ├── orders/         # Bestellverwaltung UI
-│   ├── markets/        # Marktplatz-Verwaltung UI
-│   └── settings/       # User-Settings + Account-Löschung
+│   │   └── migrate/    # Backup Import (Restore)
+│   └── legal/          # Impressum, Datenschutz, AGB, Changelog
 ├── components/         # Shared React Components
 └── lib/
-    ├── schema.ts       # Drizzle DB-Schema (single source of truth)
-    ├── api-client.ts   # React Query Client + Query-Keys
+    ├── api-client.ts       # React Query Client + Query-Keys
+    ├── formatCurrency.ts   # Cent<->Euro-Konvertierung (Anzeige/Eingabe)
     └── server/
-        ├── auth.ts     # getAuthUserId, getAuthUserIdStrict, requireAdmin
-        ├── storage.ts  # Alle DB-Queries (Drizzle)
-        └── db.ts       # Drizzle-Postgres-Verbindung
+        ├── schema.ts       # Drizzle DB-Schema (single source of truth)
+        ├── auth.ts         # getAuthUserId, requireActiveSubscription
+        ├── admin.ts        # isAdmin, requireAdmin (ADMIN_EMAILS)
+        ├── storage.ts      # Alle DB-Queries (Drizzle)
+        ├── env.ts          # Zod-validierte Server-Env-Variablen
+        └── db.ts           # Drizzle-Postgres-Verbindung
 ```
 
 ## Befehle
@@ -48,8 +57,10 @@ src/
 npm run dev          # Dev-Server (localhost:3000)
 npm run build        # Produktions-Build
 npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
 npm test             # Vitest
-tsc --noEmit         # Typcheck ohne Output
+npm run db:generate  # Migration aus Schemaänderung erzeugen (-> drizzle/)
+npm run db:push      # Nur für lokale Experimente
 ```
 
 ## Verifikation nach Änderungen
@@ -119,15 +130,17 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 ## Bekannte Architektur-Entscheidungen
 
 - Direkte Postgres-Verbindung via Drizzle (db.ts) gegen Neon. Auth-Tabellen (`user`/`session`/`account`/`verification`) verwaltet Better Auth (auth-schema.ts); die App-`users`-Tabelle ist das Profil, gekeyt auf `better-auth user.id`.
-- Settings clientseitig in localStorage (LanguageContext, ThemeContext). Serverseitige Settings-Route und `app_settings`-Tabelle weitgehend ungenutzt.
+- **Geld = Integer-Cents** in DB, API und State. Umrechnung Euro↔Cent nur an der UI-Grenze (`formatCurrency.ts`: `parseAmount` bei Eingabe, `formatCurrency`/`formatAmountInput` bei Anzeige). Keine Float-Arithmetik auf Beträgen.
+- **Datumsfelder** der Domäne sind `date` (ISO-String), `createdAt`/`updatedAt` sind `timestamptz` (im Response als ISO-String serialisiert).
+- **Migrationen** liegen versioniert in `drizzle/`. Jede Schemaänderung: `npm run db:generate` und die erzeugte Migration mitcommitten. `db:push` nur lokal.
+- **Server-Env** wird zentral in `src/lib/server/env.ts` per Zod validiert (fail-fast). `import "server-only"` in allen `src/lib/server/*`-Logikmodulen.
+- Settings (Theme/Sprache) leben clientseitig in localStorage (LanguageContext, ThemeContext). Es gibt keine serverseitige Settings-Route/`app_settings`-Tabelle mehr.
 - Proxy-Konvention `src/proxy.ts` (Next.js 16, Node.js-Runtime → kein 1-MB-Edge-Limit) statt der deprecateten `middleware.ts`. Enthält Arcjet-Rate-Limiting + optimistischen Better-Auth-Cookie-Check (echte Session-Validierung passiert in Routen/Layout).
 
 ## Weiterführende Docs
 
-Lies diese Dateien nur bei Bedarf:
+- `docs/REBUILD-PLAN.md` – Vollständiger Überarbeitungsplan (Phasen 0–5), Ist-Zustand, Zielbild, Abnahmekriterien
+- `SETUP.md` – Lokales Setup (Neon, Better Auth, Env-Variablen, Migrationen)
+- `AGENTS.md` – Gemeinsame Agent-Regeln (Antigravity, Cursor, Claude Code)
 
-- `docs/known-issues.md` – Offene Findings aus dem Security-Audit
-- `docs/security-policy.md` – Detaillierte Security-Richtlinien
-- `docs/database-schema.md` – Schema-Details und Relationen
-- `docs/stripe-integration.md` – Billing-Flow und Webhook-Events
-- `docs/development-workflow.md` – Branching, PR, Deploy-Prozess
+Die früher hier gelisteten `docs/*.md` (known-issues, security-policy, database-schema, stripe-integration, development-workflow) existieren nicht.
