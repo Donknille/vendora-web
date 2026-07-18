@@ -67,7 +67,7 @@ npm run build
 
 Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst nicht automatisch ausgeführt:
 
-1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0005) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema (numeric/text, ohne `paidAt`, `expenses.marketId/source`, EÜR-Kategorien, `isSmallBusiness`, `webhook_events`). Bei vorhandenen Echtdaten: manuelle Konvertierung (Beträge ×100 → Cents, Text-Datum → `date`) + Baseline, sonst frische DB.
+1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0005) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema (numeric/text, ohne `paidAt`, `expenses.marketId/source`, EÜR-Kategorien, `isSmallBusiness`, `webhook_events`). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
 2. **`STRIPE_PRICE_ID`** noch hartkodiert in `src/lib/server/stripe.ts` → wird in **Phase 4** auf Env/Config umgestellt.
 3. **Webhook `current_period_end`** hat einen +30-Tage-Fallback (Stripe-API-Version-Unsicherheit) → bei Live-Billing gegen Stripe-Testmode verifizieren.
 4. **CI `Security & Quality Check` rot:** `npm audit --audit-level=high` scheitert an einer Next.js-High-Advisory ohne stabilen Fix (+ dev-only vite). Nicht von dieser Arbeit verursacht; separat entscheiden (Allowlist/Gate-Anpassung), nicht durch Downgrade.
