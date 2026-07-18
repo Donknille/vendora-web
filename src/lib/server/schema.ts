@@ -9,15 +9,18 @@ import {
   timestamp,
   jsonb,
   index,
+  check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================
-// Users — managed by Supabase Auth, but we store app-specific fields
+// Users — app profile keyed by the Better Auth user.id.
+// Better Auth owns the `user`/`session`/`account` tables (see auth-schema.ts);
+// this table holds app-specific fields (subscription, Stripe, soft-delete).
 // ============================================================
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey(), // Supabase Auth UID
+  id: varchar("id").primaryKey(), // == Better Auth user.id
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Subscription fields
@@ -31,6 +34,10 @@ export const users = pgTable("users", {
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
   index("idx_users_stripe_customer_id").on(t.stripeCustomerId),
+  check(
+    "chk_users_subscription_status",
+    sql`${t.subscriptionStatus} in ('trial', 'active', 'expired', 'cancelled')`
+  ),
 ]);
 
 export type User = typeof users.$inferSelect;
@@ -64,6 +71,11 @@ export const orders = pgTable("orders", {
   updatedAt: text("updated_at").notNull(),
 }, (t) => [
   index("idx_orders_user_id").on(t.userId),
+  index("idx_orders_user_status").on(t.userId, t.status),
+  check(
+    "chk_orders_status",
+    sql`${t.status} in ('open', 'paid', 'shipped', 'delivered', 'cancelled')`
+  ),
 ]);
 
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
@@ -112,6 +124,10 @@ export const marketEvents = pgTable("market_events", {
   createdAt: text("created_at").notNull(),
 }, (t) => [
   index("idx_market_events_user_id").on(t.userId),
+  check(
+    "chk_market_events_status",
+    sql`${t.status} in ('open', 'completed', 'cancelled')`
+  ),
 ]);
 
 export type SelectMarketEvent = typeof marketEvents.$inferSelect;
@@ -209,3 +225,9 @@ export const invoiceCounters = pgTable("invoice_counters", {
     .references(() => users.id, { onDelete: "cascade" }),
   counter: integer("counter").notNull().default(0),
 });
+
+// ============================================================
+// Better Auth tables (user / session / account / verification)
+// Re-exported so drizzle-kit (schema: schema.ts) creates them too.
+// ============================================================
+export * from "./auth-schema";

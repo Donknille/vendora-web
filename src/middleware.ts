@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { getSessionCookie } from "better-auth/cookies";
 import { aj, ajAuth, ajWrite } from "@/lib/server/arcjet";
 
 export async function middleware(request: NextRequest) {
@@ -31,7 +31,52 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  return await updateSession(request);
+  return handleAuthRedirect(request);
+}
+
+/**
+ * Optimistic auth-based redirects using only the presence of the Better Auth
+ * session cookie (no DB call — edge-safe). Real session validation happens in
+ * (app)/layout.tsx and in every API route via getAuthUserId().
+ */
+function handleAuthRedirect(request: NextRequest): NextResponse {
+  const { pathname } = request.nextUrl;
+
+  // API routes authenticate themselves
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
+  const hasSession = getSessionCookie(request) != null;
+
+  // Redirect unauthenticated users to landing (except auth + landing + legal pages)
+  if (
+    !hasSession &&
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/landing") &&
+    !pathname.startsWith("/legal") &&
+    pathname !== "/"
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/landing";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (hasSession && pathname.startsWith("/auth")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect root
+  if (pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = hasSession ? "/dashboard" : "/landing";
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

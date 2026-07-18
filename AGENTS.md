@@ -12,7 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Projekt
 
 Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler.
-Stack: Next.js 16, Supabase Auth, Drizzle ORM, Stripe, Vercel.
+Stack: Next.js 16, Better Auth, Neon Postgres, Drizzle ORM, Stripe, Vercel.
 
 ## Unveränderliche Regeln
 

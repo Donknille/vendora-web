@@ -1,30 +1,29 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 import { db } from "./db";
 import { users } from "./schema";
-import { eq } from "drizzle-orm";
 import { getUser, getSubscriptionStatus } from "./storage";
 
 /**
- * Gets the authenticated user ID from the Supabase session.
- * Also checks if the user is blocked in the DB.
- * Returns null if unauthenticated or blocked.
+ * Gets the authenticated user ID from the Better Auth session.
+ * Also checks if the user is blocked / soft-deleted in the DB.
+ * Returns null if unauthenticated, blocked, or deleted.
  */
 export async function getAuthUserId(): Promise<string | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) return null;
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
 
   const [dbUser] = await db
     .select({ isBlocked: users.isBlocked, deletedAt: users.deletedAt })
     .from(users)
-    .where(eq(users.id, user.id));
+    .where(eq(users.id, userId));
 
   if (dbUser?.isBlocked || dbUser?.deletedAt) return null;
 
-  return user.id;
+  return userId;
 }
 
 /**
@@ -44,44 +43,4 @@ export async function requireActiveSubscription(userId: string): Promise<NextRes
     );
   }
   return null;
-}
-
-/**
- * Ensures a user record exists in our users table.
- * Called after Supabase Auth signup/login.
- * Rejects previously deleted accounts (soft-delete guard).
- */
-export async function ensureUserRecord(id: string, email: string) {
-  const [existing] = await db.select().from(users).where(eq(users.id, id));
-
-  // Block re-creation of deleted accounts
-  if (existing?.deletedAt) {
-    return null;
-  }
-
-  if (existing) return existing;
-
-  // Also check if this email was previously used by a deleted account
-  const [deletedByEmail] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email));
-  if (deletedByEmail?.deletedAt) {
-    return null;
-  }
-
-  // Set trial period: 6 weeks from now
-  const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 42);
-
-  const [created] = await db
-    .insert(users)
-    .values({
-      id,
-      email,
-      subscriptionStatus: "trial",
-      trialEndsAt,
-    })
-    .returning();
-  return created;
 }

@@ -7,8 +7,8 @@ Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler (Bestellve
 ## Stack
 
 - **Runtime:** Next.js 16 (App Router), TypeScript strict
-- **Auth:** Supabase Auth (JWT, Cookie-basiert via @supabase/ssr)
-- **DB:** PostgreSQL (Supabase-hosted), Drizzle ORM ≥0.45.2
+- **Auth:** Better Auth (Session-Cookies, Drizzle-Adapter; Tabellen in `src/lib/server/auth-schema.ts`, Config in `src/lib/auth.ts`)
+- **DB:** PostgreSQL (Neon-hosted), Drizzle ORM ≥0.45.2
 - **Payments:** Stripe (Subscriptions, Webhooks, Checkout)
 - **Deployment:** Vercel
 - **State:** TanStack React Query (api-client.ts)
@@ -72,10 +72,10 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 - JEDE DB-Query MUSS einen `WHERE user_id = ?` Ownership-Check haben
 - Admin-Endpunkte MÜSSEN `requireAdmin()` verwenden
 - Blockierte User (`is_blocked = true`) dürfen KEINEN Zugriff haben
-- Serverseitig: `getUser()` statt `getSession()` für Auth-Checks
+- Serverseitig: Session immer über `getAuthUserId()` (Better Auth `auth.api.getSession`, DB-validiert) prüfen
 
 ### Secrets & Keys
-- Supabase `service_role` Key NIEMALS in Client-Code oder `NEXT_PUBLIC_*`
+- `BETTER_AUTH_SECRET` und alle Secrets NIEMALS in Client-Code oder `NEXT_PUBLIC_*`
 - KEINE hardcodierten API-Keys, Tokens oder Passwörter im Code
 - Secrets nur in `.env.local` (nicht committed) oder Vercel Environment Variables
 
@@ -111,14 +111,14 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 
 ## DSGVO-Anforderungen
 
-- Account-Löschung (Art. 17): Supabase Auth User + Stripe Customer + alle DB-Zeilen entfernen
+- Account-Löschung (Art. 17): Better Auth User (inkl. Sessions) + Stripe Customer + alle DB-Zeilen entfernen
 - Datenexport (Art. 20): `/api/export` exportiert alle User-Daten als JSON
 - Nur essentielle Auth-Cookies, kein Tracking ohne Consent
 - Datensparsamkeit: nur speichern, was funktional notwendig ist
 
 ## Bekannte Architektur-Entscheidungen
 
-- Direkte Postgres-Verbindung via Drizzle (db.ts), NICHT Supabase Data API. Serverseitiges RLS greift nur bei zusätzlicher DB-Konfiguration.
+- Direkte Postgres-Verbindung via Drizzle (db.ts) gegen Neon. Auth-Tabellen (`user`/`session`/`account`/`verification`) verwaltet Better Auth (auth-schema.ts); die App-`users`-Tabelle ist das Profil, gekeyt auf `better-auth user.id`.
 - Settings clientseitig in localStorage (LanguageContext, ThemeContext). Serverseitige Settings-Route und `app_settings`-Tabelle weitgehend ungenutzt.
 - middleware.ts ist laut Next.js 16 deprecated, Migration auf proxy.ts steht aus.
 

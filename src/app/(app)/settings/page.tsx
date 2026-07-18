@@ -25,7 +25,7 @@ import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
 import { useAppSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/lib/api-client";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -82,9 +82,8 @@ export default function SettingsPage() {
   // Load user email
   useEffect(() => {
     const loadUser = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      setUserEmail(data.user?.email ?? null);
+      const { data } = await authClient.getSession();
+      setUserEmail(data?.user?.email ?? null);
     };
     loadUser();
   }, []);
@@ -108,8 +107,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     queryClient.clear();
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     router.push("/auth/login");
   };
 
@@ -623,8 +621,7 @@ export default function SettingsPage() {
               return;
             }
             queryClient.clear();
-            const supabase = createClient();
-            await supabase.auth.signOut();
+            await authClient.signOut();
             router.push("/auth/login");
           } catch {
             setDeleteError(language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.");
