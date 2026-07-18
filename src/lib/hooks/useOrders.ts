@@ -26,6 +26,8 @@ export function useCreateOrder() {
       status: string;
       notes: string;
       orderDate: string;
+      paidAt?: string;
+      paymentMethod?: string;
       items: { name: string; quantity: number; price: number }[];
     }) => {
       const res = await apiRequest("POST", "/api/orders", data);
@@ -50,6 +52,8 @@ export function useUpdateOrder() {
       status: string;
       notes: string;
       orderDate: string;
+      paidAt: string;
+      paymentMethod: string;
       items: { name: string; quantity: number; price: number }[];
     }>) => {
       const res = await apiRequest("PUT", `/api/orders/${id}`, data);

@@ -24,6 +24,8 @@ export interface Order {
   notes: string;
   orderDate: string;
   serviceDate: string | null;
+  paidAt: string | null;
+  paymentMethod: string | null;
   shippingCost: number | null;
   total: number;
   processingStatus: string | null;

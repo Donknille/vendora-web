@@ -23,6 +23,8 @@ const updateOrderSchema = z.object({
   notes: z.string().max(5000).optional(),
   orderDate: z.string().max(50).optional(),
   serviceDate: z.string().max(50).optional(),
+  paidAt: z.string().max(50).optional(),
+  paymentMethod: z.enum(["cash", "card", "transfer", "paypal", "other"]).optional(),
   shippingCost: z.number().int().min(0).max(9999999).optional(), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),

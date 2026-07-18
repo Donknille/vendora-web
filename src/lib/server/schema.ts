@@ -63,6 +63,8 @@ export const orders = pgTable("orders", {
   notes: text("notes").notNull().default(""),
   orderDate: date("order_date").notNull(),
   serviceDate: date("service_date"),
+  paidAt: date("paid_at"), // Zuflussdatum (gesetzt bei Statuswechsel auf 'paid')
+  paymentMethod: text("payment_method"),
   shippingCost: integer("shipping_cost"), // cents
   total: integer("total").notNull().default(0), // cents
   processingStatus: text("processing_status"),
@@ -72,9 +74,14 @@ export const orders = pgTable("orders", {
 }, (t) => [
   index("idx_orders_user_id").on(t.userId),
   index("idx_orders_user_status").on(t.userId, t.status),
+  index("idx_orders_user_paid_at").on(t.userId, t.paidAt),
   check(
     "chk_orders_status",
     sql`${t.status} in ('open', 'paid', 'shipped', 'delivered', 'cancelled')`
+  ),
+  check(
+    "chk_orders_payment_method",
+    sql`${t.paymentMethod} is null or ${t.paymentMethod} in ('cash', 'card', 'transfer', 'paypal', 'other')`
   ),
 ]);
 

@@ -53,6 +53,13 @@ export interface SubscriptionInfo {
   daysRemaining: number | null;
 }
 
+// Order statuses that count as "money received" for revenue/EÜR purposes.
+export const PAID_LIKE_STATUSES = ["paid", "shipped", "delivered"] as const;
+
+export function isPaidLike(status: string | null | undefined): boolean {
+  return status != null && (PAID_LIKE_STATUSES as readonly string[]).includes(status);
+}
+
 // ── Users ──────────────────────────────────────────────────
 
 export async function getUser(id: string): Promise<User | undefined> {
@@ -129,6 +136,8 @@ export async function createOrder(
     notes: string;
     orderDate: string;
     serviceDate?: string;
+    paidAt?: string;
+    paymentMethod?: string;
     shippingCost?: number;
     processingStatus?: string;
     comment?: string;
@@ -156,6 +165,9 @@ export async function createOrder(
       notes: data.notes,
       orderDate: data.orderDate || today,
       serviceDate: data.serviceDate || null,
+      // Zuflussdatum: übernommen falls angegeben, sonst heute bei bezahltem Status.
+      paidAt: data.paidAt || (isPaidLike(data.status) ? today : null),
+      paymentMethod: data.paymentMethod || null,
       shippingCost: data.shippingCost ?? null,
       total,
       processingStatus: data.processingStatus,
@@ -199,6 +211,8 @@ export async function updateOrder(
     notes?: string;
     orderDate?: string;
     serviceDate?: string;
+    paidAt?: string;
+    paymentMethod?: string;
     shippingCost?: number;
     processingStatus?: string;
     comment?: string;
@@ -221,9 +235,22 @@ export async function updateOrder(
   if (fields.notes !== undefined) dbUpdates.notes = fields.notes;
   if (fields.orderDate !== undefined) dbUpdates.orderDate = fields.orderDate;
   if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate || null;
+  if (fields.paidAt !== undefined) dbUpdates.paidAt = fields.paidAt || null;
+  if (fields.paymentMethod !== undefined) dbUpdates.paymentMethod = fields.paymentMethod || null;
   if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost;
   if (fields.processingStatus !== undefined) dbUpdates.processingStatus = fields.processingStatus;
   if (fields.comment !== undefined) dbUpdates.comment = fields.comment;
+
+  // Auto-set the inflow date when an order first moves into a paid-like status
+  // (unless the caller supplied one explicitly).
+  if (
+    fields.status !== undefined &&
+    isPaidLike(fields.status) &&
+    !existing.paidAt &&
+    fields.paidAt === undefined
+  ) {
+    dbUpdates.paidAt = new Date().toISOString().slice(0, 10);
+  }
 
   // Wrap item replacement + order update in a transaction to prevent data loss
   await db.transaction(async (tx) => {
