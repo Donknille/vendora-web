@@ -7,6 +7,8 @@ import {
   expenses, companyProfiles, invoiceCounters,
 } from "@/lib/server/schema";
 import { eq, inArray } from "drizzle-orm";
+import { mapLegacyCategory } from "@/lib/euer";
+import { deriveMarketCosts } from "@/lib/marketCosts";
 import { z } from "zod";
 
 // v1: money as euro decimals. v2: money as integer cents.
@@ -200,17 +202,22 @@ export async function POST(request: Request) {
         }
       }
 
-      // Step 3: Import markets
+      // Step 3: Import markets (+ re-derive their market-cost expense rows,
+      // since we insert directly and bypass storage.syncMarketExpenses).
       const marketIdMap = new Map<string, string>();
       if (data.markets) {
         for (const market of data.markets) {
+          const standFee = toCents(market.standFee, fromEuros);
+          const travelCost = toCents(market.travelCost, fromEuros);
+          const marketDate = market.date || today;
+          const marketName = market.name || "";
           const [inserted] = await tx.insert(marketEvents).values({
             userId,
-            name: market.name || "",
-            date: market.date || today,
+            name: marketName,
+            date: marketDate,
             location: market.location || "",
-            standFee: toCents(market.standFee, fromEuros),
-            travelCost: toCents(market.travelCost, fromEuros),
+            standFee,
+            travelCost,
             notes: market.notes || "",
             status: market.status || "open",
             quickItems: market.quickItems?.map((q) => ({
@@ -219,6 +226,14 @@ export async function POST(request: Request) {
             })),
             createdAt: now,
           }).returning();
+
+          const derived = deriveMarketCosts({
+            name: marketName,
+            date: marketDate,
+            standFee,
+            travelCost,
+          }).map((r) => ({ ...r, userId, marketId: inserted.id, createdAt: now }));
+          if (derived.length > 0) await tx.insert(expenses).values(derived);
 
           if (market.id) {
             marketIdMap.set(market.id, inserted.id);
@@ -243,14 +258,15 @@ export async function POST(request: Request) {
         }
       }
 
-      // Step 5: Import expenses
+      // Step 5: Import manual expenses (market cost rows are re-derived above).
       if (data.expenses) {
         for (const expense of data.expenses) {
           await tx.insert(expenses).values({
             userId,
             description: expense.description || "",
             amount: toCents(expense.amount, fromEuros),
-            category: expense.category || "Other",
+            category: mapLegacyCategory(expense.category),
+            source: "manual",
             expenseDate: expense.expenseDate || expense.date || today,
             createdAt: now,
           });

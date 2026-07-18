@@ -62,9 +62,11 @@ export interface MarketSale {
 export interface Expense {
   id: string;
   userId: string;
+  marketId: string | null;
   description: string;
   amount: number;
   category: string;
+  source: string;
   expenseDate: string;
   createdAt: string;
 }

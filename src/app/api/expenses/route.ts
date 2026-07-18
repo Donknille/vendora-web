@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
+import { EUER_CATEGORIES } from "@/lib/euer";
 import { z } from "zod";
 
 const createExpenseSchema = z.object({
   description: z.string().min(1, "Description is required").max(200),
   amount: z.number().int().min(0).max(99999999), // cents
-  category: z.string().min(1, "Category is required").max(100),
+  category: z.enum(EUER_CATEGORIES),
   expenseDate: z.string().min(1, "Date is required").max(50),
 });
 

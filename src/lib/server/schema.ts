@@ -173,13 +173,26 @@ export const expenses = pgTable("expenses", {
   userId: varchar("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  // Set for auto-derived market cost rows (source market_fee/market_travel);
+  // null for manual expenses. Cascade-deleted with the market.
+  marketId: varchar("market_id").references(() => marketEvents.id, { onDelete: "cascade" }),
   description: text("description").notNull().default(""),
   amount: integer("amount").notNull().default(0), // cents
-  category: text("category").notNull().default(""),
+  category: text("category").notNull().default("sonstiges"),
+  source: text("source").notNull().default("manual"),
   expenseDate: date("expense_date").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_expenses_user_id").on(t.userId),
+  index("idx_expenses_market_id").on(t.marketId),
+  check(
+    "chk_expenses_category",
+    sql`${t.category} in ('wareneinkauf_material', 'standgebuehren_raumkosten', 'fahrtkosten', 'arbeitsmittel_gwg', 'verpackung', 'marketing', 'versicherungen_beitraege', 'software_gebuehren', 'sonstiges')`
+  ),
+  check(
+    "chk_expenses_source",
+    sql`${t.source} in ('manual', 'market_fee', 'market_travel')`
+  ),
 ]);
 
 export type SelectExpense = typeof expenses.$inferSelect;

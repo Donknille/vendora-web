@@ -1,5 +1,6 @@
 import "server-only";
 import { eq, and, sql, inArray } from "drizzle-orm";
+import { deriveMarketCosts } from "@/lib/marketCosts";
 import { db } from "./db";
 import {
   users,
@@ -306,25 +307,57 @@ export async function getMarket(userId: string, id: string): Promise<MarketEvent
   return market ? toMarketResponse(market) : undefined;
 }
 
+// Drizzle transaction handle type (first arg of the db.transaction callback).
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Keeps the derived expense rows for a market's stand fee / travel cost in sync
+ * (source `market_fee` / `market_travel`). Delete-and-reinsert inside the caller's
+ * transaction so market costs land in the expenses table exactly once — this is
+ * what makes them show up correctly in the dashboard/EÜR.
+ */
+async function syncMarketExpenses(
+  tx: DbTransaction,
+  userId: string,
+  marketId: string,
+  market: { name: string; date: string; standFee: number; travelCost: number }
+): Promise<void> {
+  await tx
+    .delete(expenses)
+    .where(and(eq(expenses.marketId, marketId), inArray(expenses.source, ["market_fee", "market_travel"])));
+
+  const rows = deriveMarketCosts(market).map((r) => ({ ...r, userId, marketId }));
+  if (rows.length > 0) await tx.insert(expenses).values(rows);
+}
+
 export async function createMarket(
   userId: string,
   data: { name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status?: string; quickItems?: { name: string; price: number }[] }
 ): Promise<MarketEventResponse> {
-  const [market] = await db
-    .insert(marketEvents)
-    .values({
-      userId,
-      name: data.name,
-      date: data.date,
-      location: data.location,
+  const market = await db.transaction(async (tx) => {
+    const [m] = await tx
+      .insert(marketEvents)
+      .values({
+        userId,
+        name: data.name,
+        date: data.date,
+        location: data.location,
+        standFee: data.standFee,
+        travelCost: data.travelCost,
+        notes: data.notes,
+        status: data.status || "open",
+        quickItems: data.quickItems,
+        createdAt: new Date(),
+      })
+      .returning();
+    await syncMarketExpenses(tx, userId, m.id, {
+      name: m.name,
+      date: m.date,
       standFee: data.standFee,
       travelCost: data.travelCost,
-      notes: data.notes,
-      status: data.status || "open",
-      quickItems: data.quickItems,
-      createdAt: new Date(),
-    })
-    .returning();
+    });
+    return m;
+  });
   return toMarketResponse(market);
 }
 
@@ -346,7 +379,18 @@ export async function updateMarket(
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.quickItems !== undefined) dbUpdates.quickItems = updates.quickItems;
 
-  await db.update(marketEvents).set(dbUpdates).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId)));
+  await db.transaction(async (tx) => {
+    if (Object.keys(dbUpdates).length > 0) {
+      await tx.update(marketEvents).set(dbUpdates).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId)));
+    }
+    // Re-derive the linked cost expenses from the merged values.
+    await syncMarketExpenses(tx, userId, id, {
+      name: updates.name ?? existing.name,
+      date: updates.date ?? existing.date,
+      standFee: updates.standFee ?? existing.standFee,
+      travelCost: updates.travelCost ?? existing.travelCost,
+    });
+  });
   return getMarket(userId, id);
 }
 
@@ -412,16 +456,28 @@ function toExpenseResponse(e: SelectExpense): ExpenseResponse {
   return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
+// Manual expenses only — market cost rows (source market_fee/market_travel)
+// are managed via the market form and hidden from the expenses list.
 export async function getExpenses(userId: string, opts?: PageOpts): Promise<ExpenseResponse[]> {
   let q = db
     .select()
     .from(expenses)
-    .where(eq(expenses.userId, userId))
+    .where(and(eq(expenses.userId, userId), eq(expenses.source, "manual")))
     .orderBy(sql`${expenses.createdAt} DESC`)
     .$dynamic();
   if (opts?.limit != null) q = q.limit(opts.limit);
   if (opts?.offset != null) q = q.offset(opts.offset);
   const rows = await q;
+  return rows.map(toExpenseResponse);
+}
+
+// All expense rows incl. derived market costs — for dashboard/EÜR aggregation.
+export async function getReportingExpenses(userId: string): Promise<ExpenseResponse[]> {
+  const rows = await db
+    .select()
+    .from(expenses)
+    .where(eq(expenses.userId, userId))
+    .orderBy(sql`${expenses.expenseDate} DESC`);
   return rows.map(toExpenseResponse);
 }
 
