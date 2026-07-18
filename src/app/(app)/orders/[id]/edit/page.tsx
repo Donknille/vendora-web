@@ -6,7 +6,8 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useOrders, useUpdateOrder } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
+import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payments";
 
 interface OrderItem {
   name: string;
@@ -15,7 +16,7 @@ interface OrderItem {
 }
 
 export default function EditOrderPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -32,6 +33,8 @@ export default function EditOrderPage() {
   const [orderDate, setOrderDate] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("open");
+  const [paidAt, setPaidAt] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [items, setItems] = useState<OrderItem[]>([
     { name: "", quantity: "1", price: "" },
   ]);
@@ -55,13 +58,15 @@ export default function EditOrderPage() {
       );
       setNotes(order.notes || "");
       setStatus(order.status || "open");
+      setPaidAt(order.paidAt ? order.paidAt.slice(0, 10) : "");
+      setPaymentMethod(order.paymentMethod ?? "");
 
       if (order.items && order.items.length > 0) {
         setItems(
           order.items.map((item) => ({
             name: item.name || "",
             quantity: String(item.quantity || 1),
-            price: item.price ? Number(item.price).toFixed(2).replace(".", ",") : "",
+            price: item.price ? formatAmountInput(item.price) : "",
           }))
         );
       }
@@ -123,6 +128,8 @@ export default function EditOrderPage() {
         customerCountry: customerCountry.trim() || undefined,
         orderDate,
         notes: notes.trim() || undefined,
+        paidAt: paidAt || undefined,
+        paymentMethod: paymentMethod || undefined,
         items: orderItems,
         status,
       });
@@ -259,6 +266,38 @@ export default function EditOrderPage() {
               onChange={(e) => setOrderDate(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
             />
+          </div>
+
+          {/* Payment (Zufluss for the EÜR) */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                {language === "de" ? "Zahlungsart" : "Payment method"}
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              >
+                <option value="">{language === "de" ? "— keine —" : "— none —"}</option>
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {PAYMENT_METHOD_LABELS[m][language === "de" ? "de" : "en"]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-secondary mb-1.5">
+                {language === "de" ? "Bezahlt am" : "Paid on"}
+              </label>
+              <input
+                type="date"
+                value={paidAt}
+                onChange={(e) => setPaidAt(e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              />
+            </div>
           </div>
         </div>
 

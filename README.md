@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vendora
 
-## Getting Started
+Multi-Tenant-SaaS für Markthändler:innen: Auftrags- & Rechnungsverwaltung, Marktmodus
+(Kassen-light für Marktstände), Ausgabenerfassung und EÜR-/Finanzdashboard – mit Backup/Restore
+und Stripe-Abo.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · Better Auth · Neon Postgres + Drizzle ORM · Stripe · Resend ·
+Arcjet · Tailwind v4 · TanStack Query · Zod · Vitest.
+
+## Loslegen
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # Werte eintragen
+npm run db:migrate                 # Schema anwenden
+npm run dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Vollständige Anleitung (Env-Variablen, Neon, Stripe, Deployment): **[SETUP.md](SETUP.md)**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Entwicklung
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint        # ESLint
+npm test            # Vitest
+npm run build       # Produktions-Build
+```
 
-## Learn More
+Diese vier Checks müssen vor jedem Commit grün sein.
 
-To learn more about Next.js, take a look at the following resources:
+## Dokumentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **[docs/REBUILD-PLAN.md](docs/REBUILD-PLAN.md)** – Überarbeitungsplan (Phasen 0–5), Ist-Zustand, Zielbild
+- **[CLAUDE.md](CLAUDE.md)** / **[AGENTS.md](AGENTS.md)** – Coding- & Security-Regeln, Architektur-Entscheidungen
+- **[SETUP.md](SETUP.md)** – Lokales Setup & Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Konventionen (Kurzfassung)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Jeder API-Endpunkt prüft Auth **und** Ownership (`getAuthUserId()` + `WHERE user_id`).
+- Geld ist überall **Integer-Cents**; Euro↔Cent nur an der UI-Grenze (`src/lib/formatCurrency.ts`).
+- Schemaänderungen als versionierte Migration (`npm run db:generate`, dann mitcommitten).
+- Secrets nur in `.env.local` / Vercel; validiert über `src/lib/server/env.ts`.

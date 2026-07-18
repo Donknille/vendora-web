@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { parsePagination } from "@/lib/server/pagination";
+import { EUER_CATEGORIES } from "@/lib/euer";
 import { z } from "zod";
 
 const createExpenseSchema = z.object({
   description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().min(0).max(999999.99),
-  category: z.string().min(1, "Category is required").max(100),
+  amount: z.number().int().min(0).max(99999999), // cents
+  category: z.enum(EUER_CATEGORIES),
   expenseDate: z.string().min(1, "Date is required").max(50),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await storage.getExpenses(userId);
+    const data = await storage.getExpenses(userId, parsePagination(request));
     return NextResponse.json(data);
   } catch (error) {
     console.error("GET /api/expenses error:", error);

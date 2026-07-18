@@ -22,11 +22,11 @@ import {
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
-import { useAppSettings } from "@/lib/hooks/useSettings";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/lib/api-client";
+import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -36,7 +36,6 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
-  const { isLoading: loadingSettings } = useAppSettings();
   const { data: sub } = useSubscription();
   const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
@@ -62,6 +61,7 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [taxNote, setTaxNote] = useState("");
   const [smallBusinessNote, setSmallBusinessNote] = useState("");
+  const [isSmallBusiness, setIsSmallBusiness] = useState(true);
   const [defaultShippingCost, setDefaultShippingCost] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
 
@@ -82,9 +82,8 @@ export default function SettingsPage() {
   // Load user email
   useEffect(() => {
     const loadUser = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      setUserEmail(data.user?.email ?? null);
+      const { data } = await authClient.getSession();
+      setUserEmail(data?.user?.email ?? null);
     };
     loadUser();
   }, []);
@@ -98,9 +97,10 @@ export default function SettingsPage() {
       setPhone(profile.phone ?? "");
       setTaxNote(profile.taxNote ?? "");
       setSmallBusinessNote(profile.smallBusinessNote ?? "");
+      setIsSmallBusiness(profile.isSmallBusiness ?? true);
       setDefaultShippingCost(
         profile.defaultShippingCost != null
-          ? String(profile.defaultShippingCost)
+          ? formatAmountInput(profile.defaultShippingCost)
           : ""
       );
     }
@@ -108,8 +108,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     queryClient.clear();
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     router.push("/auth/login");
   };
 
@@ -126,8 +125,9 @@ export default function SettingsPage() {
         phone: phone.trim(),
         taxNote: taxNote.trim(),
         smallBusinessNote: smallBusinessNote.trim(),
+        isSmallBusiness,
         defaultShippingCost: defaultShippingCost
-          ? parseFloat(defaultShippingCost.replace(",", ".")) || 0
+          ? parseAmount(defaultShippingCost)
           : 0,
       });
       setProfileSaved(true);
@@ -227,7 +227,7 @@ export default function SettingsPage() {
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
-  const isLoading = loadingProfile || loadingSettings;
+  const isLoading = loadingProfile;
 
   if (isLoading) {
     return (
@@ -374,9 +374,23 @@ export default function SettingsPage() {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isSmallBusiness}
+              onChange={(e) => setIsSmallBusiness(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-line text-brand-primary focus:ring-brand-primary"
+            />
+            <span className="text-sm text-secondary">
+              {language === "de"
+                ? "Kleinunternehmer nach § 19 UStG (keine Umsatzsteuer ausweisen)"
+                : "Small business under §19 UStG (no VAT charged)"}
+            </span>
+          </label>
+
           <div>
             <label className="mb-1 block text-sm font-medium text-secondary">
-              Kleinunternehmerregelung
+              {language === "de" ? "Zusätzlicher Steuerhinweis" : "Additional tax note"}
             </label>
             <input
               type="text"
@@ -623,8 +637,7 @@ export default function SettingsPage() {
               return;
             }
             queryClient.clear();
-            const supabase = createClient();
-            await supabase.auth.signOut();
+            await authClient.signOut();
             router.push("/auth/login");
           } catch {
             setDeleteError(language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.");

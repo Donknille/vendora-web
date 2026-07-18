@@ -40,7 +40,8 @@ export default function DatenschutzPage() {
           <li>Passwort (verschlüsselt gespeichert, nie im Klartext)</li>
           <li>Firmenprofil (Name, Adresse, Telefon, Steuerhinweis)</li>
           <li>Geschäftsdaten (Aufträge, Rechnungen, Marktveranstaltungen, Ausgaben)</li>
-          <li>Nutzungseinstellungen (Theme, Sprache)</li>
+          <li>Zahlungsdaten (nur bei kostenpflichtigem Abo — Verarbeitung ausschließlich durch Stripe, Kartendaten werden nie auf unseren Servern gespeichert)</li>
+          <li>Nutzungseinstellungen (Theme, Sprache) — ausschließlich lokal im Browser gespeichert</li>
         </ul>
       </Card>
 
@@ -58,18 +59,27 @@ export default function DatenschutzPage() {
 
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-primary mb-1">Supabase (Datenbank & Authentifizierung)</h3>
+            <h3 className="text-sm font-medium text-primary mb-1">Neon (Datenbank-Hosting)</h3>
             <p className="text-sm text-secondary">
-              Anbieter: Supabase Inc., 970 Toa Payoh North #07-04, Singapore 318992.
-              Supabase speichert Nutzerdaten (E-Mail, Passwort-Hash, Geschäftsdaten) in einer PostgreSQL-Datenbank.
+              Anbieter: Neon, Inc., USA. Neon betreibt die PostgreSQL-Datenbank, in der alle Nutzer- und
+              Geschäftsdaten (E-Mail, Passwort-Hash, Aufträge, Rechnungen, Marktdaten, Ausgaben) gespeichert werden.
               Serverstandort: EU (Frankfurt). Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-1">Authentifizierung</h3>
+            <p className="text-sm text-secondary">
+              Registrierung, Login und Sessions werden durch die selbst betriebene Software „Better Auth“ verarbeitet.
+              Es findet keine Weitergabe an einen externen Authentifizierungsdienst statt — sämtliche Auth-Daten liegen
+              in der oben genannten Datenbank (Neon). Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
             </p>
           </div>
 
           <div>
             <h3 className="text-sm font-medium text-primary mb-1">Vercel (Hosting)</h3>
             <p className="text-sm text-secondary">
-              Anbieter: Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA.
+              Anbieter: Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.
               Vercel hostet die Web-Anwendung und führt serverseitige Funktionen aus.
               Zugriffslogs (IP-Adresse, Zeitstempel) werden von Vercel kurzfristig gespeichert.
               Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.
@@ -77,11 +87,30 @@ export default function DatenschutzPage() {
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-primary mb-1">Strato (E-Mail-Versand)</h3>
+            <h3 className="text-sm font-medium text-primary mb-1">Stripe (Zahlungsabwicklung)</h3>
             <p className="text-sm text-secondary">
-              Anbieter: STRATO AG, Pascalstraße 10, 10587 Berlin.
-              Strato versendet transaktionale E-Mails (Registrierungsbestätigung, Passwort-Reset).
+              Anbieter für Nutzer im EWR: Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand Canal Dock,
+              Dublin, Irland. Stripe wickelt Zahlungen für kostenpflichtige Abonnements ab und verarbeitet dabei
+              Zahlungs- und Rechnungsdaten. Kartendaten werden ausschließlich bei Stripe verarbeitet und erreichen
+              unsere Server nicht. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-1">Resend (E-Mail-Versand)</h3>
+            <p className="text-sm text-secondary">
+              Anbieter: Resend (Plus Five Five, Inc.), USA. Resend versendet transaktionale E-Mails
+              (z.&nbsp;B. Passwort-Reset, E-Mail-Bestätigung) und verarbeitet dazu die E-Mail-Adresse des Empfängers.
               Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-1">Arcjet (Sicherheit & Rate-Limiting)</h3>
+            <p className="text-sm text-secondary">
+              Anbieter: Arcjet, Inc., USA. Arcjet schützt die Anwendung vor Missbrauch (Rate-Limiting, Bot-Abwehr)
+              und verarbeitet dazu technische Verbindungsdaten wie die IP-Adresse. Rechtsgrundlage:
+              Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Betriebssicherheit).
             </p>
           </div>
         </div>
@@ -91,9 +120,9 @@ export default function DatenschutzPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">5. Datensicherheit</h2>
         <ul className="space-y-1 text-sm text-secondary list-disc list-inside">
           <li>Verschlüsselte Übertragung aller Daten via HTTPS/TLS</li>
-          <li>Passwörter werden mit bcrypt gehasht gespeichert (nie im Klartext)</li>
+          <li>Passwörter werden mit einem sicheren, langsamen Hash-Verfahren (scrypt) gespeichert (nie im Klartext)</li>
           <li>Zugriffskontrolle: Jeder Nutzer sieht ausschließlich seine eigenen Daten</li>
-          <li>Row Level Security (RLS) auf Datenbankebene als zusätzliche Schutzschicht</li>
+          <li>Serverseitige Prüfung von Authentifizierung und Eigentümerschaft bei jeder Datenbankabfrage</li>
           <li>Eingabevalidierung auf allen API-Endpunkten (Schutz vor Injection-Angriffen)</li>
           <li>Content Security Policy (CSP) Header zum Schutz vor Cross-Site-Scripting</li>
           <li>Kein Tracking, keine Analytics, keine Cookies zu Werbezwecken</li>
@@ -119,8 +148,14 @@ export default function DatenschutzPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">7. Speicherdauer</h2>
         <p className="text-sm text-secondary">
           Ihre Daten werden gespeichert, solange Ihr Konto aktiv ist. Nach Löschung des Kontos werden alle personenbezogenen Daten
-          und Geschäftsdaten unwiderruflich gelöscht. Es gibt keine Aufbewahrung nach Kontolöschung, es sei denn, gesetzliche
-          Aufbewahrungspflichten (z.B. steuerrechtlich) erfordern dies.
+          und Geschäftsdaten gelöscht bzw. anonymisiert.
+        </p>
+        <p className="text-sm text-secondary mt-2">
+          <strong className="text-primary">Ausnahme — steuerrechtliche Aufbewahrung:</strong> Ausgestellte Rechnungen und die
+          zugehörigen Buchungsbelege unterliegen der gesetzlichen Aufbewahrungspflicht (§ 147 AO, § 14b UStG — in der Regel
+          10 Jahre). Diese Belege werden daher auch nach einer Kontolöschung für die Dauer der gesetzlichen Frist in
+          entkoppelter Form aufbewahrt und anschließend gelöscht. Rechtsgrundlage: Art. 6 Abs. 1 lit. c DSGVO
+          (rechtliche Verpflichtung); die Löschung ist insoweit nach Art. 17 Abs. 3 lit. b DSGVO eingeschränkt.
         </p>
       </Card>
 
@@ -142,7 +177,7 @@ export default function DatenschutzPage() {
           Diese Datenschutzerklärung kann bei Bedarf aktualisiert werden, z.B. bei Änderungen der genutzten Dienste
           oder rechtlichen Anforderungen. Die aktuelle Version ist stets unter dieser Adresse abrufbar.
         </p>
-        <p className="text-sm text-muted mt-2">Stand: April 2026</p>
+        <p className="text-sm text-muted mt-2">Stand: Juli 2026</p>
       </Card>
     </div>
   );

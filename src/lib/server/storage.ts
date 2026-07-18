@@ -1,4 +1,7 @@
+import "server-only";
 import { eq, and, sql, inArray } from "drizzle-orm";
+import { deriveMarketCosts } from "@/lib/marketCosts";
+import { isPaidLike } from "@/lib/orderStatus";
 import { db } from "./db";
 import {
   users,
@@ -8,7 +11,6 @@ import {
   marketSales,
   expenses,
   companyProfiles,
-  appSettings,
   invoiceCounters,
   type User,
   type SelectOrder,
@@ -17,36 +19,33 @@ import {
   type SelectMarketSale,
   type SelectExpense,
   type SelectCompanyProfile,
-  type SelectAppSettings,
 } from "./schema";
 
-// Response types with numeric conversion
-export interface OrderWithItems extends Omit<SelectOrder, "total" | "shippingCost"> {
-  total: number;
-  shippingCost: number | null;
+// Response types. All money fields are integer cents (no conversion needed —
+// the columns are `integer`). createdAt/updatedAt are timestamptz `Date`s in the
+// DB; the mappers serialize them to ISO strings so the JSON/API contract stays
+// string-typed for the client.
+export interface OrderWithItems extends Omit<SelectOrder, "createdAt" | "updatedAt"> {
+  createdAt: string;
+  updatedAt: string;
   items: OrderItemResponse[];
 }
 
-export interface OrderItemResponse extends Omit<SelectOrderItem, "price"> {
-  price: number;
+export type OrderItemResponse = SelectOrderItem;
+
+export interface MarketEventResponse extends Omit<SelectMarketEvent, "createdAt"> {
+  createdAt: string;
 }
 
-export interface MarketEventResponse extends Omit<SelectMarketEvent, "standFee" | "travelCost"> {
-  standFee: number;
-  travelCost: number;
+export interface MarketSaleResponse extends Omit<SelectMarketSale, "createdAt"> {
+  createdAt: string;
 }
 
-export interface MarketSaleResponse extends Omit<SelectMarketSale, "amount"> {
-  amount: number;
+export interface ExpenseResponse extends Omit<SelectExpense, "createdAt"> {
+  createdAt: string;
 }
 
-export interface ExpenseResponse extends Omit<SelectExpense, "amount"> {
-  amount: number;
-}
-
-export interface CompanyProfileResponse extends Omit<SelectCompanyProfile, "defaultShippingCost"> {
-  defaultShippingCost: number | null;
-}
+export type CompanyProfileResponse = SelectCompanyProfile;
 
 export interface SubscriptionInfo {
   status: "trial" | "active" | "expired" | "cancelled";
@@ -54,14 +53,6 @@ export interface SubscriptionInfo {
   trialEndsAt: string | null;
   subscriptionExpiresAt: string | null;
   daysRemaining: number | null;
-}
-
-function toNumber(val: string | null | undefined): number {
-  return val ? parseFloat(val) : 0;
-}
-
-function toNumberOrNull(val: string | null | undefined): number | null {
-  return val != null ? parseFloat(val) : null;
 }
 
 // ── Users ──────────────────────────────────────────────────
@@ -76,18 +67,27 @@ export async function getUser(id: string): Promise<User | undefined> {
 function buildOrderWithItems(order: SelectOrder, items: SelectOrderItem[]): OrderWithItems {
   return {
     ...order,
-    total: toNumber(order.total),
-    shippingCost: toNumberOrNull(order.shippingCost),
-    items: items.map((i) => ({ ...i, price: toNumber(i.price) })),
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+    items,
   };
 }
 
-export async function getOrders(userId: string): Promise<OrderWithItems[]> {
-  const rows = await db
+export interface PageOpts {
+  limit?: number;
+  offset?: number;
+}
+
+export async function getOrders(userId: string, opts?: PageOpts): Promise<OrderWithItems[]> {
+  let q = db
     .select()
     .from(orders)
     .where(eq(orders.userId, userId))
-    .orderBy(sql`${orders.createdAt} DESC`);
+    .orderBy(sql`${orders.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
 
   if (rows.length === 0) return [];
 
@@ -131,6 +131,8 @@ export async function createOrder(
     notes: string;
     orderDate: string;
     serviceDate?: string;
+    paidAt?: string;
+    paymentMethod?: string;
     shippingCost?: number;
     processingStatus?: string;
     comment?: string;
@@ -138,8 +140,10 @@ export async function createOrder(
   }
 ): Promise<OrderWithItems> {
   const invoiceNumber = await getNextInvoiceNumber(userId);
+  // All amounts are integer cents — pure integer arithmetic, no floats.
   const total = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const now = new Date().toISOString();
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
 
   const [order] = await db
     .insert(orders)
@@ -154,10 +158,13 @@ export async function createOrder(
       status: data.status,
       invoiceNumber,
       notes: data.notes,
-      orderDate: data.orderDate || now,
-      serviceDate: data.serviceDate,
-      shippingCost: data.shippingCost?.toString(),
-      total: total.toString(),
+      orderDate: data.orderDate || today,
+      serviceDate: data.serviceDate || null,
+      // Zuflussdatum: übernommen falls angegeben, sonst heute bei bezahltem Status.
+      paidAt: data.paidAt || (isPaidLike(data.status) ? today : null),
+      paymentMethod: data.paymentMethod || null,
+      shippingCost: data.shippingCost ?? null,
+      total,
       processingStatus: data.processingStatus,
       comment: data.comment,
       createdAt: now,
@@ -174,7 +181,7 @@ export async function createOrder(
               orderId: order.id,
               name: item.name,
               quantity: item.quantity,
-              price: item.price.toString(),
+              price: item.price,
               processingStatus: item.processingStatus,
               comment: item.comment,
             }))
@@ -182,12 +189,7 @@ export async function createOrder(
           .returning()
       : [];
 
-  return {
-    ...order,
-    total,
-    shippingCost: data.shippingCost ?? null,
-    items: insertedItems.map((i) => ({ ...i, price: toNumber(i.price) })),
-  };
+  return buildOrderWithItems(order, insertedItems);
 }
 
 export async function updateOrder(
@@ -204,6 +206,8 @@ export async function updateOrder(
     notes?: string;
     orderDate?: string;
     serviceDate?: string;
+    paidAt?: string;
+    paymentMethod?: string;
     shippingCost?: number;
     processingStatus?: string;
     comment?: string;
@@ -214,7 +218,7 @@ export async function updateOrder(
   if (!existing) return undefined;
 
   const { items: newItems, ...fields } = updates;
-  const dbUpdates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  const dbUpdates: Record<string, unknown> = { updatedAt: new Date() };
 
   if (fields.customerName !== undefined) dbUpdates.customerName = fields.customerName;
   if (fields.customerEmail !== undefined) dbUpdates.customerEmail = fields.customerEmail;
@@ -225,16 +229,29 @@ export async function updateOrder(
   if (fields.status !== undefined) dbUpdates.status = fields.status;
   if (fields.notes !== undefined) dbUpdates.notes = fields.notes;
   if (fields.orderDate !== undefined) dbUpdates.orderDate = fields.orderDate;
-  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate;
-  if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost.toString();
+  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate || null;
+  if (fields.paidAt !== undefined) dbUpdates.paidAt = fields.paidAt || null;
+  if (fields.paymentMethod !== undefined) dbUpdates.paymentMethod = fields.paymentMethod || null;
+  if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost;
   if (fields.processingStatus !== undefined) dbUpdates.processingStatus = fields.processingStatus;
   if (fields.comment !== undefined) dbUpdates.comment = fields.comment;
+
+  // Auto-set the inflow date when an order first moves into a paid-like status
+  // (unless the caller supplied one explicitly).
+  if (
+    fields.status !== undefined &&
+    isPaidLike(fields.status) &&
+    !existing.paidAt &&
+    fields.paidAt === undefined
+  ) {
+    dbUpdates.paidAt = new Date().toISOString().slice(0, 10);
+  }
 
   // Wrap item replacement + order update in a transaction to prevent data loss
   await db.transaction(async (tx) => {
     if (newItems) {
       const total = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      dbUpdates.total = total.toString();
+      dbUpdates.total = total;
       await tx.delete(orderItems).where(eq(orderItems.orderId, id));
       if (newItems.length > 0) {
         await tx.insert(orderItems).values(
@@ -242,7 +259,7 @@ export async function updateOrder(
             orderId: id,
             name: item.name,
             quantity: item.quantity,
-            price: item.price.toString(),
+            price: item.price,
             processingStatus: item.processingStatus,
             comment: item.comment,
           }))
@@ -264,7 +281,7 @@ export async function deleteOrder(userId: string, id: string): Promise<boolean> 
 // ── Markets ────────────────────────────────────────────────
 
 function toMarketResponse(m: SelectMarketEvent): MarketEventResponse {
-  return { ...m, standFee: toNumber(m.standFee), travelCost: toNumber(m.travelCost) };
+  return { ...m, createdAt: m.createdAt.toISOString() };
 }
 
 export async function getMarkets(userId: string): Promise<MarketEventResponse[]> {
@@ -284,25 +301,57 @@ export async function getMarket(userId: string, id: string): Promise<MarketEvent
   return market ? toMarketResponse(market) : undefined;
 }
 
+// Drizzle transaction handle type (first arg of the db.transaction callback).
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Keeps the derived expense rows for a market's stand fee / travel cost in sync
+ * (source `market_fee` / `market_travel`). Delete-and-reinsert inside the caller's
+ * transaction so market costs land in the expenses table exactly once — this is
+ * what makes them show up correctly in the dashboard/EÜR.
+ */
+async function syncMarketExpenses(
+  tx: DbTransaction,
+  userId: string,
+  marketId: string,
+  market: { name: string; date: string; standFee: number; travelCost: number }
+): Promise<void> {
+  await tx
+    .delete(expenses)
+    .where(and(eq(expenses.marketId, marketId), inArray(expenses.source, ["market_fee", "market_travel"])));
+
+  const rows = deriveMarketCosts(market).map((r) => ({ ...r, userId, marketId }));
+  if (rows.length > 0) await tx.insert(expenses).values(rows);
+}
+
 export async function createMarket(
   userId: string,
   data: { name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status?: string; quickItems?: { name: string; price: number }[] }
 ): Promise<MarketEventResponse> {
-  const [market] = await db
-    .insert(marketEvents)
-    .values({
-      userId,
-      name: data.name,
-      date: data.date,
-      location: data.location,
-      standFee: data.standFee.toString(),
-      travelCost: data.travelCost.toString(),
-      notes: data.notes,
-      status: data.status || "open",
-      quickItems: data.quickItems,
-      createdAt: new Date().toISOString(),
-    })
-    .returning();
+  const market = await db.transaction(async (tx) => {
+    const [m] = await tx
+      .insert(marketEvents)
+      .values({
+        userId,
+        name: data.name,
+        date: data.date,
+        location: data.location,
+        standFee: data.standFee,
+        travelCost: data.travelCost,
+        notes: data.notes,
+        status: data.status || "open",
+        quickItems: data.quickItems,
+        createdAt: new Date(),
+      })
+      .returning();
+    await syncMarketExpenses(tx, userId, m.id, {
+      name: m.name,
+      date: m.date,
+      standFee: data.standFee,
+      travelCost: data.travelCost,
+    });
+    return m;
+  });
   return toMarketResponse(market);
 }
 
@@ -318,13 +367,24 @@ export async function updateMarket(
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.date !== undefined) dbUpdates.date = updates.date;
   if (updates.location !== undefined) dbUpdates.location = updates.location;
-  if (updates.standFee !== undefined) dbUpdates.standFee = updates.standFee.toString();
-  if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost.toString();
+  if (updates.standFee !== undefined) dbUpdates.standFee = updates.standFee;
+  if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.quickItems !== undefined) dbUpdates.quickItems = updates.quickItems;
 
-  await db.update(marketEvents).set(dbUpdates).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId)));
+  await db.transaction(async (tx) => {
+    if (Object.keys(dbUpdates).length > 0) {
+      await tx.update(marketEvents).set(dbUpdates).where(and(eq(marketEvents.id, id), eq(marketEvents.userId, userId)));
+    }
+    // Re-derive the linked cost expenses from the merged values.
+    await syncMarketExpenses(tx, userId, id, {
+      name: updates.name ?? existing.name,
+      date: updates.date ?? existing.date,
+      standFee: updates.standFee ?? existing.standFee,
+      travelCost: updates.travelCost ?? existing.travelCost,
+    });
+  });
   return getMarket(userId, id);
 }
 
@@ -336,7 +396,7 @@ export async function deleteMarket(userId: string, id: string): Promise<boolean>
 // ── Market Sales ───────────────────────────────────────────
 
 function toSaleResponse(s: SelectMarketSale): MarketSaleResponse {
-  return { ...s, amount: toNumber(s.amount) };
+  return { ...s, createdAt: s.createdAt.toISOString() };
 }
 
 export async function getMarketSales(userId: string, marketId: string): Promise<MarketSaleResponse[]> {
@@ -348,12 +408,16 @@ export async function getMarketSales(userId: string, marketId: string): Promise<
   return rows.map(toSaleResponse);
 }
 
-export async function getAllMarketSales(userId: string): Promise<MarketSaleResponse[]> {
-  const rows = await db
+export async function getAllMarketSales(userId: string, opts?: PageOpts): Promise<MarketSaleResponse[]> {
+  let q = db
     .select()
     .from(marketSales)
     .where(eq(marketSales.userId, userId))
-    .orderBy(sql`${marketSales.createdAt} DESC`);
+    .orderBy(sql`${marketSales.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
   return rows.map(toSaleResponse);
 }
 
@@ -367,9 +431,9 @@ export async function createMarketSale(
       userId,
       marketId: data.marketId,
       description: data.description,
-      amount: data.amount.toString(),
+      amount: data.amount,
       quantity: data.quantity,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     })
     .returning();
   return toSaleResponse(sale);
@@ -383,15 +447,31 @@ export async function deleteMarketSale(userId: string, id: string): Promise<bool
 // ── Expenses ───────────────────────────────────────────────
 
 function toExpenseResponse(e: SelectExpense): ExpenseResponse {
-  return { ...e, amount: toNumber(e.amount) };
+  return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
-export async function getExpenses(userId: string): Promise<ExpenseResponse[]> {
+// Manual expenses only — market cost rows (source market_fee/market_travel)
+// are managed via the market form and hidden from the expenses list.
+export async function getExpenses(userId: string, opts?: PageOpts): Promise<ExpenseResponse[]> {
+  let q = db
+    .select()
+    .from(expenses)
+    .where(and(eq(expenses.userId, userId), eq(expenses.source, "manual")))
+    .orderBy(sql`${expenses.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
+  return rows.map(toExpenseResponse);
+}
+
+// All expense rows incl. derived market costs — for dashboard/EÜR aggregation.
+export async function getReportingExpenses(userId: string): Promise<ExpenseResponse[]> {
   const rows = await db
     .select()
     .from(expenses)
     .where(eq(expenses.userId, userId))
-    .orderBy(sql`${expenses.createdAt} DESC`);
+    .orderBy(sql`${expenses.expenseDate} DESC`);
   return rows.map(toExpenseResponse);
 }
 
@@ -399,15 +479,15 @@ export async function createExpense(
   userId: string,
   data: { description: string; amount: number; category: string; expenseDate: string }
 ): Promise<ExpenseResponse> {
-  const now = new Date().toISOString();
+  const now = new Date();
   const [expense] = await db
     .insert(expenses)
     .values({
       userId,
       description: data.description,
-      amount: data.amount.toString(),
+      amount: data.amount,
       category: data.category,
-      expenseDate: data.expenseDate || now.split("T")[0],
+      expenseDate: data.expenseDate || now.toISOString().slice(0, 10),
       createdAt: now,
     })
     .returning();
@@ -421,69 +501,32 @@ export async function deleteExpense(userId: string, id: string): Promise<boolean
 
 // ── Profile ────────────────────────────────────────────────
 
-function toProfileResponse(p: SelectCompanyProfile): CompanyProfileResponse {
-  return { ...p, defaultShippingCost: toNumberOrNull(p.defaultShippingCost) };
-}
-
 export async function getProfile(userId: string): Promise<CompanyProfileResponse> {
   const [profile] = await db.select().from(companyProfiles).where(eq(companyProfiles.userId, userId));
-  if (profile) return toProfileResponse(profile);
-  return { id: "", userId, name: "", address: "", email: "", phone: "", taxNote: "", smallBusinessNote: null, defaultShippingCost: null };
+  if (profile) return profile;
+  return { id: "", userId, name: "", address: "", email: "", phone: "", taxNote: "", smallBusinessNote: null, isSmallBusiness: true, defaultShippingCost: null };
 }
 
 export async function upsertProfile(
   userId: string,
-  data: { name: string; address: string; email: string; phone: string; taxNote: string; smallBusinessNote?: string; defaultShippingCost?: number }
+  data: { name: string; address: string; email: string; phone: string; taxNote: string; smallBusinessNote?: string; isSmallBusiness?: boolean; defaultShippingCost?: number }
 ): Promise<CompanyProfileResponse> {
+  const values = {
+    name: data.name,
+    address: data.address,
+    email: data.email,
+    phone: data.phone,
+    taxNote: data.taxNote,
+    smallBusinessNote: data.smallBusinessNote,
+    isSmallBusiness: data.isSmallBusiness ?? true,
+    defaultShippingCost: data.defaultShippingCost ?? null,
+  };
   const [profile] = await db
     .insert(companyProfiles)
-    .values({
-      userId,
-      name: data.name,
-      address: data.address,
-      email: data.email,
-      phone: data.phone,
-      taxNote: data.taxNote,
-      smallBusinessNote: data.smallBusinessNote,
-      defaultShippingCost: data.defaultShippingCost?.toString(),
-    })
-    .onConflictDoUpdate({
-      target: companyProfiles.userId,
-      set: {
-        name: data.name,
-        address: data.address,
-        email: data.email,
-        phone: data.phone,
-        taxNote: data.taxNote,
-        smallBusinessNote: data.smallBusinessNote,
-        defaultShippingCost: data.defaultShippingCost?.toString(),
-      },
-    })
+    .values({ userId, ...values })
+    .onConflictDoUpdate({ target: companyProfiles.userId, set: values })
     .returning();
-  return toProfileResponse(profile);
-}
-
-// ── Settings ───────────────────────────────────────────────
-
-export async function getSettings(userId: string): Promise<SelectAppSettings> {
-  const [settings] = await db.select().from(appSettings).where(eq(appSettings.userId, userId));
-  if (settings) return settings;
-  return { id: "", userId, theme: "system", currency: "€" };
-}
-
-export async function upsertSettings(
-  userId: string,
-  data: { theme: string; currency: string }
-): Promise<SelectAppSettings> {
-  const [settings] = await db
-    .insert(appSettings)
-    .values({ userId, theme: data.theme, currency: data.currency })
-    .onConflictDoUpdate({
-      target: appSettings.userId,
-      set: { theme: data.theme, currency: data.currency },
-    })
-    .returning();
-  return settings;
+  return profile;
 }
 
 // ── Invoice Counter ────────────────────────────────────────
@@ -535,7 +578,6 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
   await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-  await txOrDb.delete(appSettings).where(eq(appSettings.userId, userId));
   await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 }
 

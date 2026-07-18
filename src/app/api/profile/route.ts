@@ -15,7 +15,8 @@ const updateProfileSchema = z.object({
   phone: safeStr(50).default(""),
   taxNote: safeStr(500).default(""),
   smallBusinessNote: safeStr(500).optional(),
-  defaultShippingCost: z.number().min(0).max(99999.99).optional(),
+  isSmallBusiness: z.boolean().default(true),
+  defaultShippingCost: z.number().int().min(0).max(9999999).optional(), // cents
 });
 
 export async function GET() {

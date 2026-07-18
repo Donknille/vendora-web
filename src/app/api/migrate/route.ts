@@ -4,12 +4,15 @@ import { getUser, getSubscriptionStatus } from "@/lib/server/storage";
 import { db } from "@/lib/server/db";
 import {
   orders, orderItems, marketEvents, marketSales,
-  expenses, companyProfiles, appSettings, invoiceCounters,
+  expenses, companyProfiles, invoiceCounters,
 } from "@/lib/server/schema";
 import { eq, inArray } from "drizzle-orm";
+import { mapLegacyCategory } from "@/lib/euer";
+import { deriveMarketCosts } from "@/lib/marketCosts";
 import { z } from "zod";
 
-const CURRENT_SCHEMA_VERSION = 1;
+// v1: money as euro decimals. v2: money as integer cents.
+const CURRENT_SCHEMA_VERSION = 2;
 
 const migrateItemSchema = z.object({
   name: z.string().max(200).optional(),
@@ -32,6 +35,8 @@ const migrateOrderSchema = z.object({
   notes: z.string().max(5000).optional(),
   orderDate: z.string().max(50).optional(),
   serviceDate: z.string().max(50).nullable().optional(),
+  paidAt: z.string().max(50).nullable().optional(),
+  paymentMethod: z.string().max(50).nullable().optional(),
   shippingCost: z.union([z.number(), z.null()]).optional(),
   total: z.union([z.number(), z.string()]).optional(),
   processingStatus: z.string().max(50).nullable().optional(),
@@ -50,7 +55,8 @@ const migrateMarketSchema = z.object({
   status: z.string().max(50).nullable().optional(),
   quickItems: z.array(z.object({
     name: z.string().max(200),
-    price: z.number().min(0).max(999999.99),
+    // accepts both euro decimals (v1) and integer cents (v2)
+    price: z.number().min(0).max(99999999),
   })).max(50).nullable().optional(),
 });
 
@@ -76,12 +82,8 @@ const migrateProfileSchema = z.object({
   phone: z.string().max(50).optional(),
   taxNote: z.string().max(500).optional(),
   smallBusinessNote: z.string().max(500).nullable().optional(),
+  isSmallBusiness: z.boolean().optional(),
   defaultShippingCost: z.union([z.number(), z.null()]).optional(),
-}).nullable().optional();
-
-const migrateSettingsSchema = z.object({
-  theme: z.string().max(50).optional(),
-  currency: z.string().max(10).optional(),
 }).nullable().optional();
 
 const migrateSchema = z.object({
@@ -91,14 +93,20 @@ const migrateSchema = z.object({
   marketSales: z.array(migrateMarketSaleSchema).max(2000).optional(),
   expenses: z.array(migrateExpenseSchema).max(1000).optional(),
   profile: migrateProfileSchema,
-  settings: migrateSettingsSchema,
   invoiceCounter: z.number().int().min(0).max(999999).optional(),
 });
 
-function toNum(val: unknown): number {
-  if (typeof val === "number") return Math.min(val, 999999.99);
-  if (typeof val === "string") return Math.min(parseFloat(val) || 0, 999999.99);
-  return 0;
+const MAX_CENTS = 99999999; // €999.999,99
+
+// Normalizes a backup amount to integer cents. Legacy (schemaVersion < 2)
+// backups store euro decimals and are multiplied by 100; v2+ backups already
+// store integer cents.
+function toCents(val: unknown, fromEuros: boolean): number {
+  let num = 0;
+  if (typeof val === "number") num = val;
+  else if (typeof val === "string") num = parseFloat(val) || 0;
+  const cents = fromEuros ? Math.round(num * 100) : Math.round(num);
+  return Math.max(0, Math.min(cents, MAX_CENTS));
 }
 
 export async function POST(request: Request) {
@@ -131,6 +139,8 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
+    // Legacy backups (no version, or < 2) store money as euro decimals.
+    const fromEuros = (data.schemaVersion ?? 1) < 2;
 
     // Entire restore runs in a single transaction — rollback on any failure
     await db.transaction(async (tx) => {
@@ -144,15 +154,15 @@ export async function POST(request: Request) {
       await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
       await tx.delete(expenses).where(eq(expenses.userId, userId));
       await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-      await tx.delete(appSettings).where(eq(appSettings.userId, userId));
       await tx.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 
       // Step 2: Import orders (with original invoice numbers preserved)
-      const now = new Date().toISOString();
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
       if (data.orders) {
         for (const order of data.orders) {
           const total = (order.items || []).reduce(
-            (sum, item) => sum + toNum(item.price) * (item.quantity || 1), 0
+            (sum, item) => sum + toCents(item.price, fromEuros) * (item.quantity || 1), 0
           );
           const [inserted] = await tx.insert(orders).values({
             userId,
@@ -165,10 +175,12 @@ export async function POST(request: Request) {
             status: order.status || "open",
             invoiceNumber: order.invoiceNumber || "",
             notes: order.notes || "",
-            orderDate: order.orderDate || now.split("T")[0],
-            serviceDate: order.serviceDate,
-            shippingCost: order.shippingCost?.toString(),
-            total: total.toString(),
+            orderDate: order.orderDate || today,
+            serviceDate: order.serviceDate || null,
+            paidAt: order.paidAt || null,
+            paymentMethod: order.paymentMethod || null,
+            shippingCost: order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null,
+            total,
             processingStatus: order.processingStatus,
             comment: order.comment,
             createdAt: now,
@@ -182,7 +194,7 @@ export async function POST(request: Request) {
                 orderId: inserted.id,
                 name: item.name || "",
                 quantity: item.quantity || 1,
-                price: toNum(item.price).toString(),
+                price: toCents(item.price, fromEuros),
                 processingStatus: item.processingStatus,
                 comment: item.comment,
               }))
@@ -191,22 +203,38 @@ export async function POST(request: Request) {
         }
       }
 
-      // Step 3: Import markets
+      // Step 3: Import markets (+ re-derive their market-cost expense rows,
+      // since we insert directly and bypass storage.syncMarketExpenses).
       const marketIdMap = new Map<string, string>();
       if (data.markets) {
         for (const market of data.markets) {
+          const standFee = toCents(market.standFee, fromEuros);
+          const travelCost = toCents(market.travelCost, fromEuros);
+          const marketDate = market.date || today;
+          const marketName = market.name || "";
           const [inserted] = await tx.insert(marketEvents).values({
             userId,
-            name: market.name || "",
-            date: market.date || now.split("T")[0],
+            name: marketName,
+            date: marketDate,
             location: market.location || "",
-            standFee: toNum(market.standFee).toString(),
-            travelCost: toNum(market.travelCost).toString(),
+            standFee,
+            travelCost,
             notes: market.notes || "",
             status: market.status || "open",
-            quickItems: market.quickItems,
+            quickItems: market.quickItems?.map((q) => ({
+              name: q.name,
+              price: toCents(q.price, fromEuros),
+            })),
             createdAt: now,
           }).returning();
+
+          const derived = deriveMarketCosts({
+            name: marketName,
+            date: marketDate,
+            standFee,
+            travelCost,
+          }).map((r) => ({ ...r, userId, marketId: inserted.id, createdAt: now }));
+          if (derived.length > 0) await tx.insert(expenses).values(derived);
 
           if (market.id) {
             marketIdMap.set(market.id, inserted.id);
@@ -223,7 +251,7 @@ export async function POST(request: Request) {
               userId,
               marketId: newMarketId,
               description: sale.description || "",
-              amount: toNum(sale.amount).toString(),
+              amount: toCents(sale.amount, fromEuros),
               quantity: sale.quantity || 1,
               createdAt: now,
             });
@@ -231,15 +259,16 @@ export async function POST(request: Request) {
         }
       }
 
-      // Step 5: Import expenses
+      // Step 5: Import manual expenses (market cost rows are re-derived above).
       if (data.expenses) {
         for (const expense of data.expenses) {
           await tx.insert(expenses).values({
             userId,
             description: expense.description || "",
-            amount: toNum(expense.amount).toString(),
-            category: expense.category || "Other",
-            expenseDate: expense.expenseDate || expense.date || now.split("T")[0],
+            amount: toCents(expense.amount, fromEuros),
+            category: mapLegacyCategory(expense.category),
+            source: "manual",
+            expenseDate: expense.expenseDate || expense.date || today,
             createdAt: now,
           });
         }
@@ -255,20 +284,14 @@ export async function POST(request: Request) {
           phone: data.profile.phone || "",
           taxNote: data.profile.taxNote || "",
           smallBusinessNote: data.profile.smallBusinessNote ?? undefined,
-          defaultShippingCost: data.profile.defaultShippingCost?.toString(),
+          isSmallBusiness: data.profile.isSmallBusiness ?? true,
+          defaultShippingCost: data.profile.defaultShippingCost != null
+            ? toCents(data.profile.defaultShippingCost, fromEuros)
+            : null,
         });
       }
 
-      // Step 7: Import settings
-      if (data.settings) {
-        await tx.insert(appSettings).values({
-          userId,
-          theme: data.settings.theme || "system",
-          currency: data.settings.currency || "€",
-        });
-      }
-
-      // Step 8: Import invoice counter
+      // Step 7: Import invoice counter
       if (data.invoiceCounter != null && data.invoiceCounter > 0) {
         await tx.insert(invoiceCounters).values({
           userId,

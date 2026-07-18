@@ -2,13 +2,13 @@
 
 # Vendora – Marktplatz-SaaS für Händler
 
-Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler (Bestellverwaltung, Produktkatalog, Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase.
+Vendora ist eine Multi-Tenant SaaS-Plattform für Markthändler:innen (Auftrags- & Rechnungsverwaltung, Marktmodus, EÜR-/Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase. Die geplante Neuausrichtung ist in `docs/REBUILD-PLAN.md` dokumentiert.
 
 ## Stack
 
 - **Runtime:** Next.js 16 (App Router), TypeScript strict
-- **Auth:** Supabase Auth (JWT, Cookie-basiert via @supabase/ssr)
-- **DB:** PostgreSQL (Supabase-hosted), Drizzle ORM ≥0.45.2
+- **Auth:** Better Auth (Session-Cookies, Drizzle-Adapter; Tabellen in `src/lib/server/auth-schema.ts`, Config in `src/lib/auth.ts`)
+- **DB:** PostgreSQL (Neon-hosted), Drizzle ORM ≥0.45.2
 - **Payments:** Stripe (Subscriptions, Webhooks, Checkout)
 - **Deployment:** Vercel
 - **State:** TanStack React Query (api-client.ts)
@@ -17,29 +17,44 @@ Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler (Bestellve
 ## Projektstruktur
 
 ```
+drizzle/                 # Versionierte SQL-Migrationen (db:generate)
 src/
 ├── app/
+│   ├── (app)/          # Eingeloggter Bereich (Route-Group, Server-Layout mit Session-Gate)
+│   │   ├── dashboard/  # Finanz-Dashboard + GuV
+│   │   ├── orders/     # Auftragsverwaltung + Rechnung
+│   │   ├── markets/    # Marktmodus (Quick-Sale, Live-Gewinn)
+│   │   ├── expenses/   # Ausgabenerfassung
+│   │   ├── steuer/     # EÜR-Übersicht (Zuflussprinzip) + CSV/PDF-Export
+│   │   ├── admin/      # Admin-Panel (ADMIN_EMAILS-Gate)
+│   │   └── settings/   # Firmenprofil + Account-Löschung + Backup
 │   ├── api/            # Route Handlers (REST)
-│   │   ├── account/    # Account CRUD + Löschung
+│   │   ├── account/    # Account-Löschung (DSGVO Art. 17)
 │   │   ├── orders/     # Bestell-Endpoints
-│   │   ├── markets/    # Marktplatz-Endpoints
-│   │   ├── products/   # Produkt-Endpoints
-│   │   ├── profile/    # Profil-Endpoints
-│   │   ├── stripe/     # Webhook + Checkout
+│   │   ├── markets/    # Markt-Endpoints (+ [id]/sales, [id]/copy)
+│   │   ├── market-sales/ # Alle Marktverkäufe (Dashboard)
+│   │   ├── expenses/   # Ausgaben-Endpoints
+│   │   ├── profile/    # Firmenprofil
+│   │   ├── stripe/     # Webhook + Checkout + Portal
+│   │   ├── euer/       # EÜR-Export (CSV + serverseitiges PDF via pdf-lib)
 │   │   ├── export/     # Datenexport (DSGVO Art. 20)
-│   │   └── migrate/    # Backup Import/Export
-│   ├── dashboard/      # Finanz-Dashboard + GuV
-│   ├── orders/         # Bestellverwaltung UI
-│   ├── markets/        # Marktplatz-Verwaltung UI
-│   └── settings/       # User-Settings + Account-Löschung
+│   │   └── migrate/    # Backup Import (Restore)
+│   └── legal/          # Impressum, Datenschutz, AGB, Changelog
 ├── components/         # Shared React Components
 └── lib/
-    ├── schema.ts       # Drizzle DB-Schema (single source of truth)
-    ├── api-client.ts   # React Query Client + Query-Keys
+    ├── api-client.ts       # React Query Client + Query-Keys
+    ├── formatCurrency.ts   # Cent<->Euro-Konvertierung (Anzeige/Eingabe)
+    ├── euer.ts             # EÜR-Kategorien (Labels, SKR03-Vorbereitung)
+    ├── euerReport.ts       # EÜR-Berechnung nach Zuflussprinzip (rein, testbar)
+    ├── marketCosts.ts      # Ableitung Marktkosten -> Ausgaben (rein, testbar)
+    ├── orderStatus.ts / payments.ts # geteilte Domänen-Helfer
     └── server/
-        ├── auth.ts     # getAuthUserId, getAuthUserIdStrict, requireAdmin
-        ├── storage.ts  # Alle DB-Queries (Drizzle)
-        └── db.ts       # Drizzle-Postgres-Verbindung
+        ├── schema.ts       # Drizzle DB-Schema (single source of truth)
+        ├── auth.ts         # getAuthUserId, requireActiveSubscription
+        ├── admin.ts        # isAdmin, requireAdmin (ADMIN_EMAILS)
+        ├── storage.ts      # Alle DB-Queries (Drizzle)
+        ├── env.ts          # Zod-validierte Server-Env-Variablen
+        └── db.ts           # Drizzle-Postgres-Verbindung
 ```
 
 ## Befehle
@@ -48,8 +63,10 @@ src/
 npm run dev          # Dev-Server (localhost:3000)
 npm run build        # Produktions-Build
 npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
 npm test             # Vitest
-tsc --noEmit         # Typcheck ohne Output
+npm run db:generate  # Migration aus Schemaänderung erzeugen (-> drizzle/)
+npm run db:push      # Nur für lokale Experimente
 ```
 
 ## Verifikation nach Änderungen
@@ -72,10 +89,10 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 - JEDE DB-Query MUSS einen `WHERE user_id = ?` Ownership-Check haben
 - Admin-Endpunkte MÜSSEN `requireAdmin()` verwenden
 - Blockierte User (`is_blocked = true`) dürfen KEINEN Zugriff haben
-- Serverseitig: `getUser()` statt `getSession()` für Auth-Checks
+- Serverseitig: Session immer über `getAuthUserId()` (Better Auth `auth.api.getSession`, DB-validiert) prüfen
 
 ### Secrets & Keys
-- Supabase `service_role` Key NIEMALS in Client-Code oder `NEXT_PUBLIC_*`
+- `BETTER_AUTH_SECRET` und alle Secrets NIEMALS in Client-Code oder `NEXT_PUBLIC_*`
 - KEINE hardcodierten API-Keys, Tokens oder Passwörter im Code
 - Secrets nur in `.env.local` (nicht committed) oder Vercel Environment Variables
 
@@ -111,23 +128,25 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 
 ## DSGVO-Anforderungen
 
-- Account-Löschung (Art. 17): Supabase Auth User + Stripe Customer + alle DB-Zeilen entfernen
+- Account-Löschung (Art. 17): Better Auth User (inkl. Sessions) + Stripe Customer + alle DB-Zeilen entfernen
 - Datenexport (Art. 20): `/api/export` exportiert alle User-Daten als JSON
 - Nur essentielle Auth-Cookies, kein Tracking ohne Consent
 - Datensparsamkeit: nur speichern, was funktional notwendig ist
 
 ## Bekannte Architektur-Entscheidungen
 
-- Direkte Postgres-Verbindung via Drizzle (db.ts), NICHT Supabase Data API. Serverseitiges RLS greift nur bei zusätzlicher DB-Konfiguration.
-- Settings clientseitig in localStorage (LanguageContext, ThemeContext). Serverseitige Settings-Route und `app_settings`-Tabelle weitgehend ungenutzt.
-- middleware.ts ist laut Next.js 16 deprecated, Migration auf proxy.ts steht aus.
+- Direkte Postgres-Verbindung via Drizzle (db.ts) gegen Neon. Auth-Tabellen (`user`/`session`/`account`/`verification`) verwaltet Better Auth (auth-schema.ts); die App-`users`-Tabelle ist das Profil, gekeyt auf `better-auth user.id`.
+- **Geld = Integer-Cents** in DB, API und State. Umrechnung Euro↔Cent nur an der UI-Grenze (`formatCurrency.ts`: `parseAmount` bei Eingabe, `formatCurrency`/`formatAmountInput` bei Anzeige). Keine Float-Arithmetik auf Beträgen.
+- **Datumsfelder** der Domäne sind `date` (ISO-String), `createdAt`/`updatedAt` sind `timestamptz` (im Response als ISO-String serialisiert).
+- **Migrationen** liegen versioniert in `drizzle/`. Jede Schemaänderung: `npm run db:generate` und die erzeugte Migration mitcommitten. `db:push` nur lokal.
+- **Server-Env** wird zentral in `src/lib/server/env.ts` per Zod validiert (fail-fast). `import "server-only"` in allen `src/lib/server/*`-Logikmodulen.
+- Settings (Theme/Sprache) leben clientseitig in localStorage (LanguageContext, ThemeContext). Es gibt keine serverseitige Settings-Route/`app_settings`-Tabelle mehr.
+- Proxy-Konvention `src/proxy.ts` (Next.js 16, Node.js-Runtime → kein 1-MB-Edge-Limit) statt der deprecateten `middleware.ts`. Enthält Arcjet-Rate-Limiting + optimistischen Better-Auth-Cookie-Check (echte Session-Validierung passiert in Routen/Layout).
 
 ## Weiterführende Docs
 
-Lies diese Dateien nur bei Bedarf:
+- `docs/REBUILD-PLAN.md` – Vollständiger Überarbeitungsplan (Phasen 0–5), Ist-Zustand, Zielbild, Abnahmekriterien
+- `SETUP.md` – Lokales Setup (Neon, Better Auth, Env-Variablen, Migrationen)
+- `AGENTS.md` – Gemeinsame Agent-Regeln (Antigravity, Cursor, Claude Code)
 
-- `docs/known-issues.md` – Offene Findings aus dem Security-Audit
-- `docs/security-policy.md` – Detaillierte Security-Richtlinien
-- `docs/database-schema.md` – Schema-Details und Relationen
-- `docs/stripe-integration.md` – Billing-Flow und Webhook-Events
-- `docs/development-workflow.md` – Branching, PR, Deploy-Prozess
+Die früher hier gelisteten `docs/*.md` (known-issues, security-policy, database-schema, stripe-integration, development-workflow) existieren nicht.

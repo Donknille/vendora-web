@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useMarkets, useUpdateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { parseAmount } from "@/lib/formatCurrency";
+import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 
 interface QuickItem {
   name: string;
@@ -41,22 +41,14 @@ export default function EditMarketPage() {
       setName(market.name || "");
       setDate(market.date || "");
       setLocation(market.location || "");
-      setStandFee(
-        Number(market.standFee)
-          ? Number(market.standFee).toFixed(2).replace(".", ",")
-          : ""
-      );
-      setTravelCost(
-        Number(market.travelCost)
-          ? Number(market.travelCost).toFixed(2).replace(".", ",")
-          : ""
-      );
+      setStandFee(market.standFee ? formatAmountInput(market.standFee) : "");
+      setTravelCost(market.travelCost ? formatAmountInput(market.travelCost) : "");
       setNotes(market.notes || "");
       if (market.quickItems && market.quickItems.length > 0) {
         setQuickItems(
           market.quickItems.map((item) => ({
             name: item.name,
-            price: item.price.toFixed(2).replace(".", ","),
+            price: formatAmountInput(item.price),
           }))
         );
       }

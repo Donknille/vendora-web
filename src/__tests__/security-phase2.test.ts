@@ -5,10 +5,12 @@ import { describe, it, expect } from "vitest";
 describe("2.1 — Backup schema version and transactional restore", () => {
   it("export route includes schemaVersion", async () => {
     const { z } = await import("zod");
-    const schemaVersion = z.number().int().min(1).max(1);
+    // v2 is the current version (money as integer cents); v1 legacy is still accepted.
+    const schemaVersion = z.number().int().min(1).max(2);
     expect(schemaVersion.safeParse(1).success).toBe(true);
+    expect(schemaVersion.safeParse(2).success).toBe(true);
     expect(schemaVersion.safeParse(0).success).toBe(false);
-    expect(schemaVersion.safeParse(2).success).toBe(false);
+    expect(schemaVersion.safeParse(3).success).toBe(false);
   });
 
   it("migrate route uses db.transaction for the entire restore", async () => {
@@ -41,13 +43,12 @@ describe("2.1 — Backup schema version and transactional restore", () => {
       marketSales: [{ id: "s1", userId: "u1", marketId: "m1", description: "Sale", amount: 30, quantity: 1, createdAt: "2025-06-01T10:00:00Z" }],
       expenses: [{ id: "e1", userId: "u1", description: "Material", amount: 15, category: "Material", expenseDate: "2025-03-10", createdAt: "2025-03-10T10:00:00Z" }],
       profile: { id: "p1", userId: "u1", name: "Test GmbH", address: "Str 1", email: "test@test.de", phone: "+49", taxNote: "USt", smallBusinessNote: null, defaultShippingCost: 4.99 },
-      settings: { id: "s1", userId: "u1", theme: "dark", currency: "€" },
       invoiceCounter: 1,
     };
 
     // The import schema should accept this payload (imported dynamically to match actual code)
     const migrateSchema = z.object({
-      schemaVersion: z.number().int().min(1).max(1).optional(),
+      schemaVersion: z.number().int().min(1).max(2).optional(),
       orders: z.array(z.object({
         customerName: z.string().max(200).optional(),
         customerEmail: z.string().max(254).optional(),
@@ -68,7 +69,6 @@ describe("2.1 — Backup schema version and transactional restore", () => {
         description: z.string().max(200).optional(),
       }).passthrough()).max(2000).optional(),
       profile: z.object({}).passthrough().nullable().optional(),
-      settings: z.object({}).passthrough().nullable().optional(),
       invoiceCounter: z.number().int().min(0).max(999999).optional(),
     });
 

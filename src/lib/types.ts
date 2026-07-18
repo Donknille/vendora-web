@@ -24,6 +24,8 @@ export interface Order {
   notes: string;
   orderDate: string;
   serviceDate: string | null;
+  paidAt: string | null;
+  paymentMethod: string | null;
   shippingCost: number | null;
   total: number;
   processingStatus: string | null;
@@ -60,9 +62,11 @@ export interface MarketSale {
 export interface Expense {
   id: string;
   userId: string;
+  marketId: string | null;
   description: string;
   amount: number;
   category: string;
+  source: string;
   expenseDate: string;
   createdAt: string;
 }
@@ -76,6 +80,7 @@ export interface CompanyProfile {
   phone: string;
   taxNote: string;
   smallBusinessNote: string | null;
+  isSmallBusiness: boolean;
   defaultShippingCost: number | null;
 }
 

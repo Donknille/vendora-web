@@ -4,20 +4,23 @@ import {
   text,
   varchar,
   integer,
-  numeric,
   boolean,
   timestamp,
+  date,
   jsonb,
   index,
+  check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================
-// Users — managed by Supabase Auth, but we store app-specific fields
+// Users — app profile keyed by the Better Auth user.id.
+// Better Auth owns the `user`/`session`/`account` tables (see auth-schema.ts);
+// this table holds app-specific fields (subscription, Stripe, soft-delete).
 // ============================================================
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey(), // Supabase Auth UID
+  id: varchar("id").primaryKey(), // == Better Auth user.id
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Subscription fields
@@ -31,6 +34,10 @@ export const users = pgTable("users", {
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
   index("idx_users_stripe_customer_id").on(t.stripeCustomerId),
+  check(
+    "chk_users_subscription_status",
+    sql`${t.subscriptionStatus} in ('trial', 'active', 'expired', 'cancelled')`
+  ),
 ]);
 
 export type User = typeof users.$inferSelect;
@@ -54,16 +61,28 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("open"),
   invoiceNumber: text("invoice_number").notNull().default(""),
   notes: text("notes").notNull().default(""),
-  orderDate: text("order_date").notNull(),
-  serviceDate: text("service_date"),
-  shippingCost: numeric("shipping_cost"),
-  total: numeric("total").notNull().default("0"),
+  orderDate: date("order_date").notNull(),
+  serviceDate: date("service_date"),
+  paidAt: date("paid_at"), // Zuflussdatum (gesetzt bei Statuswechsel auf 'paid')
+  paymentMethod: text("payment_method"),
+  shippingCost: integer("shipping_cost"), // cents
+  total: integer("total").notNull().default(0), // cents
   processingStatus: text("processing_status"),
   comment: text("comment"),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_orders_user_id").on(t.userId),
+  index("idx_orders_user_status").on(t.userId, t.status),
+  index("idx_orders_user_paid_at").on(t.userId, t.paidAt),
+  check(
+    "chk_orders_status",
+    sql`${t.status} in ('open', 'paid', 'shipped', 'delivered', 'cancelled')`
+  ),
+  check(
+    "chk_orders_payment_method",
+    sql`${t.paymentMethod} is null or ${t.paymentMethod} in ('cash', 'card', 'transfer', 'paypal', 'other')`
+  ),
 ]);
 
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
@@ -82,7 +101,7 @@ export const orderItems = pgTable("order_items", {
     .references(() => orders.id, { onDelete: "cascade" }),
   name: text("name").notNull().default(""),
   quantity: integer("quantity").notNull().default(1),
-  price: numeric("price").notNull().default("0"),
+  price: integer("price").notNull().default(0), // cents
   processingStatus: text("processing_status"),
   comment: text("comment"),
 }, (t) => [
@@ -102,16 +121,20 @@ export const marketEvents = pgTable("market_events", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull().default(""),
-  date: text("date").notNull(),
+  date: date("date").notNull(),
   location: text("location").notNull().default(""),
-  standFee: numeric("stand_fee").notNull().default("0"),
-  travelCost: numeric("travel_cost").notNull().default("0"),
+  standFee: integer("stand_fee").notNull().default(0), // cents
+  travelCost: integer("travel_cost").notNull().default(0), // cents
   notes: text("notes").notNull().default(""),
   status: text("status").default("open"),
-  quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(),
-  createdAt: text("created_at").notNull(),
+  quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(), // price in cents
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_events_user_id").on(t.userId),
+  check(
+    "chk_market_events_status",
+    sql`${t.status} in ('open', 'completed', 'cancelled')`
+  ),
 ]);
 
 export type SelectMarketEvent = typeof marketEvents.$inferSelect;
@@ -130,9 +153,9 @@ export const marketSales = pgTable("market_sales", {
     .notNull()
     .references(() => marketEvents.id, { onDelete: "cascade" }),
   description: text("description").notNull().default(""),
-  amount: numeric("amount").notNull().default("0"),
+  amount: integer("amount").notNull().default(0), // cents
   quantity: integer("quantity").notNull().default(1),
-  createdAt: text("created_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_sales_user_id").on(t.userId),
   index("idx_market_sales_market_id").on(t.marketId),
@@ -150,13 +173,26 @@ export const expenses = pgTable("expenses", {
   userId: varchar("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  // Set for auto-derived market cost rows (source market_fee/market_travel);
+  // null for manual expenses. Cascade-deleted with the market.
+  marketId: varchar("market_id").references(() => marketEvents.id, { onDelete: "cascade" }),
   description: text("description").notNull().default(""),
-  amount: numeric("amount").notNull().default("0"),
-  category: text("category").notNull().default(""),
-  expenseDate: text("expense_date").notNull(),
-  createdAt: text("created_at").notNull(),
+  amount: integer("amount").notNull().default(0), // cents
+  category: text("category").notNull().default("sonstiges"),
+  source: text("source").notNull().default("manual"),
+  expenseDate: date("expense_date").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_expenses_user_id").on(t.userId),
+  index("idx_expenses_market_id").on(t.marketId),
+  check(
+    "chk_expenses_category",
+    sql`${t.category} in ('wareneinkauf_material', 'standgebuehren_raumkosten', 'fahrtkosten', 'arbeitsmittel_gwg', 'verpackung', 'marketing', 'versicherungen_beitraege', 'software_gebuehren', 'sonstiges')`
+  ),
+  check(
+    "chk_expenses_source",
+    sql`${t.source} in ('manual', 'market_fee', 'market_travel')`
+  ),
 ]);
 
 export type SelectExpense = typeof expenses.$inferSelect;
@@ -178,27 +214,11 @@ export const companyProfiles = pgTable("company_profiles", {
   phone: text("phone").notNull().default(""),
   taxNote: text("tax_note").notNull().default(""),
   smallBusinessNote: text("small_business_note"),
-  defaultShippingCost: numeric("default_shipping_cost"),
+  isSmallBusiness: boolean("is_small_business").notNull().default(true),
+  defaultShippingCost: integer("default_shipping_cost"), // cents
 });
 
 export type SelectCompanyProfile = typeof companyProfiles.$inferSelect;
-
-// ============================================================
-// App Settings (1:1 per user)
-// ============================================================
-export const appSettings = pgTable("app_settings", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
-    .notNull()
-    .unique()
-    .references(() => users.id, { onDelete: "cascade" }),
-  theme: text("theme").notNull().default("system"),
-  currency: text("currency").notNull().default("€"),
-});
-
-export type SelectAppSettings = typeof appSettings.$inferSelect;
 
 // ============================================================
 // Invoice Counters (1:1 per user)
@@ -209,3 +229,20 @@ export const invoiceCounters = pgTable("invoice_counters", {
     .references(() => users.id, { onDelete: "cascade" }),
   counter: integer("counter").notNull().default(0),
 });
+
+// ============================================================
+// Webhook Events — idempotency ledger for Stripe webhooks.
+// Each Stripe event.id is recorded once; replays are ignored.
+// ============================================================
+export const webhookEvents = pgTable("webhook_events", {
+  eventId: text("event_id").primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// ============================================================
+// Better Auth tables (user / session / account / verification)
+// Re-exported so drizzle-kit (schema: schema.ts) creates them too.
+// ============================================================
+export * from "./auth-schema";

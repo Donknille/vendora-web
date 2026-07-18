@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/lib/api-client";
 import {
   LayoutDashboard,
   ShoppingCart,
   Store,
   Receipt,
+  Calculator,
   Settings,
   LogOut,
   Shield,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/orders", icon: ShoppingCart, labelKey: "orders" as const },
   { href: "/markets", icon: Store, labelKey: "markets" as const },
   { href: "/expenses", icon: Receipt, labelKey: "expenses" as const },
+  { href: "/steuer", icon: Calculator, labelKey: "steuer" as const },
   { href: "/settings", icon: Settings, labelKey: "settings" as const },
 ];
 
@@ -40,8 +42,7 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     queryClient.clear();
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     router.push("/auth/login");
   };
 

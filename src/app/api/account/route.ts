@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import { getUser, deleteAllUserData } from "@/lib/server/storage";
-import { getAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/server/stripe";
 import { db } from "@/lib/server/db";
 import { users } from "@/lib/server/schema";
+import { user as authUser } from "@/lib/server/auth-schema";
 import { eq } from "drizzle-orm";
 
 export async function DELETE() {
@@ -32,31 +32,15 @@ export async function DELETE() {
       }
     }
 
-    // Step 2: Delete Supabase Auth user (external, do before DB changes)
-    try {
-      const adminClient = getAdminClient();
-      const { error } = await adminClient.auth.admin.deleteUser(userId);
-      if (error) {
-        console.error("Failed to delete Supabase auth user:", error);
-        return NextResponse.json(
-          { message: "Failed to delete authentication data. Please try again or contact support." },
-          { status: 500 }
-        );
-      }
-    } catch (error) {
-      console.error("Failed to delete Supabase auth user:", error);
-      return NextResponse.json(
-        { message: "Failed to delete authentication data. Please try again or contact support." },
-        { status: 500 }
-      );
-    }
-
-    // Step 3: Delete all user data + soft-delete user record in a transaction
+    // Step 2: Delete all user data, soft-delete the profile row, and remove the
+    // Better Auth identity — atomically in a single transaction (same DB now).
     await db.transaction(async (tx) => {
       // Delete all user data (orders, markets, expenses, profile, settings, etc.)
       await deleteAllUserData(userId, tx);
-      // Soft-delete the user record to prevent re-registration with the same email
+      // Soft-delete the profile record to prevent re-registration with the same email
       await tx.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
+      // Delete the Better Auth user (cascades to sessions/accounts) — logs them out
+      await tx.delete(authUser).where(eq(authUser.id, userId));
     });
 
     return NextResponse.json({ message: "Account and all data deleted successfully" });

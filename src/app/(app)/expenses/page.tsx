@@ -6,32 +6,23 @@ import { useExpenses, useCreateExpense, useDeleteExpense } from "@/lib/hooks/use
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
+import { EUER_CATEGORIES, euerLabel, isEuerCategory, type EuerCategory } from "@/lib/euer";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 
-const CATEGORIES = [
-  "Materials",
-  "Shipping",
-  "Subscriptions",
-  "Tools",
-  "Marketing",
-  "Packaging",
-  "Other",
-] as const;
-
-type Category = (typeof CATEGORIES)[number];
-
-const categoryColors: Record<Category, string> = {
-  Materials: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  Shipping: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  Subscriptions: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  Tools: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  Marketing: "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  Packaging: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  Other: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+const categoryColors: Record<EuerCategory, string> = {
+  wareneinkauf_material: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  standgebuehren_raumkosten: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  fahrtkosten: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  arbeitsmittel_gwg: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  verpackung: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+  marketing: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  versicherungen_beitraege: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  software_gebuehren: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  sonstiges: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
 export default function ExpensesPage() {
@@ -46,7 +37,7 @@ export default function ExpensesPage() {
   const [formError, setFormError] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<Category>("Other");
+  const [category, setCategory] = useState<EuerCategory>("sonstiges");
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
@@ -77,7 +68,7 @@ export default function ExpensesPage() {
       // Reset form
       setDescription("");
       setAmount("");
-      setCategory("Other");
+      setCategory("sonstiges");
       setExpenseDate(new Date().toISOString().slice(0, 10));
       setShowForm(false);
     } catch {
@@ -194,12 +185,12 @@ export default function ExpensesPage() {
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as Category)}
+                onChange={(e) => setCategory(e.target.value as EuerCategory)}
                 className={inputClass}
               >
-                {CATEGORIES.map((cat) => (
+                {EUER_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
-                    {t.expenses.categories[cat]}
+                    {euerLabel(cat, language)}
                   </option>
                 ))}
               </select>
@@ -242,9 +233,10 @@ export default function ExpensesPage() {
               return dateB.localeCompare(dateA);
             })
             .map((expense) => {
-              const cat = (expense.category as Category) || "Other";
-              const colors =
-                categoryColors[cat] || categoryColors.Other;
+              const cat: EuerCategory = isEuerCategory(expense.category)
+                ? expense.category
+                : "sonstiges";
+              const colors = categoryColors[cat];
 
               return (
                 <Card
@@ -259,7 +251,7 @@ export default function ExpensesPage() {
                       <span
                         className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${colors}`}
                       >
-                        {t.expenses.categories[cat as keyof typeof t.expenses.categories] ?? cat}
+                        {euerLabel(cat, language)}
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-muted">
