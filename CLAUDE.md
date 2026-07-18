@@ -25,6 +25,7 @@ src/
 │   │   ├── orders/     # Auftragsverwaltung + Rechnung
 │   │   ├── markets/    # Marktmodus (Quick-Sale, Live-Gewinn)
 │   │   ├── expenses/   # Ausgabenerfassung
+│   │   ├── steuer/     # EÜR-Übersicht (Zuflussprinzip) + CSV/PDF-Export
 │   │   ├── admin/      # Admin-Panel (ADMIN_EMAILS-Gate)
 │   │   └── settings/   # Firmenprofil + Account-Löschung + Backup
 │   ├── api/            # Route Handlers (REST)
@@ -35,6 +36,7 @@ src/
 │   │   ├── expenses/   # Ausgaben-Endpoints
 │   │   ├── profile/    # Firmenprofil
 │   │   ├── stripe/     # Webhook + Checkout + Portal
+│   │   ├── euer/       # EÜR-Export (CSV + serverseitiges PDF via pdf-lib)
 │   │   ├── export/     # Datenexport (DSGVO Art. 20)
 │   │   └── migrate/    # Backup Import (Restore)
 │   └── legal/          # Impressum, Datenschutz, AGB, Changelog
@@ -42,6 +44,10 @@ src/
 └── lib/
     ├── api-client.ts       # React Query Client + Query-Keys
     ├── formatCurrency.ts   # Cent<->Euro-Konvertierung (Anzeige/Eingabe)
+    ├── euer.ts             # EÜR-Kategorien (Labels, SKR03-Vorbereitung)
+    ├── euerReport.ts       # EÜR-Berechnung nach Zuflussprinzip (rein, testbar)
+    ├── marketCosts.ts      # Ableitung Marktkosten -> Ausgaben (rein, testbar)
+    ├── orderStatus.ts / payments.ts # geteilte Domänen-Helfer
     └── server/
         ├── schema.ts       # Drizzle DB-Schema (single source of truth)
         ├── auth.ts         # getAuthUserId, requireActiveSubscription

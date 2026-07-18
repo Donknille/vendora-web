@@ -1,6 +1,7 @@
 import "server-only";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
+import { isPaidLike } from "@/lib/orderStatus";
 import { db } from "./db";
 import {
   users,
@@ -52,13 +53,6 @@ export interface SubscriptionInfo {
   trialEndsAt: string | null;
   subscriptionExpiresAt: string | null;
   daysRemaining: number | null;
-}
-
-// Order statuses that count as "money received" for revenue/EÜR purposes.
-export const PAID_LIKE_STATUSES = ["paid", "shipped", "delivered"] as const;
-
-export function isPaidLike(status: string | null | undefined): boolean {
-  return status != null && (PAID_LIKE_STATUSES as readonly string[]).includes(status);
 }
 
 // ── Users ──────────────────────────────────────────────────

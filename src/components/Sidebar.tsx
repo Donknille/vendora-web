@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Store,
   Receipt,
+  Calculator,
   Settings,
   LogOut,
   Shield,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/orders", icon: ShoppingCart, labelKey: "orders" as const },
   { href: "/markets", icon: Store, labelKey: "markets" as const },
   { href: "/expenses", icon: Receipt, labelKey: "expenses" as const },
+  { href: "/steuer", icon: Calculator, labelKey: "steuer" as const },
   { href: "/settings", icon: Settings, labelKey: "settings" as const },
 ];
 
