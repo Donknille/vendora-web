@@ -214,6 +214,7 @@ export const companyProfiles = pgTable("company_profiles", {
   phone: text("phone").notNull().default(""),
   taxNote: text("tax_note").notNull().default(""),
   smallBusinessNote: text("small_business_note"),
+  isSmallBusiness: boolean("is_small_business").notNull().default(true),
   defaultShippingCost: integer("default_shipping_cost"), // cents
 });
 

@@ -61,6 +61,7 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [taxNote, setTaxNote] = useState("");
   const [smallBusinessNote, setSmallBusinessNote] = useState("");
+  const [isSmallBusiness, setIsSmallBusiness] = useState(true);
   const [defaultShippingCost, setDefaultShippingCost] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
 
@@ -96,6 +97,7 @@ export default function SettingsPage() {
       setPhone(profile.phone ?? "");
       setTaxNote(profile.taxNote ?? "");
       setSmallBusinessNote(profile.smallBusinessNote ?? "");
+      setIsSmallBusiness(profile.isSmallBusiness ?? true);
       setDefaultShippingCost(
         profile.defaultShippingCost != null
           ? formatAmountInput(profile.defaultShippingCost)
@@ -123,6 +125,7 @@ export default function SettingsPage() {
         phone: phone.trim(),
         taxNote: taxNote.trim(),
         smallBusinessNote: smallBusinessNote.trim(),
+        isSmallBusiness,
         defaultShippingCost: defaultShippingCost
           ? parseAmount(defaultShippingCost)
           : 0,
@@ -371,9 +374,23 @@ export default function SettingsPage() {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isSmallBusiness}
+              onChange={(e) => setIsSmallBusiness(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-line text-brand-primary focus:ring-brand-primary"
+            />
+            <span className="text-sm text-secondary">
+              {language === "de"
+                ? "Kleinunternehmer nach § 19 UStG (keine Umsatzsteuer ausweisen)"
+                : "Small business under §19 UStG (no VAT charged)"}
+            </span>
+          </label>
+
           <div>
             <label className="mb-1 block text-sm font-medium text-secondary">
-              Kleinunternehmerregelung
+              {language === "de" ? "Zusätzlicher Steuerhinweis" : "Additional tax note"}
             </label>
             <input
               type="text"

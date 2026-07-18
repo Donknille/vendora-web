@@ -36,6 +36,13 @@
       "when": 1784408339958,
       "tag": "0004_expense_model_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784408820546,
+      "tag": "0005_small_business_flag",
+      "breakpoints": true
     }
   ]
 }

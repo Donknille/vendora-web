@@ -510,37 +510,27 @@ export async function deleteExpense(userId: string, id: string): Promise<boolean
 export async function getProfile(userId: string): Promise<CompanyProfileResponse> {
   const [profile] = await db.select().from(companyProfiles).where(eq(companyProfiles.userId, userId));
   if (profile) return profile;
-  return { id: "", userId, name: "", address: "", email: "", phone: "", taxNote: "", smallBusinessNote: null, defaultShippingCost: null };
+  return { id: "", userId, name: "", address: "", email: "", phone: "", taxNote: "", smallBusinessNote: null, isSmallBusiness: true, defaultShippingCost: null };
 }
 
 export async function upsertProfile(
   userId: string,
-  data: { name: string; address: string; email: string; phone: string; taxNote: string; smallBusinessNote?: string; defaultShippingCost?: number }
+  data: { name: string; address: string; email: string; phone: string; taxNote: string; smallBusinessNote?: string; isSmallBusiness?: boolean; defaultShippingCost?: number }
 ): Promise<CompanyProfileResponse> {
+  const values = {
+    name: data.name,
+    address: data.address,
+    email: data.email,
+    phone: data.phone,
+    taxNote: data.taxNote,
+    smallBusinessNote: data.smallBusinessNote,
+    isSmallBusiness: data.isSmallBusiness ?? true,
+    defaultShippingCost: data.defaultShippingCost ?? null,
+  };
   const [profile] = await db
     .insert(companyProfiles)
-    .values({
-      userId,
-      name: data.name,
-      address: data.address,
-      email: data.email,
-      phone: data.phone,
-      taxNote: data.taxNote,
-      smallBusinessNote: data.smallBusinessNote,
-      defaultShippingCost: data.defaultShippingCost ?? null,
-    })
-    .onConflictDoUpdate({
-      target: companyProfiles.userId,
-      set: {
-        name: data.name,
-        address: data.address,
-        email: data.email,
-        phone: data.phone,
-        taxNote: data.taxNote,
-        smallBusinessNote: data.smallBusinessNote,
-        defaultShippingCost: data.defaultShippingCost ?? null,
-      },
-    })
+    .values({ userId, ...values })
+    .onConflictDoUpdate({ target: companyProfiles.userId, set: values })
     .returning();
   return profile;
 }

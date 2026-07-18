@@ -91,6 +91,16 @@ export default function OrderDetailPage() {
     const pPhone = escapeHtml(profile?.phone || "");
     const pTaxNote = escapeHtml(profile?.taxNote || "");
     const pSmallBiz = escapeHtml(profile?.smallBusinessNote || "");
+    // Standard §19-UStG-Hinweis, gesteuert über das Kleinunternehmer-Flag.
+    const smallBizHint = profile?.isSmallBusiness
+      ? (language === "de"
+          ? "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+          : "In accordance with §19 German VAT Act (UStG), no VAT is charged.")
+      : "";
+    const taxNoticeParts = [smallBizHint, pTaxNote, pSmallBiz].filter(Boolean);
+    const taxNoticeHtml = taxNoticeParts.length
+      ? `<div class="tax-notice">${taxNoticeParts.join("<br/>")}</div>`
+      : "";
 
     const invoiceNum = escapeHtml(order.invoiceNumber || `INV-${order.id?.slice(0, 8)?.toUpperCase() || "0000"}`);
     const invoiceDate = order.orderDate || order.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0];
@@ -215,10 +225,7 @@ export default function OrderDetailPage() {
       </table>
     </div>
 
-    ${pTaxNote || pSmallBiz ? `
-    <div class="tax-notice">
-      ${pTaxNote}${pTaxNote && pSmallBiz ? "<br/>" : ""}${pSmallBiz}
-    </div>` : ""}
+    ${taxNoticeHtml}
 
     ${order.notes ? `
     <div class="notes">

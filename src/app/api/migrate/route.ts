@@ -82,6 +82,7 @@ const migrateProfileSchema = z.object({
   phone: z.string().max(50).optional(),
   taxNote: z.string().max(500).optional(),
   smallBusinessNote: z.string().max(500).nullable().optional(),
+  isSmallBusiness: z.boolean().optional(),
   defaultShippingCost: z.union([z.number(), z.null()]).optional(),
 }).nullable().optional();
 
@@ -283,6 +284,7 @@ export async function POST(request: Request) {
           phone: data.profile.phone || "",
           taxNote: data.profile.taxNote || "",
           smallBusinessNote: data.profile.smallBusinessNote ?? undefined,
+          isSmallBusiness: data.profile.isSmallBusiness ?? true,
           defaultShippingCost: data.profile.defaultShippingCost != null
             ? toCents(data.profile.defaultShippingCost, fromEuros)
             : null,

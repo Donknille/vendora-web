@@ -80,6 +80,7 @@ export interface CompanyProfile {
   phone: string;
   taxNote: string;
   smallBusinessNote: string | null;
+  isSmallBusiness: boolean;
   defaultShippingCost: number | null;
 }
 
