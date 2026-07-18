@@ -1,4 +1,6 @@
+import "server-only";
 import { Resend } from "resend";
+import { env } from "./env";
 
 let _resend: Resend | null = null;
 
@@ -7,7 +9,7 @@ let _resend: Resend | null = null;
  * RESEND_API_KEY (keeps `next build` / CI green without secrets).
  */
 function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  const key = env.RESEND_API_KEY;
   if (!key) return null;
   if (!_resend) _resend = new Resend(key);
   return _resend;
@@ -26,7 +28,7 @@ interface SendEmailOptions {
  */
 export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<void> {
   const resend = getResend();
-  const from = process.env.EMAIL_FROM || "Vendora <onboarding@resend.dev>";
+  const from = env.EMAIL_FROM || "Vendora <onboarding@resend.dev>";
 
   if (!resend) {
     console.warn(

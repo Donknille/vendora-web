@@ -1,3 +1,4 @@
+import "server-only";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -21,7 +22,10 @@ export async function getAuthUserId(): Promise<string | null> {
     .from(users)
     .where(eq(users.id, userId));
 
-  if (dbUser?.isBlocked || dbUser?.deletedAt) return null;
+  // Fail closed: a session without a matching app-profile row (e.g. if the
+  // provisioning hook failed) must not be treated as authenticated.
+  if (!dbUser) return null;
+  if (dbUser.isBlocked || dbUser.deletedAt) return null;
 
   return userId;
 }

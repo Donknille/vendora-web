@@ -1,7 +1,9 @@
+import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { APIError } from "better-auth/api";
+import { env } from "@/lib/server/env";
 import { db } from "@/lib/server/db";
 import { user, session, account, verification } from "@/lib/server/auth-schema";
 import { sendEmail } from "@/lib/server/email";
@@ -20,8 +22,8 @@ function buttonEmail(heading: string, intro: string, url: string, cta: string): 
 
 export const auth = betterAuth({
   appName: "Vendora",
-  baseURL: process.env.BETTER_AUTH_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { user, session, account, verification },

@@ -2,8 +2,34 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/server/stripe";
 import * as storage from "@/lib/server/storage";
 import { db } from "@/lib/server/db";
-import { users } from "@/lib/server/schema";
+import { users, webhookEvents } from "@/lib/server/schema";
 import { eq } from "drizzle-orm";
+
+/**
+ * Resolves the subscription's paid-through date from Stripe
+ * (`current_period_end`) instead of assuming a fixed +30 days.
+ * Falls back to +30 days only if the value can't be read.
+ */
+async function getSubscriptionExpiry(subscriptionId: string): Promise<Date> {
+  try {
+    const sub = (await getStripe().subscriptions.retrieve(
+      subscriptionId
+    )) as unknown as Record<string, unknown>;
+
+    let periodEnd = sub.current_period_end as number | undefined;
+    if (!periodEnd) {
+      // Newer Stripe API versions expose the period on the subscription item.
+      const items = (sub.items as { data?: Array<{ current_period_end?: number }> } | undefined)?.data;
+      periodEnd = items?.[0]?.current_period_end;
+    }
+    if (periodEnd) return new Date(periodEnd * 1000);
+  } catch (error) {
+    console.error("Failed to read subscription period end:", error);
+  }
+  const fallback = new Date();
+  fallback.setDate(fallback.getDate() + 30);
+  return fallback;
+}
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +55,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
     }
 
+    // Idempotency: skip events we've already processed (guards against replays,
+    // e.g. a re-delivered customer.subscription.deleted cancelling an active sub).
+    const [seen] = await db
+      .select({ eventId: webhookEvents.eventId })
+      .from(webhookEvents)
+      .where(eq(webhookEvents.eventId, event.id));
+    if (seen) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
     // Use Record type for event data — Stripe v22 types are overly strict
     // for constructEvent which returns generic Stripe.Event
     const obj = event.data.object as unknown as Record<string, unknown>;
@@ -39,8 +75,7 @@ export async function POST(request: Request) {
         const subscriptionId = obj.subscription as string | undefined;
 
         if (userId && subscriptionId) {
-          const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + 30);
+          const expiresAt = await getSubscriptionExpiry(subscriptionId);
 
           // Idempotent: only update if new expiration is later than current
           const currentUser = await storage.getUser(userId);
@@ -52,7 +87,6 @@ export async function POST(request: Request) {
               stripeSubscriptionId: subscriptionId,
               stripeCustomerId: obj.customer as string,
             });
-            console.log(`[STRIPE] Subscription activated for user ${userId}, expires ${expiresAt.toISOString()}`);
           }
         }
         break;
@@ -62,8 +96,6 @@ export async function POST(request: Request) {
         const subscriptionId = obj.subscription as string | undefined;
 
         if (subscriptionId) {
-          const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + 30);
           const customerId = obj.customer as string;
 
           const [user] = await db
@@ -72,6 +104,7 @@ export async function POST(request: Request) {
             .where(eq(users.stripeCustomerId, customerId));
 
           if (user) {
+            const expiresAt = await getSubscriptionExpiry(subscriptionId);
             // Idempotent: only extend if new expiration is later than current
             const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
             if (!currentExpiry || expiresAt > currentExpiry) {
@@ -79,7 +112,6 @@ export async function POST(request: Request) {
                 subscriptionStatus: "active",
                 subscriptionExpiresAt: expiresAt,
               });
-              console.log(`[STRIPE] Subscription renewed for user ${user.id}, expires ${expiresAt.toISOString()}`);
             }
           }
         }
@@ -98,7 +130,6 @@ export async function POST(request: Request) {
           await storage.updateSubscription(user.id, {
             subscriptionStatus: "cancelled",
           });
-          console.log(`[STRIPE] Subscription cancelled for user ${user.id}`);
         }
         break;
       }
@@ -107,6 +138,10 @@ export async function POST(request: Request) {
         // Unhandled event type
         break;
     }
+
+    // Record the event as processed (after successful handling, so a failure
+    // above returns 500 and lets Stripe retry).
+    await db.insert(webhookEvents).values({ eventId: event.id }).onConflictDoNothing();
 
     return NextResponse.json({ received: true });
   } catch (error) {

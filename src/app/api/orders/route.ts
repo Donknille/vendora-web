@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { parsePagination } from "@/lib/server/pagination";
 import { z } from "zod";
 
 const orderItemSchema = z.object({
@@ -28,14 +29,14 @@ const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, "At least one item is required").max(100),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await storage.getOrders(userId);
+    const data = await storage.getOrders(userId, parsePagination(request));
     return NextResponse.json(data);
   } catch (error) {
     console.error("GET /api/orders error:", error);

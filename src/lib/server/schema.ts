@@ -227,6 +227,17 @@ export const invoiceCounters = pgTable("invoice_counters", {
 });
 
 // ============================================================
+// Webhook Events — idempotency ledger for Stripe webhooks.
+// Each Stripe event.id is recorded once; replays are ignored.
+// ============================================================
+export const webhookEvents = pgTable("webhook_events", {
+  eventId: text("event_id").primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// ============================================================
 // Better Auth tables (user / session / account / verification)
 // Re-exported so drizzle-kit (schema: schema.ts) creates them too.
 // ============================================================

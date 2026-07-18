@@ -1,3 +1,4 @@
+import "server-only";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import {
@@ -72,12 +73,21 @@ function buildOrderWithItems(order: SelectOrder, items: SelectOrderItem[]): Orde
   };
 }
 
-export async function getOrders(userId: string): Promise<OrderWithItems[]> {
-  const rows = await db
+export interface PageOpts {
+  limit?: number;
+  offset?: number;
+}
+
+export async function getOrders(userId: string, opts?: PageOpts): Promise<OrderWithItems[]> {
+  let q = db
     .select()
     .from(orders)
     .where(eq(orders.userId, userId))
-    .orderBy(sql`${orders.createdAt} DESC`);
+    .orderBy(sql`${orders.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
 
   if (rows.length === 0) return [];
 
@@ -335,12 +345,16 @@ export async function getMarketSales(userId: string, marketId: string): Promise<
   return rows.map(toSaleResponse);
 }
 
-export async function getAllMarketSales(userId: string): Promise<MarketSaleResponse[]> {
-  const rows = await db
+export async function getAllMarketSales(userId: string, opts?: PageOpts): Promise<MarketSaleResponse[]> {
+  let q = db
     .select()
     .from(marketSales)
     .where(eq(marketSales.userId, userId))
-    .orderBy(sql`${marketSales.createdAt} DESC`);
+    .orderBy(sql`${marketSales.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
   return rows.map(toSaleResponse);
 }
 
@@ -373,12 +387,16 @@ function toExpenseResponse(e: SelectExpense): ExpenseResponse {
   return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
-export async function getExpenses(userId: string): Promise<ExpenseResponse[]> {
-  const rows = await db
+export async function getExpenses(userId: string, opts?: PageOpts): Promise<ExpenseResponse[]> {
+  let q = db
     .select()
     .from(expenses)
     .where(eq(expenses.userId, userId))
-    .orderBy(sql`${expenses.createdAt} DESC`);
+    .orderBy(sql`${expenses.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
   return rows.map(toExpenseResponse);
 }
 
