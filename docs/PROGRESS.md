@@ -11,7 +11,7 @@
 ## So geht es weiter (Quickstart für die nächste Session)
 
 1. **Branch:** `migrate/neon-betterauth` (Basis der Rebuild-Arbeit, offen als PR #10 → `master`).
-2. **Nächste offene Phase:** **Phase 2 – Aufträge & Rechnungen (GoBD).** Spec: `docs/REBUILD-PLAN.md`, Abschnitt „Phase 2".
+2. **Nächste offene Phase:** **Phase 3 – Marktmodus (Offline-PWA).** Spec: `docs/REBUILD-PLAN.md`, Abschnitt „Phase 3". (Phase 2 ist abgeschlossen.)
 3. **Arbeitsweise (verbindlich, wie bisher):**
    - Phasen **in Reihenfolge**, jede Sub-Aufgabe (z. B. 2.1, 2.2 …) einzeln umsetzen.
    - Nach **jeder** Änderung: `npm run typecheck` → `npm run lint` → `npm test` → `npm run build`. Erst wenn alle vier grün sind, committen.
@@ -37,8 +37,8 @@ npm run build
 |---|---|---|
 | 0 | Fundament & Pflichtreparaturen | ✅ erledigt |
 | 1 | EÜR & Steuer | ✅ erledigt |
-| **2** | **Aufträge & Rechnungen (GoBD)** | 🔄 **in Arbeit** (2.1–2.3 ✅, ← 2.4 nächste) |
-| 3 | Marktmodus (Offline-PWA) | ⬜ offen |
+| 2 | Aufträge & Rechnungen (GoBD) | ✅ erledigt (2.1–2.5) |
+| **3** | **Marktmodus (Offline-PWA)** | ⬜ **offen ← NÄCHSTE** |
 | 4 | Monetarisierung (ohne Abo-Zwang) | ⬜ offen |
 | 5 | Veranstalter-Modul (B2B2C) | ⬜ nur skizziert |
 
@@ -82,9 +82,9 @@ Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst 
 - **2.1 `invoices`-Tabelle** ✅ **erledigt** (`f640c78`) – unveränderlicher Snapshot bei Rechnungserstellung (Nummer, Datum, Absender/Empfänger, Positionen als jsonb, Beträge in **Cents**, Steuerhinweise, `orderId` set-null, `status` issued/cancelled, `pdfUrl` (2.2)). Kein UPDATE auf ausgestellte Rechnungen — Korrektur nur per **Stornorechnung** (negiert, neue Nummer, Referenz). Reines Modul `src/lib/invoice.ts` (Builder, 13 Tests) + Storage `issueInvoice/cancelInvoice/getInvoices/getInvoice` + API `/api/invoices(+/[id](+/cancel))`. Migration `drizzle/0006`. **Noch NICHT gemacht (kommt in 2.2):** Entkopplung Order-Erstellung von der Nummernvergabe, UI-Button „Rechnung ausstellen", Ablösung des Client-HTML-Prints.
 - **2.2 Server-PDF** ✅ **erledigt** (`c006055` 2.2a, `24bd360` 2.2b) – **Entscheidung: PDF on-demand aus dem immutablen Snapshot erzeugen** (kein Objekt-Storage, kein Vendor, `pdfUrl` bleibt null, byte-identisch reproduzierbar). Gemeinsames pdf-lib-Modul `src/lib/server/pdf.ts` (A4-Canvas, `sanitizeWinAnsi` für freien Nutzertext) + `invoicePdf.ts`; `euerExport` darauf umgestellt. Endpoint `GET /api/invoices/[id]/pdf`. UI: Order-Detailseite stellt Rechnungen aus/storniert + PDF-Download (Client-HTML-Print entfernt). **Nummern-Entkopplung:** `createOrder` vergibt keine Rechnungsnummer mehr — der Counter zählt nur ausgestellte Rechnungen.
 - **2.3 Aufbewahrung vs. DSGVO** ✅ **erledigt** (`3c367c4`) – Account-Löschung **archiviert Rechnungen statt sie zu löschen**: `invoices.userId` nullable + FK `SET NULL`, neue Spalten `archivedAt`/`retentionUntil`; `archiveUserInvoices` entkoppelt `userId→null` + stempelt Frist (31.12. Ausstellungsjahr+10, §147 Abs.3 AO), Snapshot unverändert; `invoices` raus aus `deleteAllUserData`; aktive Abfragen filtern `archivedAt IS NULL`; `api/export` (Art. 20) enthält jetzt Rechnungen. Migration `0007`. Datenschutz-Passus deckt das bereits ab (Phase 0.1). **Offen/optional:** Cron-Löschung nach Ablauf `retentionUntil`; Rechnungen in Backup/Restore (`api/migrate` fasst `invoices` bewusst nicht an).
-- **2.4 Kundenstamm** – `customers`-Tabelle (user-scoped), Autocomplete im Auftragsformular, tote Route `api/customers` + `useCustomers()` anschließen, distinct-Kunden aus Bestellungen migrieren. Orders optional `customerId` + Adress-Snapshot behalten.
-- **2.5 E-Rechnung (nur vorbereiten)** – Datenmodell ZUGFeRD/XRechnung-fähig halten (strukturierte Beträge, Leistungsdatum vorhanden).
-- **Abnahme:** Rechnung → PDF gespeichert + identisch reproduzierbar; Auftrag ändern → Rechnung unverändert; Storno-Flow; Account-Löschung erhält Rechnungsarchiv; Integrationstests für Rechnungs-Immutabilität.
+- **2.4 Kundenstamm** ✅ **erledigt** (`aff160b`) – `customers`-Tabelle (user-scoped) + `orders.customerId` (FK SET NULL); `getCustomers`/`upsertCustomerFromOrder` (Exact-Match-Dedup) in create/updateOrder; `api/customers` liefert die echte Tabelle; Datalist-Autocomplete + Auto-Fill in Neu-/Edit-Formular; `customers` in `deleteAllUserData` + migrate-Reset. Migration `drizzle/0008` inkl. Datenmigration (distinct-Kunden aus Orders seeden + verknüpfen).
+- **2.5 E-Rechnung (nur vorbereiten)** ✅ **erledigt** (Doku) – Datenmodell ist ZUGFeRD/XRechnung-erweiterbar (strukturierte Cent-Beträge, Leistungsdatum, strukturierte Parteien). Readiness-Assessment + Ausbauplan (Lücken: USt je Position, strukturierte Steuer-IDs, Leitweg-ID, Währung, Einheit) in **[`docs/E-RECHNUNG.md`](./E-RECHNUNG.md)**. Kein Code (KU von Ausstellungspflicht befreit).
+- **Abnahme:** ✅ Rechnung → PDF identisch reproduzierbar (on-demand, deterministisch); ✅ Auftrag ändern → Rechnung unverändert (immutabler Snapshot, kein `updateInvoice`); ✅ Storno-Flow; ✅ Account-Löschung erhält Rechnungsarchiv. **Offen (Querschnitt):** DB-gestützte **Integrationstests** für Rechnungs-Immutabilität — verschoben, bis eine Test-Postgres-Harness (PGlite/Testcontainer) existiert; aktuell durch Unit-Tests der reinen Builder + strukturelle Immutabilität (kein UPDATE-Pfad) abgedeckt.
 
 ---
 
