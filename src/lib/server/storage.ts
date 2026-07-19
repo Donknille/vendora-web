@@ -2,6 +2,12 @@ import "server-only";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
+import {
+  buildInvoiceSnapshot,
+  buildCancellationSnapshot,
+  type InvoiceSnapshot,
+  type InvoiceType,
+} from "@/lib/invoice";
 import { db } from "./db";
 import {
   users,
@@ -12,6 +18,7 @@ import {
   expenses,
   companyProfiles,
   invoiceCounters,
+  invoices,
   type User,
   type SelectOrder,
   type SelectOrderItem,
@@ -19,6 +26,7 @@ import {
   type SelectMarketSale,
   type SelectExpense,
   type SelectCompanyProfile,
+  type SelectInvoice,
 } from "./schema";
 
 // Response types. All money fields are integer cents (no conversion needed —
@@ -549,8 +557,11 @@ export async function setInvoiceCounter(userId: string, counter: number): Promis
     });
 }
 
-export async function getNextInvoiceNumber(userId: string): Promise<string> {
-  const [result] = await db
+export async function getNextInvoiceNumber(
+  userId: string,
+  txOrDb: Pick<typeof db, "insert"> = db
+): Promise<string> {
+  const [result] = await txOrDb
     .insert(invoiceCounters)
     .values({ userId, counter: 1 })
     .onConflictDoUpdate({
@@ -561,6 +572,208 @@ export async function getNextInvoiceNumber(userId: string): Promise<string> {
 
   const year = new Date().getFullYear().toString().slice(-2);
   return `${year}-${result.counter.toString().padStart(3, "0")}`;
+}
+
+// ── Invoices (immutable GoBD documents) ──────────────────────
+
+export interface InvoiceResponse extends Omit<SelectInvoice, "createdAt"> {
+  createdAt: string;
+}
+
+function toInvoiceResponse(inv: SelectInvoice): InvoiceResponse {
+  return { ...inv, createdAt: inv.createdAt.toISOString() };
+}
+
+/** Map an immutable snapshot to DB insert values. `status` is always 'issued'
+ *  — even a cancellation invoice is itself a valid issued document. */
+function snapshotToInsert(
+  userId: string,
+  orderId: string | null,
+  s: InvoiceSnapshot
+): typeof invoices.$inferInsert {
+  return {
+    userId,
+    orderId,
+    invoiceNumber: s.invoiceNumber,
+    type: s.type,
+    status: "issued",
+    cancelsInvoiceId: s.cancelsInvoiceId,
+    issueDate: s.issueDate,
+    serviceDate: s.serviceDate,
+    sellerName: s.seller.name,
+    sellerAddress: s.seller.address,
+    sellerEmail: s.seller.email,
+    sellerPhone: s.seller.phone,
+    customerName: s.customer.name,
+    customerEmail: s.customer.email,
+    customerStreet: s.customer.street,
+    customerZip: s.customer.zip,
+    customerCity: s.customer.city,
+    customerCountry: s.customer.country,
+    items: s.items,
+    subtotal: s.subtotal,
+    shippingCost: s.shippingCost,
+    total: s.total,
+    taxNote: s.taxNote,
+    isSmallBusiness: s.isSmallBusiness,
+    notes: s.notes,
+  };
+}
+
+function invoiceRowToSnapshot(row: SelectInvoice): InvoiceSnapshot {
+  return {
+    type: row.type as InvoiceType,
+    invoiceNumber: row.invoiceNumber,
+    issueDate: row.issueDate,
+    serviceDate: row.serviceDate,
+    cancelsInvoiceId: row.cancelsInvoiceId,
+    seller: {
+      name: row.sellerName,
+      address: row.sellerAddress,
+      email: row.sellerEmail,
+      phone: row.sellerPhone,
+    },
+    customer: {
+      name: row.customerName,
+      email: row.customerEmail,
+      street: row.customerStreet,
+      zip: row.customerZip,
+      city: row.customerCity,
+      country: row.customerCountry,
+    },
+    items: row.items,
+    subtotal: row.subtotal,
+    shippingCost: row.shippingCost,
+    total: row.total,
+    taxNote: row.taxNote,
+    isSmallBusiness: row.isSmallBusiness,
+    notes: row.notes,
+  };
+}
+
+export async function getInvoices(userId: string, opts?: PageOpts): Promise<InvoiceResponse[]> {
+  let q = db
+    .select()
+    .from(invoices)
+    .where(eq(invoices.userId, userId))
+    .orderBy(sql`${invoices.createdAt} DESC`)
+    .$dynamic();
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
+  const rows = await q;
+  return rows.map(toInvoiceResponse);
+}
+
+export async function getInvoice(userId: string, id: string): Promise<InvoiceResponse | undefined> {
+  const [inv] = await db
+    .select()
+    .from(invoices)
+    .where(and(eq(invoices.id, id), eq(invoices.userId, userId)));
+  return inv ? toInvoiceResponse(inv) : undefined;
+}
+
+export type IssueInvoiceResult =
+  | { ok: true; invoice: InvoiceResponse }
+  | { ok: false; code: "order_not_found" | "already_issued" };
+
+/**
+ * Issue an immutable invoice for an order: freeze a snapshot of seller, recipient,
+ * positions, amounts and tax notice, and consume the next invoice number. At most
+ * one active (issued) invoice per order — re-issuance after a Storno is allowed.
+ */
+export async function issueInvoice(userId: string, orderId: string): Promise<IssueInvoiceResult> {
+  const order = await getOrder(userId, orderId);
+  if (!order) return { ok: false, code: "order_not_found" };
+
+  const [existing] = await db
+    .select({ id: invoices.id })
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.userId, userId),
+        eq(invoices.orderId, orderId),
+        eq(invoices.type, "invoice"),
+        eq(invoices.status, "issued")
+      )
+    );
+  if (existing) return { ok: false, code: "already_issued" };
+
+  const profile = await getProfile(userId);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const row = await db.transaction(async (tx) => {
+    const invoiceNumber = await getNextInvoiceNumber(userId, tx);
+    const snapshot = buildInvoiceSnapshot({
+      invoiceNumber,
+      issueDate: today,
+      order: {
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        customerStreet: order.customerStreet,
+        customerZip: order.customerZip,
+        customerCity: order.customerCity,
+        customerCountry: order.customerCountry,
+        serviceDate: order.serviceDate,
+        shippingCost: order.shippingCost,
+        notes: order.notes,
+      },
+      items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+      profile: profile.id ? profile : null,
+    });
+    const [inserted] = await tx.insert(invoices).values(snapshotToInsert(userId, orderId, snapshot)).returning();
+    return inserted;
+  });
+
+  return { ok: true, invoice: toInvoiceResponse(row) };
+}
+
+export type CancelInvoiceResult =
+  | { ok: true; cancellation: InvoiceResponse; original: InvoiceResponse }
+  | { ok: false; code: "not_found" | "not_cancellable" };
+
+/**
+ * Cancel an issued invoice via a Storno: insert a cancellation invoice (negated
+ * amounts, its own number, reference to the original) and flip the original's
+ * status to 'cancelled'. A cancellation or already-cancelled invoice cannot be
+ * cancelled again.
+ */
+export async function cancelInvoice(userId: string, invoiceId: string): Promise<CancelInvoiceResult> {
+  const [original] = await db
+    .select()
+    .from(invoices)
+    .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, userId)));
+  if (!original) return { ok: false, code: "not_found" };
+  if (original.type !== "invoice" || original.status !== "issued") {
+    return { ok: false, code: "not_cancellable" };
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const result = await db.transaction(async (tx) => {
+    const invoiceNumber = await getNextInvoiceNumber(userId, tx);
+    const cancellation = buildCancellationSnapshot({
+      invoiceNumber,
+      issueDate: today,
+      cancelsInvoiceId: original.id,
+      original: invoiceRowToSnapshot(original),
+    });
+    const [cancellationRow] = await tx
+      .insert(invoices)
+      .values(snapshotToInsert(userId, original.orderId, cancellation))
+      .returning();
+    const [updatedOriginal] = await tx
+      .update(invoices)
+      .set({ status: "cancelled" })
+      .where(and(eq(invoices.id, original.id), eq(invoices.userId, userId)))
+      .returning();
+    return { cancellationRow, updatedOriginal };
+  });
+
+  return {
+    ok: true,
+    cancellation: toInvoiceResponse(result.cancellationRow),
+    original: toInvoiceResponse(result.updatedOriginal),
+  };
 }
 
 // ── Delete All User Data (for backup restore or account deletion) ────────────
@@ -574,6 +787,10 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   if (userOrders.length > 0) {
     await txOrDb.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
   }
+  // invoices → references orders (set null) + users (cascade); delete explicitly.
+  // NOTE: Phase 2.3 changes account deletion to *archive* invoices (10-year
+  // retention) instead of deleting them.
+  await txOrDb.delete(invoices).where(eq(invoices.userId, userId));
   await txOrDb.delete(orders).where(eq(orders.userId, userId));
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));

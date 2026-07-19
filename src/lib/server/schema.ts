@@ -9,6 +9,7 @@ import {
   date,
   jsonb,
   index,
+  uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -229,6 +230,68 @@ export const invoiceCounters = pgTable("invoice_counters", {
     .references(() => users.id, { onDelete: "cascade" }),
   counter: integer("counter").notNull().default(0),
 });
+
+// ============================================================
+// Invoices — immutable legal document snapshot (GoBD).
+// Created only on explicit issuance from an order. Never UPDATEd once issued
+// (except pdfUrl on generation, and status→'cancelled' via the Storno flow).
+// Corrections are made by issuing a `cancellation` invoice (negative amounts,
+// new number, reference to the original) and re-issuing.
+// All money fields are integer cents.
+// ============================================================
+export const invoices = pgTable("invoices", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // The order this invoice was issued for. Nullable + set-null on order delete
+  // so the immutable invoice survives even if the working order is later removed.
+  orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
+  invoiceNumber: text("invoice_number").notNull(),
+  type: text("type").notNull().default("invoice"), // 'invoice' | 'cancellation'
+  status: text("status").notNull().default("issued"), // 'issued' | 'cancelled'
+  // For a cancellation invoice: the original invoice it reverses (app-enforced ref).
+  cancelsInvoiceId: varchar("cancels_invoice_id"),
+  issueDate: date("issue_date").notNull(), // Rechnungsdatum
+  serviceDate: date("service_date"), // Leistungsdatum (E-Rechnung-ready)
+  // Seller snapshot (from company profile at issuance)
+  sellerName: text("seller_name").notNull().default(""),
+  sellerAddress: text("seller_address").notNull().default(""),
+  sellerEmail: text("seller_email").notNull().default(""),
+  sellerPhone: text("seller_phone").notNull().default(""),
+  // Recipient snapshot (structured, E-Rechnung-ready)
+  customerName: text("customer_name").notNull().default(""),
+  customerEmail: text("customer_email").notNull().default(""),
+  customerStreet: text("customer_street").notNull().default(""),
+  customerZip: text("customer_zip").notNull().default(""),
+  customerCity: text("customer_city").notNull().default(""),
+  customerCountry: text("customer_country").notNull().default(""),
+  // Line-item snapshot (cents)
+  items: jsonb("items")
+    .$type<{ name: string; quantity: number; price: number }[]>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  subtotal: integer("subtotal").notNull().default(0), // cents
+  shippingCost: integer("shipping_cost").notNull().default(0), // cents
+  total: integer("total").notNull().default(0), // cents (negative for cancellation)
+  // Frozen tax notice + small-business flag at issuance
+  taxNote: text("tax_note").notNull().default(""),
+  isSmallBusiness: boolean("is_small_business").notNull().default(true),
+  notes: text("notes").notNull().default(""),
+  pdfUrl: text("pdf_url"), // filled by server-side PDF generation (Phase 2.2)
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("idx_invoices_user_id").on(t.userId),
+  index("idx_invoices_order_id").on(t.orderId),
+  // A user's invoice numbers are unique (GoBD: no duplicates).
+  uniqueIndex("uq_invoices_user_number").on(t.userId, t.invoiceNumber),
+  check("chk_invoices_type", sql`${t.type} in ('invoice', 'cancellation')`),
+  check("chk_invoices_status", sql`${t.status} in ('issued', 'cancelled')`),
+]);
+
+export type SelectInvoice = typeof invoices.$inferSelect;
 
 // ============================================================
 // Webhook Events — idempotency ledger for Stripe webhooks.

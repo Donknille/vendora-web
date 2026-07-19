@@ -35,6 +35,37 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface Invoice {
+  id: string;
+  userId: string;
+  orderId: string | null;
+  invoiceNumber: string;
+  type: "invoice" | "cancellation";
+  status: "issued" | "cancelled";
+  cancelsInvoiceId: string | null;
+  issueDate: string;
+  serviceDate: string | null;
+  sellerName: string;
+  sellerAddress: string;
+  sellerEmail: string;
+  sellerPhone: string;
+  customerName: string;
+  customerEmail: string;
+  customerStreet: string;
+  customerZip: string;
+  customerCity: string;
+  customerCountry: string;
+  items: { name: string; quantity: number; price: number }[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  taxNote: string;
+  isSmallBusiness: boolean;
+  notes: string;
+  pdfUrl: string | null;
+  createdAt: string;
+}
+
 export interface MarketEvent {
   id: string;
   userId: string;
