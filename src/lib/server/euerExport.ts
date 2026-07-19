@@ -1,5 +1,5 @@
 import "server-only";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { createA4Canvas, PDF_COLORS } from "./pdf";
 import type { EuerReport } from "@/lib/euerReport";
 import { EUER_CATEGORY_META } from "@/lib/euer";
 import { formatAmountInput } from "@/lib/formatCurrency";
@@ -47,69 +47,59 @@ export function buildEuerCsv(report: EuerReport, meta: EuerExportMeta): string {
   return "﻿" + rows.join("\r\n") + "\r\n";
 }
 
-// Summary PDF (Gegenüberstellung). Uses only WinAnsi-safe glyphs (no user free
-// text), so StandardFonts.Helvetica renders it without embedding a font.
+// Summary PDF (Gegenüberstellung), rendered via the shared PdfCanvas primitives.
 export async function buildEuerPdf(report: EuerReport, meta: EuerExportMeta): Promise<Uint8Array> {
-  const doc = await PDFDocument.create();
-  const page = doc.addPage([595.28, 841.89]); // A4
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-
-  const left = 50;
-  const right = 545;
-  const ink = rgb(0.12, 0.12, 0.14);
-  const muted = rgb(0.42, 0.45, 0.5);
-  const green = rgb(0.02, 0.47, 0.34);
-  const red = rgb(0.86, 0.15, 0.15);
-  let y = 800;
-
+  const c = await createA4Canvas(800);
   const eur = (cents: number) => `${formatAmountInput(cents)} EUR`;
-  const text = (s: string, x: number, size: number, f = font, color = ink) =>
-    page.drawText(s, { x, y, size, font: f, color });
-  const textRight = (s: string, x: number, size: number, f = font, color = ink) =>
-    page.drawText(s, { x: x - f.widthOfTextAtSize(s, size), y, size, font: f, color });
 
-  text(meta.companyName || "Vendora", left, 20, bold);
-  y -= 26;
-  text("Einnahmen-Überschuss-Rechnung", left, 15, bold);
-  textRight(`Geschäftsjahr ${report.year}`, right, 12, font, muted);
-  y -= 8;
-  page.drawLine({ start: { x: left, y }, end: { x: right, y }, thickness: 1.5, color: rgb(0, 0.71, 0.65) });
-  y -= 30;
+  c.text(meta.companyName || "Vendora", c.left, 20, { bold: true });
+  c.down(26);
+  c.text("Einnahmen-Überschuss-Rechnung", c.left, 15, { bold: true });
+  c.textRight(`Geschäftsjahr ${report.year}`, c.right, 12, { color: PDF_COLORS.muted });
+  c.down(8);
+  c.hr(PDF_COLORS.brand, 1.5);
+  c.down(30);
 
-  text("Einnahmen (nach Zufluss)", left, 12, bold);
-  textRight(eur(report.incomeTotal), right, 12, bold, green);
-  y -= 26;
+  c.text("Einnahmen (nach Zufluss)", c.left, 12, { bold: true });
+  c.textRight(eur(report.incomeTotal), c.right, 12, { bold: true, color: PDF_COLORS.green });
+  c.down(26);
 
-  text("Ausgaben nach Kategorie", left, 12, bold);
-  y -= 18;
+  c.text("Ausgaben nach Kategorie", c.left, 12, { bold: true });
+  c.down(18);
   if (report.expensesByCategory.length === 0) {
-    text("—", left + 10, 10, font, muted);
-    y -= 16;
+    c.text("—", c.left + 10, 10, { color: PDF_COLORS.muted });
+    c.down(16);
   } else {
     for (const row of report.expensesByCategory) {
-      text(EUER_CATEGORY_META[row.category].de, left + 10, 10);
-      textRight("-" + eur(row.amount), right, 10);
-      y -= 16;
-      if (y < 90) break;
+      c.text(EUER_CATEGORY_META[row.category].de, c.left + 10, 10);
+      c.textRight("-" + eur(row.amount), c.right, 10);
+      c.down(16);
+      if (c.y < 90) break;
     }
   }
-  y -= 6;
-  text("Ausgaben gesamt", left, 12, bold);
-  textRight("-" + eur(report.expenseTotal), right, 12, bold, red);
-  y -= 10;
-  page.drawLine({ start: { x: left, y }, end: { x: right, y }, thickness: 1, color: rgb(0.85, 0.86, 0.88) });
-  y -= 22;
+  c.down(6);
+  c.text("Ausgaben gesamt", c.left, 12, { bold: true });
+  c.textRight("-" + eur(report.expenseTotal), c.right, 12, { bold: true, color: PDF_COLORS.red });
+  c.down(10);
+  c.hr(PDF_COLORS.line, 1);
+  c.down(22);
 
-  text("Überschuss / Gewinn", left, 14, bold);
-  textRight(eur(report.surplus), right, 14, bold, report.surplus >= 0 ? green : red);
-  y -= 40;
+  c.text("Überschuss / Gewinn", c.left, 14, { bold: true });
+  c.textRight(eur(report.surplus), c.right, 14, {
+    bold: true,
+    color: report.surplus >= 0 ? PDF_COLORS.green : PDF_COLORS.red,
+  });
+  c.down(40);
 
   if (meta.isSmallBusiness) {
-    text("Kleinunternehmer nach § 19 UStG — es wird keine Umsatzsteuer ausgewiesen.", left, 9, font, muted);
-    y -= 14;
+    c.text("Kleinunternehmer nach § 19 UStG — es wird keine Umsatzsteuer ausgewiesen.", c.left, 9, {
+      color: PDF_COLORS.muted,
+    });
+    c.down(14);
   }
-  text(`Erstellt am ${meta.generatedOn} mit Vendora. Ohne Gewähr, keine Steuerberatung.`, left, 9, font, muted);
+  c.text(`Erstellt am ${meta.generatedOn} mit Vendora. Ohne Gewähr, keine Steuerberatung.`, c.left, 9, {
+    color: PDF_COLORS.muted,
+  });
 
-  return doc.save();
+  return c.save();
 }
