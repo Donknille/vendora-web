@@ -147,7 +147,9 @@ export async function createOrder(
     items: { name: string; quantity: number; price: number; processingStatus?: string; comment?: string }[];
   }
 ): Promise<OrderWithItems> {
-  const invoiceNumber = await getNextInvoiceNumber(userId);
+  // Orders no longer consume an invoice number at creation — the counter is the
+  // authoritative sequence for *issued* invoices (Phase 2.1/2.2). An order is a
+  // working document; its legal number is assigned when an invoice is issued.
   // All amounts are integer cents — pure integer arithmetic, no floats.
   const total = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const now = new Date();
@@ -164,7 +166,7 @@ export async function createOrder(
       customerCity: data.customerCity,
       customerCountry: data.customerCountry || "",
       status: data.status,
-      invoiceNumber,
+      invoiceNumber: "",
       notes: data.notes,
       orderDate: data.orderDate || today,
       serviceDate: data.serviceDate || null,
