@@ -100,6 +100,7 @@ export interface MarketSale {
   description: string;
   amount: number;
   quantity: number;
+  paymentMethod: "cash" | "card" | null;
   createdAt: string;
 }
 

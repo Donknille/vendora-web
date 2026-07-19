@@ -563,6 +563,7 @@ export interface MarketSaleBatchEntry {
   description: string;
   amount: number;
   quantity: number;
+  paymentMethod?: "cash" | "card" | null;
   createdAt?: string; // ISO string; the moment the sale was recorded (offline)
 }
 
@@ -592,6 +593,7 @@ export async function upsertMarketSalesBatch(
     description: e.description,
     amount: e.amount,
     quantity: e.quantity,
+    paymentMethod: e.paymentMethod ?? null,
     createdAt: e.createdAt ? new Date(e.createdAt) : new Date(),
   }));
 

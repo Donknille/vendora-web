@@ -12,6 +12,7 @@ export const batchSaleEntrySchema = z.object({
   description: z.string().min(1, "Description is required").max(200),
   amount: z.number().int().min(0).max(99999999), // cents
   quantity: z.number().int().min(1).max(9999).default(1),
+  paymentMethod: z.enum(["cash", "card"]).nullish(),
   createdAt: z.string().datetime().optional(),
 });
 

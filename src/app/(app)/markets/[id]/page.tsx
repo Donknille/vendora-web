@@ -13,6 +13,9 @@ import {
   Copy,
   RefreshCw,
   CheckCircle2,
+  Banknote,
+  CreditCard,
+  Store,
 } from "lucide-react";
 import { useMarkets, useDeleteMarket, useCopyMarket } from "@/lib/hooks/useMarkets";
 import {
@@ -20,10 +23,12 @@ import {
   useDeleteMarketSale,
 } from "@/lib/hooks/useMarketSales";
 import { useOfflineSales } from "@/lib/offline/useOfflineSales";
+import { computeDayClosing } from "@/lib/marketDay";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TseNotice } from "@/components/markets/TseNotice";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
@@ -87,7 +92,25 @@ export default function MarketDetailPage() {
     0
   );
   const totalSales = serverTotal + pendingTotal;
-  const profit = totalSales - standFee - travelCost;
+
+  // Day closing (Tagesabschluss): combine server + unsynced sales, split by
+  // payment method.
+  const closing = computeDayClosing(
+    [
+      ...(sales ?? []).map((s) => ({
+        amount: Number(s.amount),
+        quantity: Number(s.quantity),
+        paymentMethod: s.paymentMethod,
+      })),
+      ...unsyncedPending.map((p) => ({
+        amount: p.amount,
+        quantity: p.quantity,
+        paymentMethod: p.paymentMethod,
+      })),
+    ],
+    standFee,
+    travelCost
+  );
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");
@@ -217,6 +240,15 @@ export default function MarketDetailPage() {
           <p className="mt-3 text-sm text-faint">{market.notes}</p>
         )}
       </Card>
+
+      {/* Open the full-screen POS / market mode */}
+      <Link
+        href={`/markets/${marketId}/kasse`}
+        className="flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3.5 text-base font-semibold text-white hover:bg-brand-primary/90 active:scale-[0.99] transition-all"
+      >
+        <Store className="h-5 w-5" />
+        {language === "de" ? "Kasse öffnen" : "Open register"}
+      </Link>
 
       {/* Cost Breakdown */}
       <Card>
@@ -382,15 +414,49 @@ export default function MarketDetailPage() {
         )}
       </Card>
 
-      {/* Profit */}
+      {/* Tagesabschluss (day closing) */}
       <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.profit}</h3>
-          <span className={`text-xl font-bold ${profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
-            {formatCurrency(profit)}
-          </span>
+        <h3 className="mb-3 text-sm font-medium text-faint uppercase tracking-wider">
+          {language === "de" ? "Tagesabschluss" : "Day closing"}
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-line bg-page p-3">
+            <p className="inline-flex items-center gap-1.5 text-xs text-faint">
+              <Banknote className="h-3.5 w-3.5" /> {language === "de" ? "Bar" : "Cash"}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-primary tabular-nums">{formatCurrency(closing.cash)}</p>
+          </div>
+          <div className="rounded-lg border border-line bg-page p-3">
+            <p className="inline-flex items-center gap-1.5 text-xs text-faint">
+              <CreditCard className="h-3.5 w-3.5" /> {language === "de" ? "Karte" : "Card"}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-primary tabular-nums">{formatCurrency(closing.card)}</p>
+          </div>
+        </div>
+        {closing.unknown > 0 && (
+          <p className="mt-2 text-xs text-muted">
+            {language === "de" ? "Ohne Zahlart" : "No method"}: {formatCurrency(closing.unknown)}
+          </p>
+        )}
+        <div className="mt-3 space-y-2 border-t border-line pt-3 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-secondary">{t.markets.sales} ({closing.count})</span>
+            <span className="text-primary tabular-nums">{formatCurrency(closing.total)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-secondary">{t.markets.costs}</span>
+            <span className="text-primary tabular-nums">−{formatCurrency(closing.costs)}</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-line pt-2 font-medium">
+            <span className="text-secondary">{t.markets.profit}</span>
+            <span className={`text-lg font-bold tabular-nums ${closing.profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+              {formatCurrency(closing.profit)}
+            </span>
+          </div>
         </div>
       </Card>
+
+      <TseNotice />
 
       {/* Action Buttons */}
       <div className="space-y-3">

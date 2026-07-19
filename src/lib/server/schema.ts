@@ -188,11 +188,16 @@ export const marketSales = pgTable("market_sales", {
   description: text("description").notNull().default(""),
   amount: integer("amount").notNull().default(0), // cents
   quantity: integer("quantity").notNull().default(1),
+  paymentMethod: text("payment_method"), // 'cash' | 'card' | null (Phase 3.3)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_sales_user_id").on(t.userId),
   index("idx_market_sales_market_id").on(t.marketId),
   uniqueIndex("uq_market_sales_user_client").on(t.userId, t.clientId),
+  check(
+    "chk_market_sales_payment_method",
+    sql`${t.paymentMethod} is null or ${t.paymentMethod} in ('cash', 'card')`
+  ),
 ]);
 
 export type SelectMarketSale = typeof marketSales.$inferSelect;

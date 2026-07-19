@@ -5,12 +5,15 @@
 // client-generated `clientId` (UUID) that the batch endpoint uses as an
 // idempotency key, so re-syncing the same sale never double-counts.
 
+export type SalePaymentMethod = "cash" | "card";
+
 export interface PendingSale {
   clientId: string;
   marketId: string;
   description: string;
   amount: number; // cents
   quantity: number;
+  paymentMethod: SalePaymentMethod | null;
   createdAt: string; // ISO — the moment the sale was recorded
 }
 

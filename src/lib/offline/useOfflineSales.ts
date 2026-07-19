@@ -8,6 +8,7 @@ import {
   getPendingSales,
   removePendingSales,
   type PendingSale,
+  type SalePaymentMethod,
 } from "./salesQueue";
 
 const CHUNK = 100; // must match MAX_BATCH on the server
@@ -20,6 +21,7 @@ export interface RecordSaleInput {
   description: string;
   amount: number; // cents
   quantity: number;
+  paymentMethod?: SalePaymentMethod | null;
 }
 
 /**
@@ -61,6 +63,7 @@ export function useOfflineSales(marketId: string) {
               description: s.description,
               amount: s.amount,
               quantity: s.quantity,
+              paymentMethod: s.paymentMethod,
               createdAt: s.createdAt,
             }))
           );
@@ -86,20 +89,32 @@ export function useOfflineSales(marketId: string) {
   }, [marketId, userId, refreshPending]);
 
   const recordSale = useCallback(
-    async (input: RecordSaleInput) => {
+    async (input: RecordSaleInput): Promise<string> => {
+      const clientId = crypto.randomUUID();
       const sale: PendingSale = {
-        clientId: crypto.randomUUID(),
+        clientId,
         marketId,
         description: input.description,
         amount: input.amount,
         quantity: input.quantity,
+        paymentMethod: input.paymentMethod ?? null,
         createdAt: new Date().toISOString(),
       };
       await enqueueSale(sale);
       await refreshPending();
       void sync();
+      return clientId;
     },
     [marketId, refreshPending, sync]
+  );
+
+  // Remove a not-yet-synced sale from the queue (undo of a mis-entry).
+  const dequeue = useCallback(
+    async (clientId: string) => {
+      await removePendingSales([clientId]);
+      await refreshPending();
+    },
+    [refreshPending]
   );
 
   useEffect(() => {
@@ -115,6 +130,7 @@ export function useOfflineSales(marketId: string) {
     pendingCount: pending.length,
     syncing,
     recordSale,
+    dequeue,
     sync,
   };
 }
