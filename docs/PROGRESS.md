@@ -37,7 +37,7 @@ npm run build
 |---|---|---|
 | 0 | Fundament & Pflichtreparaturen | ✅ erledigt |
 | 1 | EÜR & Steuer | ✅ erledigt |
-| **2** | **Aufträge & Rechnungen (GoBD)** | ⬜ **offen ← NÄCHSTE** |
+| **2** | **Aufträge & Rechnungen (GoBD)** | 🔄 **in Arbeit** (2.1 ✅, ← 2.2 nächste) |
 | 3 | Marktmodus (Offline-PWA) | ⬜ offen |
 | 4 | Monetarisierung (ohne Abo-Zwang) | ⬜ offen |
 | 5 | Veranstalter-Modul (B2B2C) | ⬜ nur skizziert |
@@ -79,7 +79,7 @@ Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst 
 
 > Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 2".
 
-- **2.1 `invoices`-Tabelle** – unveränderlicher Snapshot bei Rechnungserstellung (Nummer, Datum, Absender/Empfänger, Positionen als jsonb, Beträge in **Cents**, Steuerhinweise, `orderId`, `status` issued/cancelled, `pdfUrl`). Kein UPDATE auf ausgestellte Rechnungen — Korrektur nur per **Stornorechnung** (neue Nummer, negativer Betrag, Referenz) + Neuausstellung.
+- **2.1 `invoices`-Tabelle** ✅ **erledigt** (`f640c78`) – unveränderlicher Snapshot bei Rechnungserstellung (Nummer, Datum, Absender/Empfänger, Positionen als jsonb, Beträge in **Cents**, Steuerhinweise, `orderId` set-null, `status` issued/cancelled, `pdfUrl` (2.2)). Kein UPDATE auf ausgestellte Rechnungen — Korrektur nur per **Stornorechnung** (negiert, neue Nummer, Referenz). Reines Modul `src/lib/invoice.ts` (Builder, 13 Tests) + Storage `issueInvoice/cancelInvoice/getInvoices/getInvoice` + API `/api/invoices(+/[id](+/cancel))`. Migration `drizzle/0006`. **Noch NICHT gemacht (kommt in 2.2):** Entkopplung Order-Erstellung von der Nummernvergabe, UI-Button „Rechnung ausstellen", Ablösung des Client-HTML-Prints.
 - **2.2 Server-PDF** – serverseitige PDF-Erzeugung (pdf-lib ist schon drin, s. `src/lib/server/euerExport.ts`), Ablage in Objekt-Storage (Vercel Blob **oder** Neon Object Storage — eines wählen + dokumentieren), `pdfUrl` speichern. **Gemeinsames Template-Modul** für Rechnung **und** EÜR-PDF (Duplikate aus `orders/[id]` und Dashboard ablösen).
 - **2.3 Aufbewahrung vs. DSGVO** – Account-Löschung anonymisiert + löscht Nicht-Beleg-Daten, **archiviert Rechnungen** (userId-Entkopplung, Aufbewahrung +10 Jahre). Datenschutz-Passus existiert bereits (Phase 0.1). `api/export` um Rechnungen erweitern.
 - **2.4 Kundenstamm** – `customers`-Tabelle (user-scoped), Autocomplete im Auftragsformular, tote Route `api/customers` + `useCustomers()` anschließen, distinct-Kunden aus Bestellungen migrieren. Orders optional `customerId` + Adress-Snapshot behalten.
