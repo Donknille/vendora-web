@@ -4,14 +4,14 @@
 > [`docs/REBUILD-PLAN.md`](./REBUILD-PLAN.md). Diese Datei sagt nur: **was ist erledigt, was kommt
 > als Nächstes, und wie man weiterarbeitet.**
 >
-> Stand: 2026-07-18 · Branch: `migrate/neon-betterauth`
+> Stand: 2026-07-19 · Branch: `migrate/neon-betterauth`
 
 ---
 
 ## So geht es weiter (Quickstart für die nächste Session)
 
 1. **Branch:** `migrate/neon-betterauth` (Basis der Rebuild-Arbeit, offen als PR #10 → `master`).
-2. **Nächste offene Phase:** **Phase 3 – Marktmodus (Offline-PWA).** Spec: `docs/REBUILD-PLAN.md`, Abschnitt „Phase 3". (Phase 2 ist abgeschlossen.)
+2. **Nächste offene Phase:** **Phase 4 – Monetarisierung (ohne Abo-Zwang).** Spec: `docs/REBUILD-PLAN.md`, Abschnitt „Phase 4". (Phasen 0–3 sind abgeschlossen.)
 3. **Arbeitsweise (verbindlich, wie bisher):**
    - Phasen **in Reihenfolge**, jede Sub-Aufgabe (z. B. 2.1, 2.2 …) einzeln umsetzen.
    - Nach **jeder** Änderung: `npm run typecheck` → `npm run lint` → `npm test` → `npm run build`. Erst wenn alle vier grün sind, committen.
@@ -38,8 +38,8 @@ npm run build
 | 0 | Fundament & Pflichtreparaturen | ✅ erledigt |
 | 1 | EÜR & Steuer | ✅ erledigt |
 | 2 | Aufträge & Rechnungen (GoBD) | ✅ erledigt (2.1–2.5) |
-| **3** | **Marktmodus (Offline-PWA)** | ⬜ **offen ← NÄCHSTE** |
-| 4 | Monetarisierung (ohne Abo-Zwang) | ⬜ offen |
+| 3 | Marktmodus (Offline-PWA) | ✅ erledigt (3.1–3.4) |
+| **4** | **Monetarisierung (ohne Abo-Zwang)** | ⬜ **offen ← NÄCHSTE** |
 | 5 | Veranstalter-Modul (B2B2C) | ⬜ nur skizziert |
 
 ### ✅ Phase 0 – erledigt
@@ -61,13 +61,28 @@ npm run build
 | 1.4 Kleinunternehmer-Flag (§ 19 UStG) | `d48f0c1` |
 | 1.5 EÜR-Ansicht `/steuer` + CSV/PDF-Export + Dashboard-Charts | `09d5b74` |
 
+### ✅ Phase 3 – erledigt
+
+Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". Vorab wurde der alte Branch `claude/pwa-offline-marktmodus-of3xb2` gesichtet — er stammt aus der Supabase-Lineage und ist nicht direkt übernehmbar; die Konzepte (minimaler SW, Offline-Queue, Batch-Route mit clientId-Dedup) wurden neu und sauber umgesetzt.
+
+| Schritt | Commit |
+|---|---|
+| 3.1 PWA-Basis (`app/manifest.ts`, Icons, handgeschriebener `public/sw.js`, SW-Registrierung, Headers, offline.html) | `8a1107a` |
+| 3.2 Offline-Verkaufserfassung (IndexedDB-Queue + `useOfflineSales`, Batch-Route `/sales/batch`, `client_id`-Dedup, Migration 0009) | `0f51a6c` |
+| 3.3 Kassen-UX Vollbild-POS `/markets/[id]/kasse` (Bar/Karte, Menge, Undo) + Tagesabschluss (`marketDay.ts`) + TSE-Hinweis/SumUp; `payment_method`, Migration 0010 | `a2b872c` |
+| 3.4 Marktkalender (Frist + Status applied/confirmed, Migration 0011) + Jahresvergleich (`marketCalendar.ts`) | `8396ef8` |
+
+**Entscheidungen (dokumentiert):** (a) **handgeschriebener Service Worker statt serwist** — serwist braucht laut Next-Guide webpack, Next 16 fährt Turbopack. (b) **Idempotenz über separate `client_id`-Spalte** statt Client-gesetztem PK (Server generiert die echte PK, Dedup per Unique-Index `(user_id, client_id)`). (c) **Kalender als Listen-/Gruppenansicht mit Fristen** statt Monats-Grid.
+
+**Offene Abnahme (manuell, gegen ein deploytes/migriertes Env):** Flugmodus-Test (Markt öffnen → 5 Verkäufe offline → online → alle exakt einmal) und Lighthouse-PWA-Installierbarkeit sind Laufzeit-Checks, die eine laufende Instanz mit angewandten Migrationen brauchen (siehe operative Punkte). Die deterministische Grundlage ist durch die vier grünen Checks + Unit-Tests (Batch-Idempotenz, Tagesabschluss, Kalender/Jahresvergleich) abgedeckt.
+
 ---
 
 ## Offene operative Punkte (kein Phasen-Inhalt, aber wichtig)
 
 Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst nicht automatisch ausgeführt:
 
-1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0005) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema (numeric/text, ohne `paidAt`, `expenses.marketId/source`, EÜR-Kategorien, `isSmallBusiness`, `webhook_events`). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
+1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0011) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema. Neu seit Phase 3: `market_sales.client_id` (+ Unique-Index, 0009), `market_sales.payment_method` (0010), `market_events.application_deadline` + erweiterter Status (0011). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
 2. **`STRIPE_PRICE_ID`** noch hartkodiert in `src/lib/server/stripe.ts` → wird in **Phase 4** auf Env/Config umgestellt.
 3. **Webhook `current_period_end`** hat einen +30-Tage-Fallback (Stripe-API-Version-Unsicherheit) → bei Live-Billing gegen Stripe-Testmode verifizieren.
 4. **CI `Security & Quality Check` rot:** `npm audit --audit-level=high` scheitert an einer Next.js-High-Advisory ohne stabilen Fix (+ dev-only vite). Nicht von dieser Arbeit verursacht; separat entscheiden (Allowlist/Gate-Anpassung), nicht durch Downgrade.
@@ -75,9 +90,9 @@ Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst 
 
 ---
 
-## Nächste Phase im Detail — Phase 2: Aufträge & Rechnungen (GoBD)
+## Abgeschlossen: Phase 2 — Aufträge & Rechnungen (GoBD)
 
-> Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 2".
+> Historie / Referenz. Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 2".
 
 - **2.1 `invoices`-Tabelle** ✅ **erledigt** (`f640c78`) – unveränderlicher Snapshot bei Rechnungserstellung (Nummer, Datum, Absender/Empfänger, Positionen als jsonb, Beträge in **Cents**, Steuerhinweise, `orderId` set-null, `status` issued/cancelled, `pdfUrl` (2.2)). Kein UPDATE auf ausgestellte Rechnungen — Korrektur nur per **Stornorechnung** (negiert, neue Nummer, Referenz). Reines Modul `src/lib/invoice.ts` (Builder, 13 Tests) + Storage `issueInvoice/cancelInvoice/getInvoices/getInvoice` + API `/api/invoices(+/[id](+/cancel))`. Migration `drizzle/0006`. **Noch NICHT gemacht (kommt in 2.2):** Entkopplung Order-Erstellung von der Nummernvergabe, UI-Button „Rechnung ausstellen", Ablösung des Client-HTML-Prints.
 - **2.2 Server-PDF** ✅ **erledigt** (`c006055` 2.2a, `24bd360` 2.2b) – **Entscheidung: PDF on-demand aus dem immutablen Snapshot erzeugen** (kein Objekt-Storage, kein Vendor, `pdfUrl` bleibt null, byte-identisch reproduzierbar). Gemeinsames pdf-lib-Modul `src/lib/server/pdf.ts` (A4-Canvas, `sanitizeWinAnsi` für freien Nutzertext) + `invoicePdf.ts`; `euerExport` darauf umgestellt. Endpoint `GET /api/invoices/[id]/pdf`. UI: Order-Detailseite stellt Rechnungen aus/storniert + PDF-Download (Client-HTML-Print entfernt). **Nummern-Entkopplung:** `createOrder` vergibt keine Rechnungsnummer mehr — der Counter zählt nur ausgestellte Rechnungen.
@@ -90,8 +105,7 @@ Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst 
 
 ## Danach (Kurzfassung, Details im Plan)
 
-- **Phase 3 – Marktmodus (Offline-PWA):** PWA-Basis/Service Worker, Offline-Sale-Queue (IndexedDB, idempotenter Sync via Client-UUID), Kassen-UX + Tagesabschluss (bar/Karte), Marktkalender + Jahresvergleich. Vorab Branch `claude/pwa-offline-marktmodus-of3xb2` sichten.
-- **Phase 4 – Monetarisierung:** Free-Basis statt Trial (serverseitige Feature-Limits, `plan`-Feld), Credits/Pay-per-Use, EÜR-Jahresexport als Einmalkauf, Referral-Slots. `STRIPE_PRICE_ID` → Config.
+- **Phase 4 – Monetarisierung (← NÄCHSTE):** Free-Basis statt Trial (serverseitige Feature-Limits, `plan`-Feld), Credits/Pay-per-Use, EÜR-Jahresexport als Einmalkauf, Referral-Slots (SumUp-Slot ist in 3.3 als `TseNotice` + `NEXT_PUBLIC_SUMUP_REFERRAL_URL` bereits vorbereitet). `STRIPE_PRICE_ID` → Config.
 - **Phase 5 – Veranstalter-Modul (B2B2C):** erst bei Kern-Traktion.
 
 ## Querschnitt (in jeder Phase mitführen)

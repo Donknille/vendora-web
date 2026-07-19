@@ -7,7 +7,7 @@
 > (Marktanalyse-Dossier Juli 2026, Strategiebericht „Monetarisierung ohne Abo-Zwang").
 >
 > **▶ Aktueller Fortschritt & Handoff: [`docs/PROGRESS.md`](./PROGRESS.md).**
-> Stand 2026-07-18: **Phase 0 und Phase 1 erledigt** (Branch `migrate/neon-betterauth`). Nächste offene Phase: **Phase 2**.
+> Stand 2026-07-19: **Phasen 0–3 erledigt** (Branch `migrate/neon-betterauth`). Nächste offene Phase: **Phase 4**.
 
 ---
 
