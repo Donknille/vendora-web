@@ -43,6 +43,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // The service worker must never be cached by the browser/CDN so an
+        // updated sw.js is picked up immediately on the next visit.
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
