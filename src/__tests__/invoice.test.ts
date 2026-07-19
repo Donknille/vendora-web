@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeInvoiceTotals,
+  computeRetentionUntil,
   buildInvoiceTaxNote,
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
@@ -46,6 +47,14 @@ describe("computeInvoiceTotals", () => {
 
   it("returns zero for no items", () => {
     expect(computeInvoiceTotals([], 0)).toEqual({ subtotal: 0, total: 0 });
+  });
+});
+
+describe("computeRetentionUntil", () => {
+  it("returns 31 Dec of the issue year + 10 (§147 Abs. 3 AO)", () => {
+    expect(computeRetentionUntil("2026-07-19")).toBe("2036-12-31");
+    expect(computeRetentionUntil("2020-01-01")).toBe("2030-12-31");
+    expect(computeRetentionUntil("2026-12-31")).toBe("2036-12-31");
   });
 });
 

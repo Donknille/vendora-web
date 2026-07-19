@@ -243,9 +243,9 @@ export const invoices = pgTable("invoices", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  // Nullable + set-null on user delete: on account deletion the invoice is
+  // *decoupled* from the account (userId → null) and retained (see archivedAt).
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
   // The order this invoice was issued for. Nullable + set-null on order delete
   // so the immutable invoice survives even if the working order is later removed.
   orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
@@ -280,7 +280,11 @@ export const invoices = pgTable("invoices", {
   taxNote: text("tax_note").notNull().default(""),
   isSmallBusiness: boolean("is_small_business").notNull().default(true),
   notes: text("notes").notNull().default(""),
-  pdfUrl: text("pdf_url"), // filled by server-side PDF generation (Phase 2.2)
+  pdfUrl: text("pdf_url"), // reserved; PDFs are rendered on demand (Phase 2.2)
+  // DSGVO/GoBD retention: set when the owning account is deleted. The invoice is
+  // kept (decoupled) until retentionUntil (§147 AO / §14b UStG, ~10 years).
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  retentionUntil: date("retention_until"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_invoices_user_id").on(t.userId),

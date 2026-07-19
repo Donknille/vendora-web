@@ -37,7 +37,7 @@ export interface Order {
 
 export interface Invoice {
   id: string;
-  userId: string;
+  userId: string | null;
   orderId: string | null;
   invoiceNumber: string;
   type: "invoice" | "cancellation";
@@ -63,6 +63,8 @@ export interface Invoice {
   isSmallBusiness: boolean;
   notes: string;
   pdfUrl: string | null;
+  archivedAt: string | null;
+  retentionUntil: string | null;
   createdAt: string;
 }
 

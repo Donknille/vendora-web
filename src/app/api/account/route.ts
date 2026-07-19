@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { getUser, deleteAllUserData } from "@/lib/server/storage";
+import { getUser, deleteAllUserData, archiveUserInvoices } from "@/lib/server/storage";
 import { getStripe } from "@/lib/server/stripe";
 import { db } from "@/lib/server/db";
 import { users } from "@/lib/server/schema";
@@ -35,7 +35,10 @@ export async function DELETE() {
     // Step 2: Delete all user data, soft-delete the profile row, and remove the
     // Better Auth identity — atomically in a single transaction (same DB now).
     await db.transaction(async (tx) => {
-      // Delete all user data (orders, markets, expenses, profile, settings, etc.)
+      // Retain issued invoices (§147 AO / §14b UStG): decouple them from the
+      // account and stamp the retention deadline BEFORE any deletion runs.
+      await archiveUserInvoices(userId, tx);
+      // Delete all remaining user data (orders, markets, expenses, profile, etc.)
       await deleteAllUserData(userId, tx);
       // Soft-delete the profile record to prevent re-registration with the same email
       await tx.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));

@@ -1,10 +1,11 @@
 import "server-only";
-import { eq, and, sql, inArray } from "drizzle-orm";
+import { eq, and, sql, inArray, isNull } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
 import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
+  computeRetentionUntil,
   type InvoiceSnapshot,
   type InvoiceType,
 } from "@/lib/invoice";
@@ -578,12 +579,17 @@ export async function getNextInvoiceNumber(
 
 // ── Invoices (immutable GoBD documents) ──────────────────────
 
-export interface InvoiceResponse extends Omit<SelectInvoice, "createdAt"> {
+export interface InvoiceResponse extends Omit<SelectInvoice, "createdAt" | "archivedAt"> {
   createdAt: string;
+  archivedAt: string | null;
 }
 
 function toInvoiceResponse(inv: SelectInvoice): InvoiceResponse {
-  return { ...inv, createdAt: inv.createdAt.toISOString() };
+  return {
+    ...inv,
+    createdAt: inv.createdAt.toISOString(),
+    archivedAt: inv.archivedAt ? inv.archivedAt.toISOString() : null,
+  };
 }
 
 /** Map an immutable snapshot to DB insert values. `status` is always 'issued'
@@ -657,7 +663,7 @@ export async function getInvoices(userId: string, opts?: PageOpts): Promise<Invo
   let q = db
     .select()
     .from(invoices)
-    .where(eq(invoices.userId, userId))
+    .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)))
     .orderBy(sql`${invoices.createdAt} DESC`)
     .$dynamic();
   if (opts?.limit != null) q = q.limit(opts.limit);
@@ -670,7 +676,7 @@ export async function getInvoice(userId: string, id: string): Promise<InvoiceRes
   const [inv] = await db
     .select()
     .from(invoices)
-    .where(and(eq(invoices.id, id), eq(invoices.userId, userId)));
+    .where(and(eq(invoices.id, id), eq(invoices.userId, userId), isNull(invoices.archivedAt)));
   return inv ? toInvoiceResponse(inv) : undefined;
 }
 
@@ -778,6 +784,29 @@ export async function cancelInvoice(userId: string, invoiceId: string): Promise<
   };
 }
 
+/**
+ * DSGVO/GoBD retention on account deletion: decouple the user's invoices from
+ * the account (userId → null) and stamp the statutory retention deadline. The
+ * immutable snapshot is kept intact; nothing is deleted. Idempotent — only
+ * touches not-yet-archived rows.
+ */
+export async function archiveUserInvoices(
+  userId: string,
+  txOrDb: Pick<typeof db, "select" | "update"> = db
+): Promise<void> {
+  const rows = await txOrDb
+    .select({ id: invoices.id, issueDate: invoices.issueDate })
+    .from(invoices)
+    .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)));
+  const archivedAt = new Date();
+  for (const row of rows) {
+    await txOrDb
+      .update(invoices)
+      .set({ archivedAt, retentionUntil: computeRetentionUntil(row.issueDate), userId: null })
+      .where(eq(invoices.id, row.id));
+  }
+}
+
 // ── Delete All User Data (for backup restore or account deletion) ────────────
 
 export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, "delete" | "select"> = db): Promise<void> {
@@ -789,10 +818,10 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   if (userOrders.length > 0) {
     await txOrDb.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
   }
-  // invoices → references orders (set null) + users (cascade); delete explicitly.
-  // NOTE: Phase 2.3 changes account deletion to *archive* invoices (10-year
-  // retention) instead of deleting them.
-  await txOrDb.delete(invoices).where(eq(invoices.userId, userId));
+  // NOTE: invoices are intentionally NOT deleted here. Statutory retention
+  // (§147 AO / §14b UStG) requires keeping issued invoices ~10 years, so account
+  // deletion *archives* them via archiveUserInvoices() instead. When orders are
+  // deleted below, an archived invoice's orderId is set null (FK), snapshot kept.
   await txOrDb.delete(orders).where(eq(orders.userId, userId));
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));

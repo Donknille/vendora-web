@@ -70,6 +70,16 @@ export interface InvoiceProfileInput {
   isSmallBusiness: boolean;
 }
 
+/**
+ * Statutory retention deadline for an invoice. Under §147 Abs. 3 AO the 10-year
+ * period starts at the end of the calendar year the document was issued, so the
+ * deadline is 31 Dec of (issue year + 10). Returns a YYYY-MM-DD date string.
+ */
+export function computeRetentionUntil(issueDate: string, years = 10): string {
+  const issueYear = Number(issueDate.slice(0, 4));
+  return `${issueYear + years}-12-31`;
+}
+
 /** Sum line items and add shipping — pure integer-cent arithmetic. */
 export function computeInvoiceTotals(
   items: InvoiceLineItem[],
