@@ -3,7 +3,7 @@ import { getAuthUserId } from "@/lib/server/auth";
 import { getUser, getSubscriptionStatus } from "@/lib/server/storage";
 import { db } from "@/lib/server/db";
 import {
-  orders, orderItems, marketEvents, marketSales,
+  orders, orderItems, customers, marketEvents, marketSales,
   expenses, companyProfiles, invoiceCounters,
 } from "@/lib/server/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -151,6 +151,10 @@ export async function POST(request: Request) {
         await tx.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
       }
       await tx.delete(orders).where(eq(orders.userId, userId));
+      // Drop the stale customer master set so restore stays consistent. It is
+      // rebuilt as the user next creates/edits orders (imported orders keep their
+      // address snapshot; customerId is left null). Invoices are intentionally kept.
+      await tx.delete(customers).where(eq(customers.userId, userId));
       await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
       await tx.delete(expenses).where(eq(expenses.userId, userId));
       await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useOrders, useUpdateOrder } from "@/lib/hooks/useOrders";
+import { useOrders, useUpdateOrder, useCustomers } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payments";
@@ -22,6 +22,7 @@ export default function EditOrderPage() {
   const id = params.id as string;
 
   const { data: orders, isLoading } = useOrders();
+  const { data: customers } = useCustomers();
   const updateOrder = useUpdateOrder();
 
   const [customerName, setCustomerName] = useState("");
@@ -74,6 +75,19 @@ export default function EditOrderPage() {
     }
   }, [order, initialized]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Pick an existing customer by name → prefill the address snapshot.
+  const handleCustomerNameChange = (value: string) => {
+    setCustomerName(value);
+    const match = customers?.find((c) => c.name === value);
+    if (match) {
+      setCustomerEmail(match.email);
+      setCustomerStreet(match.street);
+      setCustomerZip(match.zip);
+      setCustomerCity(match.city);
+      setCustomerCountry(match.country);
+    }
+  };
 
   const updateItem = (index: number, field: keyof OrderItem, value: string) => {
     setItems((prev) =>
@@ -183,11 +197,17 @@ export default function EditOrderPage() {
             </label>
             <input
               type="text"
+              list="customer-suggestions"
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onChange={(e) => handleCustomerNameChange(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               placeholder={t.orders.customerName}
             />
+            <datalist id="customer-suggestions">
+              {Array.from(new Set((customers ?? []).map((c) => c.name))).map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
           </div>
 
           <div>

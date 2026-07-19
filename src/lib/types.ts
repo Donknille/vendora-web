@@ -35,6 +35,16 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  street: string;
+  zip: string;
+  city: string;
+  country: string;
+}
+
 export interface Invoice {
   id: string;
   userId: string | null;

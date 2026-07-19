@@ -14,6 +14,7 @@ import {
   users,
   orders,
   orderItems,
+  customers,
   marketEvents,
   marketSales,
   expenses,
@@ -156,10 +157,21 @@ export async function createOrder(
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
 
+  // Link (or create) the customer master record for autocomplete.
+  const customerId = await upsertCustomerFromOrder(userId, {
+    name: data.customerName,
+    email: data.customerEmail,
+    street: data.customerStreet,
+    zip: data.customerZip,
+    city: data.customerCity,
+    country: data.customerCountry || "",
+  });
+
   const [order] = await db
     .insert(orders)
     .values({
       userId,
+      customerId,
       customerName: data.customerName,
       customerEmail: data.customerEmail,
       customerStreet: data.customerStreet,
@@ -258,6 +270,25 @@ export async function updateOrder(
     dbUpdates.paidAt = new Date().toISOString().slice(0, 10);
   }
 
+  // Re-link the customer master record when the recipient snapshot changes.
+  if (
+    fields.customerName !== undefined ||
+    fields.customerEmail !== undefined ||
+    fields.customerStreet !== undefined ||
+    fields.customerZip !== undefined ||
+    fields.customerCity !== undefined ||
+    fields.customerCountry !== undefined
+  ) {
+    dbUpdates.customerId = await upsertCustomerFromOrder(userId, {
+      name: fields.customerName ?? existing.customerName,
+      email: fields.customerEmail ?? existing.customerEmail,
+      street: fields.customerStreet ?? existing.customerStreet,
+      zip: fields.customerZip ?? existing.customerZip,
+      city: fields.customerCity ?? existing.customerCity,
+      country: fields.customerCountry ?? existing.customerCountry,
+    });
+  }
+
   // Wrap item replacement + order update in a transaction to prevent data loss
   await db.transaction(async (tx) => {
     if (newItems) {
@@ -287,6 +318,78 @@ export async function updateOrder(
 export async function deleteOrder(userId: string, id: string): Promise<boolean> {
   const [deleted] = await db.delete(orders).where(and(eq(orders.id, id), eq(orders.userId, userId))).returning({ id: orders.id });
   return !!deleted;
+}
+
+// ── Customers ──────────────────────────────────────────────
+
+export interface CustomerResponse {
+  id: string;
+  name: string;
+  email: string;
+  street: string;
+  zip: string;
+  city: string;
+  country: string;
+}
+
+export async function getCustomers(userId: string): Promise<CustomerResponse[]> {
+  return db
+    .select({
+      id: customers.id,
+      name: customers.name,
+      email: customers.email,
+      street: customers.street,
+      zip: customers.zip,
+      city: customers.city,
+      country: customers.country,
+    })
+    .from(customers)
+    .where(eq(customers.userId, userId))
+    .orderBy(sql`${customers.updatedAt} DESC`)
+    .limit(200);
+}
+
+type CustomerFields = { name: string; email: string; street: string; zip: string; city: string; country: string };
+
+/**
+ * Find or create the customer master record matching an order's recipient
+ * snapshot; returns the customer id (or null for an empty recipient). Exact-match
+ * dedup keeps it predictable — a changed address just yields a new customer row.
+ */
+async function upsertCustomerFromOrder(
+  userId: string,
+  r: CustomerFields,
+  txOrDb: Pick<typeof db, "select" | "insert"> = db
+): Promise<string | null> {
+  if (!r.name.trim()) return null;
+  const [existing] = await txOrDb
+    .select({ id: customers.id })
+    .from(customers)
+    .where(
+      and(
+        eq(customers.userId, userId),
+        eq(customers.name, r.name),
+        eq(customers.email, r.email),
+        eq(customers.street, r.street),
+        eq(customers.zip, r.zip),
+        eq(customers.city, r.city),
+        eq(customers.country, r.country)
+      )
+    );
+  if (existing) return existing.id;
+  const [created] = await txOrDb
+    .insert(customers)
+    .values({
+      userId,
+      name: r.name,
+      email: r.email,
+      street: r.street,
+      zip: r.zip,
+      city: r.city,
+      country: r.country,
+    })
+    .returning({ id: customers.id });
+  return created.id;
 }
 
 // ── Markets ────────────────────────────────────────────────
@@ -823,6 +926,7 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   // deletion *archives* them via archiveUserInvoices() instead. When orders are
   // deleted below, an archived invoice's orderId is set null (FK), snapshot kept.
   await txOrDb.delete(orders).where(eq(orders.userId, userId));
+  await txOrDb.delete(customers).where(eq(customers.userId, userId));
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
   await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));

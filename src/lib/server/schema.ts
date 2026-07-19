@@ -53,6 +53,9 @@ export const orders = pgTable("orders", {
   userId: varchar("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  // Optional link to the customer master record; the address fields below stay a
+  // snapshot so the order is unaffected if the customer is later edited/deleted.
+  customerId: varchar("customer_id").references(() => customers.id, { onDelete: "set null" }),
   customerName: text("customer_name").notNull().default(""),
   customerEmail: text("customer_email").notNull().default(""),
   customerStreet: text("customer_street").notNull().default(""),
@@ -110,6 +113,31 @@ export const orderItems = pgTable("order_items", {
 ]);
 
 export type SelectOrderItem = typeof orderItems.$inferSelect;
+
+// ============================================================
+// Customers — per-user master record, fed from order recipients.
+// Powers autocomplete in the order form; orders keep their own address snapshot.
+// ============================================================
+export const customers = pgTable("customers", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default(""),
+  email: text("email").notNull().default(""),
+  street: text("street").notNull().default(""),
+  zip: text("zip").notNull().default(""),
+  city: text("city").notNull().default(""),
+  country: text("country").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("idx_customers_user_id").on(t.userId),
+]);
+
+export type SelectCustomer = typeof customers.$inferSelect;
 
 // ============================================================
 // Market Events
