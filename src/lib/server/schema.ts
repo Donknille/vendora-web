@@ -181,6 +181,10 @@ export const marketSales = pgTable("market_sales", {
   marketId: varchar("market_id")
     .notNull()
     .references(() => marketEvents.id, { onDelete: "cascade" }),
+  // Client-generated idempotency key for the offline sale queue (Phase 3.2).
+  // Null for server-created/legacy rows. Scoped-unique per user so a queued sale
+  // synced more than once (retry, multi-device) is inserted exactly once.
+  clientId: text("client_id"),
   description: text("description").notNull().default(""),
   amount: integer("amount").notNull().default(0), // cents
   quantity: integer("quantity").notNull().default(1),
@@ -188,6 +192,7 @@ export const marketSales = pgTable("market_sales", {
 }, (t) => [
   index("idx_market_sales_user_id").on(t.userId),
   index("idx_market_sales_market_id").on(t.marketId),
+  uniqueIndex("uq_market_sales_user_client").on(t.userId, t.clientId),
 ]);
 
 export type SelectMarketSale = typeof marketSales.$inferSelect;

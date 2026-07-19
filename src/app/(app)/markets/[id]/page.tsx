@@ -11,13 +11,15 @@ import {
   MapPin,
   Calendar,
   Copy,
+  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 import { useMarkets, useDeleteMarket, useCopyMarket } from "@/lib/hooks/useMarkets";
 import {
   useMarketSales,
-  useCreateMarketSale,
   useDeleteMarketSale,
 } from "@/lib/hooks/useMarketSales";
+import { useOfflineSales } from "@/lib/offline/useOfflineSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
@@ -32,9 +34,9 @@ export default function MarketDetailPage() {
   const { data: markets, isLoading } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
   const deleteMarket = useDeleteMarket();
-  const createSale = useCreateMarketSale();
   const deleteSale = useDeleteMarketSale();
   const copyMarket = useCopyMarket();
+  const { pending, syncing, recordSale } = useOfflineSales(marketId);
 
   const [error, setError] = useState("");
 
@@ -68,16 +70,29 @@ export default function MarketDetailPage() {
 
   const standFee = Number(market.standFee) || 0;
   const travelCost = Number(market.travelCost) || 0;
-  const totalSales = (sales || []).reduce(
+
+  // Sales the server already knows about carry a clientId; drop those from the
+  // pending queue view so a freshly-synced sale isn't shown (and counted) twice.
+  const serverClientIds = new Set(
+    (sales ?? []).map((s) => s.clientId).filter(Boolean) as string[]
+  );
+  const unsyncedPending = pending.filter((p) => !serverClientIds.has(p.clientId));
+
+  const serverTotal = (sales || []).reduce(
     (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
     0
   );
+  const pendingTotal = unsyncedPending.reduce(
+    (sum, p) => sum + p.amount * p.quantity,
+    0
+  );
+  const totalSales = serverTotal + pendingTotal;
   const profit = totalSales - standFee - travelCost;
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");
     try {
-      await createSale.mutateAsync({ marketId, description: item.name, amount: item.price, quantity: 1 });
+      await recordSale({ description: item.name, amount: item.price, quantity: 1 });
     } catch {
       setError("Verkauf konnte nicht gespeichert werden.");
     }
@@ -89,8 +104,7 @@ export default function MarketDetailPage() {
     if (!saleDescription.trim() || !saleAmount.trim()) return;
 
     try {
-      await createSale.mutateAsync({
-        marketId,
+      await recordSale({
         description: saleDescription.trim(),
         amount: parseAmount(saleAmount),
         quantity: parseInt(saleQuantity, 10) || 1,
@@ -133,9 +147,13 @@ export default function MarketDetailPage() {
   };
 
   const getSoldCount = (itemName: string, itemPrice: number) => {
-    return (sales ?? [])
+    const serverCount = (sales ?? [])
       .filter((s) => s.description === itemName && Number(s.amount) === itemPrice)
       .reduce((sum, s) => sum + Number(s.quantity), 0);
+    const pendingCountForItem = unsyncedPending
+      .filter((p) => p.description === itemName && p.amount === itemPrice)
+      .reduce((sum, p) => sum + p.quantity, 0);
+    return serverCount + pendingCountForItem;
   };
 
   const inputClass =
@@ -234,7 +252,6 @@ export default function MarketDetailPage() {
                 <button
                   key={idx}
                   onClick={() => handleQuickSale(item)}
-                  disabled={createSale.isPending}
                   className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <span className="text-sm font-semibold text-primary truncate w-full text-center">
@@ -258,9 +275,27 @@ export default function MarketDetailPage() {
       {/* Sales Section */}
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
-            {market.quickItems && market.quickItems.length > 0 ? t.markets.otherSale : t.markets.sales}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium text-faint uppercase tracking-wider">
+              {market.quickItems && market.quickItems.length > 0 ? t.markets.otherSale : t.markets.sales}
+            </h3>
+            {syncing ? (
+              <span className="inline-flex items-center gap-1 text-xs text-muted">
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                {language === "de" ? "Synchronisiere…" : "Syncing…"}
+              </span>
+            ) : unsyncedPending.length > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
+                <RefreshCw className="h-3 w-3" />
+                {unsyncedPending.length} {language === "de" ? "ausstehend" : "pending"}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-muted">
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                {language === "de" ? "Synchronisiert" : "Synced"}
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setShowAddSale(!showAddSale)}
             className="rounded-lg p-1.5 text-brand-primary hover:bg-elevated transition-colors"
@@ -278,8 +313,8 @@ export default function MarketDetailPage() {
               <input type="number" min="1" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
-              <button type="submit" disabled={createSale.isPending} className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">
-                {createSale.isPending ? t.common.loading : t.common.save}
+              <button type="submit" className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">
+                {t.common.save}
               </button>
               <button type="button" onClick={() => setShowAddSale(false)} className="rounded-lg px-4 py-2 text-sm text-faint hover:text-secondary hover:bg-elevated transition-colors">
                 {t.common.cancel}
@@ -289,11 +324,33 @@ export default function MarketDetailPage() {
         )}
 
         {/* Sales List */}
-        {!sales || sales.length === 0 ? (
+        {(!sales || sales.length === 0) && unsyncedPending.length === 0 ? (
           <p className="text-sm text-muted">{t.markets.noSales}</p>
         ) : (
           <div className="space-y-2">
-            {sales.map((sale) => (
+            {/* Unsynced offline sales (still in the local queue) */}
+            {unsyncedPending.map((p) => (
+              <div key={p.clientId} className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-secondary truncate">{p.description}</p>
+                  <p className="text-xs text-muted">
+                    {p.quantity > 1
+                      ? `${p.quantity} × ${formatCurrency(p.amount)}`
+                      : formatCurrency(p.amount)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-amber-600">
+                    {formatCurrency(p.amount * p.quantity)}
+                  </span>
+                  <RefreshCw
+                    className="h-4 w-4 text-amber-500"
+                    aria-label={language === "de" ? "wird synchronisiert" : "syncing"}
+                  />
+                </div>
+              </div>
+            ))}
+            {(sales ?? []).map((sale) => (
               <div key={sale.id} className="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-secondary truncate">{sale.description}</p>
@@ -317,7 +374,7 @@ export default function MarketDetailPage() {
         )}
 
         {/* Sales Total */}
-        {sales && sales.length > 0 && (
+        {((sales && sales.length > 0) || unsyncedPending.length > 0) && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
             <span className="text-green-600">{formatCurrency(totalSales)}</span>

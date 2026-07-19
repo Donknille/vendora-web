@@ -96,6 +96,7 @@ export interface MarketSale {
   id: string;
   userId: string;
   marketId: string;
+  clientId: string | null;
   description: string;
   amount: number;
   quantity: number;

@@ -558,6 +558,62 @@ export async function deleteMarketSale(userId: string, id: string): Promise<bool
   return !!deleted;
 }
 
+export interface MarketSaleBatchEntry {
+  clientId: string;
+  description: string;
+  amount: number;
+  quantity: number;
+  createdAt?: string; // ISO string; the moment the sale was recorded (offline)
+}
+
+/**
+ * Idempotently persists a batch of offline-queued sales (Phase 3.2). Each entry
+ * carries a client-generated `clientId`; the scoped-unique index
+ * (user_id, client_id) makes a re-synced sale insert exactly once. Returns the
+ * authoritative server rows for every requested clientId (freshly inserted AND
+ * pre-existing) so the client can clear its queue and reconcile.
+ */
+export async function upsertMarketSalesBatch(
+  userId: string,
+  marketId: string,
+  entries: MarketSaleBatchEntry[]
+): Promise<MarketSaleResponse[]> {
+  if (entries.length === 0) return [];
+
+  // Dedup within the batch: a single INSERT ... ON CONFLICT DO NOTHING cannot
+  // touch the same (user_id, client_id) twice, so collapse duplicate clientIds.
+  const byClientId = new Map<string, MarketSaleBatchEntry>();
+  for (const e of entries) if (!byClientId.has(e.clientId)) byClientId.set(e.clientId, e);
+
+  const values = [...byClientId.values()].map((e) => ({
+    userId,
+    marketId,
+    clientId: e.clientId,
+    description: e.description,
+    amount: e.amount,
+    quantity: e.quantity,
+    createdAt: e.createdAt ? new Date(e.createdAt) : new Date(),
+  }));
+
+  await db
+    .insert(marketSales)
+    .values(values)
+    .onConflictDoNothing({ target: [marketSales.userId, marketSales.clientId] });
+
+  const clientIds = [...byClientId.keys()];
+  const rows = await db
+    .select()
+    .from(marketSales)
+    .where(
+      and(
+        eq(marketSales.userId, userId),
+        eq(marketSales.marketId, marketId),
+        inArray(marketSales.clientId, clientIds)
+      )
+    );
+  return rows.map(toSaleResponse);
+}
+
 // ── Expenses ───────────────────────────────────────────────
 
 function toExpenseResponse(e: SelectExpense): ExpenseResponse {
