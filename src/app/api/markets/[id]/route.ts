@@ -15,7 +15,8 @@ const updateMarketSchema = z.object({
   standFee: z.number().int().min(0).max(9999999).optional(), // cents
   travelCost: z.number().int().min(0).max(9999999).optional(), // cents
   notes: z.string().max(5000).optional(),
-  status: z.string().max(50).optional(),
+  status: z.enum(["open", "applied", "confirmed", "completed", "cancelled"]).optional(),
+  applicationDeadline: z.string().max(50).nullish(),
   quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 

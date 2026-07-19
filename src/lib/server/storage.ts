@@ -440,7 +440,7 @@ async function syncMarketExpenses(
 
 export async function createMarket(
   userId: string,
-  data: { name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status?: string; quickItems?: { name: string; price: number }[] }
+  data: { name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status?: string; applicationDeadline?: string | null; quickItems?: { name: string; price: number }[] }
 ): Promise<MarketEventResponse> {
   const market = await db.transaction(async (tx) => {
     const [m] = await tx
@@ -454,6 +454,7 @@ export async function createMarket(
         travelCost: data.travelCost,
         notes: data.notes,
         status: data.status || "open",
+        applicationDeadline: data.applicationDeadline || null,
         quickItems: data.quickItems,
         createdAt: new Date(),
       })
@@ -472,7 +473,7 @@ export async function createMarket(
 export async function updateMarket(
   userId: string,
   id: string,
-  updates: Partial<{ name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status: string; quickItems: { name: string; price: number }[] }>
+  updates: Partial<{ name: string; date: string; location: string; standFee: number; travelCost: number; notes: string; status: string; applicationDeadline: string | null; quickItems: { name: string; price: number }[] }>
 ): Promise<MarketEventResponse | undefined> {
   const existing = await getMarket(userId, id);
   if (!existing) return undefined;
@@ -485,6 +486,7 @@ export async function updateMarket(
   if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
+  if (updates.applicationDeadline !== undefined) dbUpdates.applicationDeadline = updates.applicationDeadline || null;
   if (updates.quickItems !== undefined) dbUpdates.quickItems = updates.quickItems;
 
   await db.transaction(async (tx) => {

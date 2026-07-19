@@ -20,10 +20,13 @@ import {
 import { useMarkets, useDeleteMarket, useCopyMarket } from "@/lib/hooks/useMarkets";
 import {
   useMarketSales,
+  useAllMarketSales,
   useDeleteMarketSale,
 } from "@/lib/hooks/useMarketSales";
 import { useOfflineSales } from "@/lib/offline/useOfflineSales";
 import { computeDayClosing } from "@/lib/marketDay";
+import { computeYearComparison } from "@/lib/marketCalendar";
+import type { MarketSale } from "@/lib/types";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
@@ -38,6 +41,7 @@ export default function MarketDetailPage() {
 
   const { data: markets, isLoading } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
+  const { data: allSales } = useAllMarketSales();
   const deleteMarket = useDeleteMarket();
   const deleteSale = useDeleteMarketSale();
   const copyMarket = useCopyMarket();
@@ -110,6 +114,23 @@ export default function MarketDetailPage() {
     ],
     standFee,
     travelCost
+  );
+
+  // Year-over-year comparison: markets that share this market's name form a
+  // "series" (created via "Markt kopieren"). Compare their revenue/profit by year.
+  const sameNameMarkets = (markets ?? []).filter((m) => m.name === market.name);
+  const salesByMarketId: Record<string, MarketSale[]> = {};
+  for (const s of allSales ?? []) {
+    (salesByMarketId[s.marketId] ??= []).push(s);
+  }
+  const yearStats = computeYearComparison(
+    sameNameMarkets.map((m) => ({
+      id: m.id,
+      date: m.date,
+      standFee: Number(m.standFee) || 0,
+      travelCost: Number(m.travelCost) || 0,
+    })),
+    salesByMarketId
   );
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
@@ -455,6 +476,38 @@ export default function MarketDetailPage() {
           </div>
         </div>
       </Card>
+
+      {/* Year-over-year comparison across same-named markets */}
+      {sameNameMarkets.length > 1 && (
+        <Card>
+          <h3 className="mb-3 text-sm font-medium text-faint uppercase tracking-wider">
+            {language === "de" ? "Jahresvergleich" : "Year comparison"}
+          </h3>
+          <div className="space-y-2">
+            {yearStats.map((y) => (
+              <div
+                key={y.marketId}
+                className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                  y.marketId === marketId
+                    ? "border-brand-primary/40 bg-brand-primary/5"
+                    : "border-line bg-page"
+                }`}
+              >
+                <span className="font-medium text-secondary tabular-nums">{y.year}</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-faint">
+                    {t.markets.sales}:{" "}
+                    <span className="text-primary tabular-nums">{formatCurrency(y.sales)}</span>
+                  </span>
+                  <span className={`font-semibold tabular-nums ${y.profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+                    {formatCurrency(y.profit)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <TseNotice />
 

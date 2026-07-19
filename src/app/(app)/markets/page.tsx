@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Store, MapPin, Calendar, Search } from "lucide-react";
+import { Plus, Store, MapPin, Calendar, Search, AlarmClock } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
-import type { MarketSale } from "@/lib/types";
+import { deadlineInfo, statusLabel, statusClasses } from "@/lib/marketCalendar";
+import type { MarketEvent, MarketSale } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
@@ -38,6 +39,86 @@ export default function MarketsPage() {
       salesByMarket[mid].push(sale);
     }
   }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const renderMarketCard = (market: MarketEvent) => {
+    const marketSales = salesByMarket[market.id] || [];
+    const totalSales = marketSales.reduce(
+      (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
+      0
+    );
+    const standFee = Number(market.standFee) || 0;
+    const travelCost = Number(market.travelCost) || 0;
+    const profit = totalSales - standFee - travelCost;
+    const dl = deadlineInfo(market.applicationDeadline, today, market.status);
+
+    return (
+      <Link key={market.id} href={`/markets/${market.id}`}>
+        <Card className="hover:border-line-hover transition-colors cursor-pointer">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-primary truncate">{market.name}</h3>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusClasses(market.status)}`}>
+                  {statusLabel(market.status, language === "de")}
+                </span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-faint">
+                {market.date && (
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
+                  </span>
+                )}
+                {market.location && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {market.location}
+                  </span>
+                )}
+              </div>
+              {dl.state !== "none" && (
+                <span
+                  className={`mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ${
+                    dl.state === "overdue"
+                      ? "bg-red-500/10 text-red-500"
+                      : dl.state === "soon"
+                        ? "bg-amber-500/10 text-amber-600"
+                        : "text-faint"
+                  }`}
+                >
+                  <AlarmClock className="h-3 w-3" />
+                  {language === "de" ? "Frist" : "Deadline"}:{" "}
+                  {formatDate(market.applicationDeadline!, language === "de" ? "de-DE" : "en-US")}
+                  {dl.state === "overdue"
+                    ? language === "de" ? " (abgelaufen)" : " (passed)"
+                    : dl.days != null && dl.days <= 7
+                      ? language === "de" ? ` (in ${dl.days} T.)` : ` (in ${dl.days}d)`
+                      : ""}
+                </span>
+              )}
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-sm text-faint">
+                {t.markets.sales}: {formatCurrency(totalSales)}
+              </p>
+              <p className={`text-sm font-semibold ${profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+                {t.markets.profit}: {formatCurrency(profit)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    );
+  };
+
+  const upcoming = filteredMarkets
+    .filter((m) => (m.date || "") >= today)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  const past = filteredMarkets
+    .filter((m) => (m.date || "") < today)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
 
@@ -71,7 +152,7 @@ export default function MarketsPage() {
         </div>
       )}
 
-      {/* Markets list */}
+      {/* Markets list — grouped into upcoming and past (calendar view) */}
       {!markets || markets.length === 0 ? (
         <EmptyState
           icon={<Store className="h-12 w-12" />}
@@ -85,60 +166,23 @@ export default function MarketsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredMarkets
-            .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-            .map((market) => {
-              const marketSales = salesByMarket[market.id] || [];
-              const totalSales = marketSales.reduce(
-                (sum: number, s) =>
-                  sum + Number(s.amount) * Number(s.quantity),
-                0
-              );
-              const standFee = Number(market.standFee) || 0;
-              const travelCost = Number(market.travelCost) || 0;
-              const profit = totalSales - standFee - travelCost;
-
-              return (
-                <Link key={market.id} href={`/markets/${market.id}`}>
-                  <Card className="hover:border-line-hover transition-colors cursor-pointer">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-primary truncate">
-                          {market.name}
-                        </h3>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-faint">
-                          {market.date && (
-                            <span className="inline-flex items-center gap-1">
-                              <Calendar className="h-3.5 w-3.5" />
-                              {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
-                            </span>
-                          )}
-                          {market.location && (
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {market.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-sm text-faint">
-                          {t.markets.sales}: {formatCurrency(totalSales)}
-                        </p>
-                        <p
-                          className={`text-sm font-semibold ${
-                            profit >= 0 ? "text-green-600" : "text-brand-primary"
-                          }`}
-                        >
-                          {t.markets.profit}: {formatCurrency(profit)}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
+        <div className="space-y-6">
+          {upcoming.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-faint">
+                {language === "de" ? "Anstehend" : "Upcoming"}
+              </h2>
+              {upcoming.map(renderMarketCard)}
+            </section>
+          )}
+          {past.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-faint">
+                {language === "de" ? "Vergangen" : "Past"}
+              </h2>
+              {past.map(renderMarketCard)}
+            </section>
+          )}
         </div>
       )}
     </div>

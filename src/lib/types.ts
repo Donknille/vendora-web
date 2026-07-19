@@ -88,6 +88,7 @@ export interface MarketEvent {
   travelCost: number;
   notes: string;
   status: string | null;
+  applicationDeadline: string | null;
   quickItems: { name: string; price: number }[] | null;
   createdAt: string;
 }

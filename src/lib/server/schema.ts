@@ -156,13 +156,15 @@ export const marketEvents = pgTable("market_events", {
   travelCost: integer("travel_cost").notNull().default(0), // cents
   notes: text("notes").notNull().default(""),
   status: text("status").default("open"),
+  // Application deadline for the stall (Marktkalender, Phase 3.4).
+  applicationDeadline: date("application_deadline"),
   quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(), // price in cents
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_events_user_id").on(t.userId),
   check(
     "chk_market_events_status",
-    sql`${t.status} in ('open', 'completed', 'cancelled')`
+    sql`${t.status} in ('open', 'applied', 'confirmed', 'completed', 'cancelled')`
   ),
 ]);
 
