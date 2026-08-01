@@ -138,9 +138,13 @@ export interface AppSettings {
 }
 
 export interface SubscriptionInfo {
-  status: "trial" | "active" | "expired" | "cancelled";
-  isActive: boolean;
-  trialEndsAt: string | null;
-  subscriptionExpiresAt: string | null;
-  daysRemaining: number | null;
+  plan: "free" | "pro";
+  proActive: boolean;
+  expiresAt: string | null;
+  limits: {
+    marketsPerMonth: number | null;
+    invoicesPerMonth: number | null;
+    yearExport: boolean;
+  };
+  usage: { marketsThisMonth: number; invoicesThisMonth: number };
 }

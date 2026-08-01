@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
@@ -46,9 +46,6 @@ export async function POST(
     if (!market) {
       return NextResponse.json({ message: "Market not found" }, { status: 404 });
     }
-
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
 
     const body = await request.json();
     const outer = batchSalesSchema.safeParse(body);

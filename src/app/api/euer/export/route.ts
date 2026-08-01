@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
+import { requireYearExport } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { computeEuerReport } from "@/lib/euerReport";
 import { buildEuerCsv, buildEuerPdf, type EuerExportMeta } from "@/lib/server/euerExport";
@@ -20,6 +21,10 @@ export async function GET(request: Request) {
         ? parsedYear
         : now.getFullYear();
     const format = searchParams.get("format") === "pdf" ? "pdf" : "csv";
+
+    // Export is a PRO feature (Phase 4.1); Phase 4.3 adds a per-year one-time unlock.
+    const exportGate = await requireYearExport(userId, year);
+    if (exportGate) return exportGate;
 
     const [orders, markets, marketSales, expenses, profile] = await Promise.all([
       storage.getOrders(userId),

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/server/admin";
 import { db } from "@/lib/server/db";
 import { users } from "@/lib/server/schema";
 import { sql } from "drizzle-orm";
+import { getEffectivePlan } from "@/lib/plan";
 
 export async function GET() {
   try {
@@ -15,8 +16,7 @@ export async function GET() {
         id: users.id,
         email: users.email,
         createdAt: users.createdAt,
-        subscriptionStatus: users.subscriptionStatus,
-        trialEndsAt: users.trialEndsAt,
+        plan: users.plan,
         subscriptionExpiresAt: users.subscriptionExpiresAt,
         isBlocked: users.isBlocked,
         orderCount: sql<number>`(SELECT count(*) FROM orders WHERE orders.user_id = "users"."id")`,
@@ -30,8 +30,7 @@ export async function GET() {
       id: user.id,
       email: user.email,
       createdAt: user.createdAt,
-      subscriptionStatus: user.subscriptionStatus,
-      trialEndsAt: user.trialEndsAt?.toISOString() ?? null,
+      plan: getEffectivePlan(user),
       subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
       isBlocked: user.isBlocked ?? false,
       stats: {

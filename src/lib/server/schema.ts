@@ -24,7 +24,10 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey(), // == Better Auth user.id
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  // Subscription fields
+  // Access plan (Phase 4). 'free' = default, limited; 'pro' = subscription lifts
+  // limits (valid while subscriptionExpiresAt is in the future).
+  plan: text("plan").notNull().default("free"),
+  // Subscription fields (drive PRO validity + Stripe lifecycle tracking).
   subscriptionStatus: text("subscription_status").notNull().default("trial"),
   trialEndsAt: timestamp("trial_ends_at"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
@@ -39,6 +42,7 @@ export const users = pgTable("users", {
     "chk_users_subscription_status",
     sql`${t.subscriptionStatus} in ('trial', 'active', 'expired', 'cancelled')`
   ),
+  check("chk_users_plan", sql`${t.plan} in ('free', 'pro')`),
 ]);
 
 export type User = typeof users.$inferSelect;

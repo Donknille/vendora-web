@@ -48,17 +48,13 @@ export async function ensureUserRecord(id: string, email: string) {
     return null;
   }
 
-  // Set trial period: 6 weeks (42 days) from now
-  const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 42);
-
+  // Phase 4.1: new accounts start on the FREE plan (no trial countdown).
   const [created] = await db
     .insert(users)
     .values({
       id,
       email,
-      subscriptionStatus: "trial",
-      trialEndsAt,
+      plan: "free",
     })
     .returning();
   return created;

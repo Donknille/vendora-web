@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { getUser, getSubscriptionStatus } from "@/lib/server/storage";
+import { getUser } from "@/lib/server/storage";
+import { getEffectivePlan } from "@/lib/plan";
 import { db } from "@/lib/server/db";
 import {
   orders, orderItems, customers, marketEvents, marketSales,
@@ -116,15 +117,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Only paying subscribers can import — prevents trial-abuse via account-hopping
+    // Import (bulk restore) bypasses the free monthly limits, so it is a PRO
+    // feature — also prevents free-account-hopping to sidestep limits.
     const user = await getUser(userId);
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
-    const sub = getSubscriptionStatus(user);
-    if (sub.status !== "active") {
+    if (getEffectivePlan(user) !== "pro") {
       return NextResponse.json(
-        { message: "Import requires an active subscription", code: "SUBSCRIPTION_REQUIRED" },
+        { message: "Der Import ist im Pro-Plan enthalten.", code: "PRO_REQUIRED" },
         { status: 403 }
       );
     }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
 import { z } from "zod";
@@ -52,9 +52,6 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
 
     const body = await request.json();
     const parsed = createOrderSchema.safeParse(body);

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Receipt, Plus, Trash2, X } from "lucide-react";
 import { useExpenses, useCreateExpense, useDeleteExpense } from "@/lib/hooks/useExpenses";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { useSubscription } from "@/lib/hooks/useSubscription";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { EUER_CATEGORIES, euerLabel, isEuerCategory, type EuerCategory } from "@/lib/euer";
 import { Card } from "@/components/ui/Card";
@@ -28,7 +27,6 @@ const categoryColors: Record<EuerCategory, string> = {
 export default function ExpensesPage() {
   const { t, language } = useLanguage();
   const { data: expenses, isLoading } = useExpenses();
-  const { data: sub } = useSubscription();
   const createExpense = useCreateExpense();
   const deleteExpense = useDeleteExpense();
 
@@ -44,8 +42,6 @@ export default function ExpensesPage() {
 
   // Delete confirm state
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const isSubscriptionInactive = sub && !sub.isActive;
 
   const totalExpenses = (expenses ?? []).reduce(
     (sum: number, e) => sum + (Number(e.amount) || 0),
@@ -94,24 +90,22 @@ export default function ExpensesPage() {
         <h1 className="text-2xl font-bold text-primary">
           {t.expenses.title}
         </h1>
-        {!isSubscriptionInactive && (
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-          >
-            {showForm ? (
-              <>
-                <X className="h-4 w-4" />
-                {t.expenses.cancel}
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                {t.expenses.newExpense}
-              </>
-            )}
-          </button>
-        )}
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+        >
+          {showForm ? (
+            <>
+              <X className="h-4 w-4" />
+              {t.expenses.cancel}
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" />
+              {t.expenses.newExpense}
+            </>
+          )}
+        </button>
       </div>
 
       <SubscriptionBanner />

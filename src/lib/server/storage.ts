@@ -1,7 +1,15 @@
 import "server-only";
-import { eq, and, sql, inArray, isNull } from "drizzle-orm";
+import { eq, and, sql, inArray, isNull, gte, lt, count } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
+import {
+  getEffectivePlan,
+  limitsFor,
+  monthKey,
+  monthRange,
+  type Plan,
+  type PlanLimits,
+} from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
@@ -57,12 +65,13 @@ export interface ExpenseResponse extends Omit<SelectExpense, "createdAt"> {
 
 export type CompanyProfileResponse = SelectCompanyProfile;
 
+// Plan + limits + current usage, returned by /api/subscription (Phase 4.1).
 export interface SubscriptionInfo {
-  status: "trial" | "active" | "expired" | "cancelled";
-  isActive: boolean;
-  trialEndsAt: string | null;
-  subscriptionExpiresAt: string | null;
-  daysRemaining: number | null;
+  plan: Plan;
+  proActive: boolean;
+  expiresAt: string | null; // PRO subscription paid-through date, if any
+  limits: PlanLimits;
+  usage: { marketsThisMonth: number; invoicesThisMonth: number };
 }
 
 // ── Users ──────────────────────────────────────────────────
@@ -997,49 +1006,78 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
 
 export async function updateSubscription(
   userId: string,
-  data: Partial<{ subscriptionStatus: string; trialEndsAt: Date; subscriptionExpiresAt: Date; stripeCustomerId: string; stripeSubscriptionId: string }>
+  data: Partial<{ plan: Plan; subscriptionStatus: string; trialEndsAt: Date; subscriptionExpiresAt: Date; stripeCustomerId: string; stripeSubscriptionId: string }>
 ): Promise<void> {
   const updates: Record<string, unknown> = {};
+  if (data.plan !== undefined) updates.plan = data.plan;
   if (data.subscriptionStatus !== undefined) updates.subscriptionStatus = data.subscriptionStatus;
   if (data.trialEndsAt !== undefined) updates.trialEndsAt = data.trialEndsAt;
   if (data.subscriptionExpiresAt !== undefined) updates.subscriptionExpiresAt = data.subscriptionExpiresAt;
   if (data.stripeCustomerId !== undefined) updates.stripeCustomerId = data.stripeCustomerId;
   if (data.stripeSubscriptionId !== undefined) updates.stripeSubscriptionId = data.stripeSubscriptionId;
 
-  await db.update(users).set(updates).where(eq(users.id, userId));
+  if (Object.keys(updates).length > 0) {
+    await db.update(users).set(updates).where(eq(users.id, userId));
+  }
 }
 
-export function getSubscriptionStatus(user: User): SubscriptionInfo {
-  const now = new Date();
-  const status = (user.subscriptionStatus || "trial") as SubscriptionInfo["status"];
+/** Count a user's markets whose event date falls in the given "YYYY-MM" month. */
+export async function countMarketsInMonth(userId: string, key: string): Promise<number> {
+  const { start, end } = monthRange(key);
+  const [row] = await db
+    .select({ n: count() })
+    .from(marketEvents)
+    .where(
+      and(
+        eq(marketEvents.userId, userId),
+        gte(marketEvents.date, start),
+        lt(marketEvents.date, end)
+      )
+    );
+  return row?.n ?? 0;
+}
 
-  if (status === "active" && user.subscriptionExpiresAt) {
-    const expiresAt = new Date(user.subscriptionExpiresAt);
-    if (expiresAt > now) {
-      const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return { status: "active", isActive: true, trialEndsAt: user.trialEndsAt?.toISOString() ?? null, subscriptionExpiresAt: expiresAt.toISOString(), daysRemaining };
-    }
-    return { status: "expired", isActive: false, trialEndsAt: user.trialEndsAt?.toISOString() ?? null, subscriptionExpiresAt: expiresAt.toISOString(), daysRemaining: 0 };
-  }
+/**
+ * Count a user's issued invoices (type 'invoice', not cancellations) whose issue
+ * date falls in the given "YYYY-MM" month. Archived invoices still count.
+ */
+export async function countInvoicesInMonth(userId: string, key: string): Promise<number> {
+  const { start, end } = monthRange(key);
+  const [row] = await db
+    .select({ n: count() })
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.userId, userId),
+        eq(invoices.type, "invoice"),
+        gte(invoices.issueDate, start),
+        lt(invoices.issueDate, end)
+      )
+    );
+  return row?.n ?? 0;
+}
 
-  if (status === "trial" && user.trialEndsAt) {
-    const trialEnd = new Date(user.trialEndsAt);
-    if (trialEnd > now) {
-      const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return { status: "trial", isActive: true, trialEndsAt: trialEnd.toISOString(), subscriptionExpiresAt: null, daysRemaining };
-    }
-    return { status: "expired", isActive: false, trialEndsAt: trialEnd.toISOString(), subscriptionExpiresAt: null, daysRemaining: 0 };
-  }
+/** Effective plan for a user (PRO only while the subscription is paid through). */
+export async function getUserPlan(userId: string): Promise<Plan> {
+  const user = await getUser(userId);
+  return user ? getEffectivePlan(user) : "free";
+}
 
-  if (status === "trial" && !user.trialEndsAt) {
-    return { status: "expired", isActive: false, trialEndsAt: null, subscriptionExpiresAt: null, daysRemaining: 0 };
-  }
-
+/** Plan + limits + current-month usage for the /api/subscription endpoint. */
+export async function getPlanInfo(userId: string): Promise<SubscriptionInfo | undefined> {
+  const user = await getUser(userId);
+  if (!user) return undefined;
+  const plan = getEffectivePlan(user);
+  const key = monthKey(new Date());
+  const [marketsThisMonth, invoicesThisMonth] = await Promise.all([
+    countMarketsInMonth(userId, key),
+    countInvoicesInMonth(userId, key),
+  ]);
   return {
-    status: status === "cancelled" ? "cancelled" : "expired",
-    isActive: false,
-    trialEndsAt: user.trialEndsAt?.toISOString() ?? null,
-    subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
-    daysRemaining: 0,
+    plan,
+    proActive: plan === "pro",
+    expiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
+    limits: limitsFor(plan),
+    usage: { marketsThisMonth, invoicesThisMonth },
   };
 }

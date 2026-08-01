@@ -11,15 +11,10 @@ interface UserDetail {
   id: string;
   email: string;
   createdAt: string;
+  plan: "free" | "pro";
   subscriptionStatus: string;
-  trialEndsAt: string | null;
   subscriptionExpiresAt: string | null;
   isBlocked: boolean;
-  subscription: {
-    status: string;
-    isActive: boolean;
-    daysRemaining: number | null;
-  };
 }
 
 interface UserStats {
@@ -28,18 +23,14 @@ interface UserStats {
   expenses: number;
 }
 
-const statusLabels: Record<string, string> = {
-  trial: "Testphase",
-  active: "Aktives Abo",
-  expired: "Abgelaufen",
-  cancelled: "Gekündigt",
+const planLabels: Record<string, string> = {
+  free: "Free",
+  pro: "Pro",
 };
 
-const statusColors: Record<string, string> = {
-  trial: "text-yellow-500",
-  active: "text-green-600",
-  expired: "text-brand-primary",
-  cancelled: "text-brand-primary",
+const planColors: Record<string, string> = {
+  free: "text-secondary",
+  pro: "text-green-600",
 };
 
 export default function AdminUserDetailPage() {
@@ -134,12 +125,12 @@ export default function AdminUserDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <CreditCardIcon status={user.subscriptionStatus} />
-            <span className={statusColors[user.subscriptionStatus] || "text-muted"}>
-              {statusLabels[user.subscriptionStatus] || user.subscriptionStatus}
-              {user.subscription.daysRemaining !== null && user.subscription.daysRemaining > 0 && (
+            <PlanIcon plan={user.plan} />
+            <span className={planColors[user.plan] || "text-muted"}>
+              {planLabels[user.plan] || user.plan}
+              {user.plan === "pro" && user.subscriptionExpiresAt && (
                 <span className="text-faint ml-1">
-                  (noch {user.subscription.daysRemaining} Tage)
+                  (bis {new Date(user.subscriptionExpiresAt).toLocaleDateString("de-DE")})
                 </span>
               )}
             </span>
@@ -185,26 +176,24 @@ export default function AdminUserDetailPage() {
         <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">Aktionen</h2>
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => handleAction({ action: "extend_trial", days: 14 })}
-            disabled={actionLoading}
-            className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Trial +14 Tage
-          </button>
-
-          <button
-            onClick={() => {
-              const date = new Date();
-              date.setFullYear(date.getFullYear() + 1);
-              handleAction({ action: "activate_subscription", expiresAt: date.toISOString() });
-            }}
+            onClick={() => handleAction({ action: "grant_pro", days: 365 })}
             disabled={actionLoading}
             className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             <CheckCircle className="h-4 w-4" />
-            Abo aktivieren (1 Jahr)
+            Pro freischalten (1 Jahr)
           </button>
+
+          {user.plan === "pro" && (
+            <button
+              onClick={() => handleAction({ action: "revoke_pro" })}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+            >
+              <Plus className="h-4 w-4 rotate-45" />
+              Pro entziehen
+            </button>
+          )}
 
           {user.isBlocked ? (
             <button
@@ -241,8 +230,7 @@ export default function AdminUserDetailPage() {
   );
 }
 
-function CreditCardIcon({ status }: { status: string }) {
-  if (status === "trial") return <Clock className="h-4 w-4 text-yellow-500" />;
-  if (status === "active") return <CheckCircle className="h-4 w-4 text-green-600" />;
-  return <Ban className="h-4 w-4 text-brand-primary" />;
+function PlanIcon({ plan }: { plan: string }) {
+  if (plan === "pro") return <CheckCircle className="h-4 w-4 text-green-600" />;
+  return <Clock className="h-4 w-4 text-muted" />;
 }

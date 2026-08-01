@@ -117,21 +117,22 @@ describe("2.2 — escapeHtml prevents XSS", () => {
   });
 });
 
-// ── 2.3 Subscription gates for copy and import ────────────
+// ── 2.3 Plan gates for copy and import (updated in Phase 4.1) ─────────
 
-describe("2.3 — Subscription gates enforcement", () => {
-  it("copy endpoint requires subscription check", async () => {
+describe("2.3 — Plan-limit gates enforcement", () => {
+  it("copy endpoint enforces the market quota", async () => {
     const fs = await import("fs");
     const source = fs.readFileSync("src/app/api/markets/[id]/copy/route.ts", "utf-8");
-    expect(source).toContain("requireActiveSubscription");
+    // A copy is a new market, so it must go through the monthly market quota.
+    expect(source).toContain("requireMarketQuota");
   });
 
-  it("migrate endpoint requires active subscription (not trial)", async () => {
+  it("migrate endpoint requires PRO (import bypasses free limits)", async () => {
     const fs = await import("fs");
     const source = fs.readFileSync("src/app/api/migrate/route.ts", "utf-8");
-    expect(source).toContain("SUBSCRIPTION_REQUIRED");
-    // Import is restricted to active subscribers only — stricter than trial
-    expect(source).toMatch(/sub\.status\s*!==\s*"active"/);
+    expect(source).toContain("PRO_REQUIRED");
+    // Import is a PRO feature — gated on the effective plan, not a trial/active flag.
+    expect(source).toMatch(/getEffectivePlan\(user\)\s*!==\s*"pro"/);
   });
 
   it("migrate schema enforces resource count limits", async () => {

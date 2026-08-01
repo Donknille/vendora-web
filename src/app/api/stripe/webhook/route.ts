@@ -82,6 +82,7 @@ export async function POST(request: Request) {
           const currentExpiry = currentUser?.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
           if (!currentExpiry || expiresAt > currentExpiry) {
             await storage.updateSubscription(userId, {
+              plan: "pro",
               subscriptionStatus: "active",
               subscriptionExpiresAt: expiresAt,
               stripeSubscriptionId: subscriptionId,
@@ -109,6 +110,7 @@ export async function POST(request: Request) {
             const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
             if (!currentExpiry || expiresAt > currentExpiry) {
               await storage.updateSubscription(user.id, {
+                plan: "pro",
                 subscriptionStatus: "active",
                 subscriptionExpiresAt: expiresAt,
               });
@@ -128,6 +130,7 @@ export async function POST(request: Request) {
 
         if (user) {
           await storage.updateSubscription(user.id, {
+            plan: "free",
             subscriptionStatus: "cancelled",
           });
         }

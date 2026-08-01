@@ -195,34 +195,18 @@ export default function SettingsPage() {
 
   const subscriptionLabel = (() => {
     if (!sub) return "—";
-    switch (sub.status) {
-      case "trial":
-        return `${t.subscription.trial}${sub.daysRemaining !== null ? ` (${sub.daysRemaining}d)` : ""}`;
-      case "active":
-        return t.subscription.active;
-      case "expired":
-        return t.subscription.expired;
-      case "cancelled":
-        return t.subscription.cancelled;
-      default:
-        return "—";
+    if (sub.plan === "pro") {
+      const until =
+        sub.expiresAt != null
+          ? ` (${language === "de" ? "bis" : "until"} ${new Date(sub.expiresAt).toLocaleDateString(language === "de" ? "de-DE" : "en-US")})`
+          : "";
+      return `Pro${until}`;
     }
+    return "Free";
   })();
 
-  const subscriptionColor = (() => {
-    if (!sub) return "text-faint";
-    switch (sub.status) {
-      case "trial":
-        return "text-yellow-400";
-      case "active":
-        return "text-brand-primary";
-      case "expired":
-      case "cancelled":
-        return "text-red-400";
-      default:
-        return "text-faint";
-    }
-  })();
+  const subscriptionColor =
+    sub?.plan === "pro" ? "text-brand-primary" : "text-secondary";
 
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
@@ -268,7 +252,7 @@ export default function SettingsPage() {
             </span>
           </div>
 
-          {sub && (sub.status === "expired" || sub.status === "cancelled" || sub.status === "trial") && (
+          {sub && sub.plan === "free" && (
             <button
               onClick={handleSubscribe}
               disabled={subscribeLoading}
@@ -278,7 +262,7 @@ export default function SettingsPage() {
             </button>
           )}
 
-          {sub && sub.status === "active" && (
+          {sub && sub.plan === "pro" && (
             <button
               onClick={handleManageSubscription}
               disabled={portalLoading}

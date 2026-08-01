@@ -85,6 +85,13 @@
       "when": 1784465859270,
       "tag": "0011_familiar_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785586380941,
+      "tag": "0012_hard_wallflower",
+      "breakpoints": true
     }
   ]
 }

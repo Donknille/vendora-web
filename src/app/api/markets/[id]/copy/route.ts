@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { requireMarketQuota } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 
 export async function POST(
@@ -12,18 +13,20 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const subError = await requireActiveSubscription(userId);
-    if (subError) return subError;
-
     const { id } = await params;
     const original = await storage.getMarket(userId, id);
     if (!original) {
       return NextResponse.json({ message: "Market not found" }, { status: 404 });
     }
 
+    // A copy is a new market dated today — subject to the same monthly quota.
+    const copyDate = new Date().toISOString().split("T")[0];
+    const quota = await requireMarketQuota(userId, copyDate);
+    if (quota) return quota;
+
     const copy = await storage.createMarket(userId, {
       name: original.name,
-      date: new Date().toISOString().split("T")[0],
+      date: copyDate,
       location: original.location,
       standFee: original.standFee,
       travelCost: original.travelCost,

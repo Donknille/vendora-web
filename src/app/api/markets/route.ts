@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { requireMarketQuota } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
@@ -50,9 +51,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
-
     const body = await request.json();
     const parsed = createMarketSchema.safeParse(body);
     if (!parsed.success) {
@@ -61,6 +59,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Free plan is limited to N markets per (event) month; PRO is unlimited.
+    const quota = await requireMarketQuota(userId, parsed.data.date);
+    if (quota) return quota;
 
     const market = await storage.createMarket(userId, parsed.data);
     return NextResponse.json(market, { status: 201 });
