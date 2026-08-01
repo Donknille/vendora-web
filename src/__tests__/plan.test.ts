@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getEffectivePlan, canCreate, daysLeft, TRIAL_DAYS } from "@/lib/plan";
+import { getEffectivePlan, canCreate, canExportYear, daysLeft, TRIAL_DAYS } from "@/lib/plan";
 
 const now = new Date("2026-08-01T12:00:00Z");
 const future = "2026-12-31T00:00:00Z";
@@ -44,6 +44,18 @@ describe("canCreate", () => {
     expect(canCreate("pro")).toBe(true);
     expect(canCreate("trial")).toBe(true);
     expect(canCreate("free")).toBe(false);
+  });
+});
+
+describe("canExportYear", () => {
+  it("TRIAL/PRO may export any year", () => {
+    expect(canExportYear("pro", false)).toBe(true);
+    expect(canExportYear("trial", false)).toBe(true);
+  });
+
+  it("FREE may only re-export a year it already generated", () => {
+    expect(canExportYear("free", true)).toBe(true); // re-export unlocked year
+    expect(canExportYear("free", false)).toBe(false); // new year is locked
   });
 });
 

@@ -22,6 +22,7 @@ import {
   companyProfiles,
   invoiceCounters,
   invoices,
+  euerExports,
   type User,
   type SelectOrder,
   type SelectOrderItem,
@@ -994,6 +995,7 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
   await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
   await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
+  await txOrDb.delete(euerExports).where(eq(euerExports.userId, userId));
 }
 
 // ── Subscription ───────────────────────────────────────────
@@ -1034,4 +1036,33 @@ export async function getPlanInfo(userId: string): Promise<SubscriptionInfo | un
     trialDaysLeft: plan === "trial" ? daysLeft(user.trialEndsAt) : null,
     expiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
   };
+}
+
+// ── EÜR export unlocks (per tax year) ──────────────────────
+
+/** Marks a tax year as generated (idempotent) — called when a TRIAL/PRO user exports. */
+export async function recordEuerExport(userId: string, year: number): Promise<void> {
+  await db
+    .insert(euerExports)
+    .values({ userId, year })
+    .onConflictDoNothing({ target: [euerExports.userId, euerExports.year] });
+}
+
+/** Whether the user has already generated the GuV export for this year. */
+export async function hasEuerExport(userId: string, year: number): Promise<boolean> {
+  const [row] = await db
+    .select({ id: euerExports.id })
+    .from(euerExports)
+    .where(and(eq(euerExports.userId, userId), eq(euerExports.year, year)));
+  return !!row;
+}
+
+/** Years the user has already unlocked by exporting (newest first). */
+export async function getEuerExportYears(userId: string): Promise<number[]> {
+  const rows = await db
+    .select({ year: euerExports.year })
+    .from(euerExports)
+    .where(eq(euerExports.userId, userId))
+    .orderBy(sql`${euerExports.year} DESC`);
+  return rows.map((r) => r.year);
 }

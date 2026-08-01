@@ -342,6 +342,24 @@ export const invoices = pgTable("invoices", {
 export type SelectInvoice = typeof invoices.$inferSelect;
 
 // ============================================================
+// EÜR Exports — records which tax years a user has generated the GuV/EÜR export
+// for while on TRIAL/PRO. Once a year is here, a later FREE (read-only) account
+// may re-export that year, but cannot generate the report for a *new* year.
+// ============================================================
+export const euerExports = pgTable("euer_exports", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_euer_exports_user_year").on(t.userId, t.year),
+]);
+
+// ============================================================
 // Webhook Events — idempotency ledger for Stripe webhooks.
 // Each Stripe event.id is recorded once; replays are ignored.
 // ============================================================

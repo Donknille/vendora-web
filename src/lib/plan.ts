@@ -19,6 +19,15 @@ export function canCreate(plan: Plan): boolean {
 }
 
 /**
+ * Whether a GuV/EÜR export for a given tax year is allowed: TRIAL/PRO may export
+ * any year, and a FREE (read-only) account may still re-export a year it already
+ * generated while it had access (`yearAlreadyExported`). New years stay locked.
+ */
+export function canExportYear(plan: Plan, yearAlreadyExported: boolean): boolean {
+  return canCreate(plan) || yearAlreadyExported;
+}
+
+/**
  * The user's effective plan right now:
  *  - "pro"   while a paid subscription is paid through (subscriptionExpiresAt future),
  *  - "trial" while the initial trial is still running (trialEndsAt future),

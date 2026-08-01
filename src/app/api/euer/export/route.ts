@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { requireWriteAccess } from "@/lib/server/limits";
+import { getEffectivePlan, canCreate, canExportYear } from "@/lib/plan";
 import * as storage from "@/lib/server/storage";
 import { computeEuerReport } from "@/lib/euerReport";
 import { buildEuerCsv, buildEuerPdf, type EuerExportMeta } from "@/lib/server/euerExport";
@@ -23,10 +23,28 @@ export async function GET(request: Request) {
     const format = searchParams.get("format") === "pdf" ? "pdf" : "csv";
 
     // Generating the EÜR/GuV year overview is a paid action ("erstellen") →
-    // TRIAL or PRO only. (Re-downloading existing invoice PDFs and the DSGVO
-    // data export stay open for FREE — those endpoints are not gated.)
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
+    // TRIAL/PRO may export any year. A FREE (read-only) account may still
+    // re-export a year it already generated while it had access, but not a new
+    // year. (Invoice PDFs and the DSGVO data export stay open regardless.)
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+    const plan = getEffectivePlan(user);
+    const alreadyExported = await storage.hasEuerExport(userId, year);
+    if (!canExportYear(plan, alreadyExported)) {
+      return NextResponse.json(
+        {
+          message: "Für einen neuen Jahresreport wird Vendora Pro benötigt.",
+          code: "PRO_REQUIRED",
+        },
+        { status: 403 }
+      );
+    }
+    // Unlock this year on generation so it stays re-exportable after the plan lapses.
+    if (canCreate(plan)) {
+      await storage.recordEuerExport(userId, year);
+    }
 
     const [orders, markets, marketSales, expenses, profile] = await Promise.all([
       storage.getOrders(userId),

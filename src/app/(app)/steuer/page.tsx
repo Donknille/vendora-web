@@ -30,6 +30,10 @@ export default function SteuerPage() {
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   const canCreate = useCanCreate();
+  const { data: unlocks } = useQuery<{ years: number[] }>({
+    queryKey: [userId, "/api/euer/unlocks"],
+    enabled: !!userId,
+  });
   const { data, isLoading } = useQuery<{
     orders: Order[];
     expenses: Expense[];
@@ -102,7 +106,7 @@ export default function SteuerPage() {
               : "Cash-basis income–expense statement"}
           </p>
         </div>
-        {canCreate ? (
+        {canCreate || (unlocks?.years ?? []).includes(year) ? (
           <div className="flex gap-2">
             <a
               href={`/api/euer/export?format=csv&year=${year}`}
