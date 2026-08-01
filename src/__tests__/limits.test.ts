@@ -3,7 +3,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock the storage layer so we exercise the gate without a DB.
 const state = {
   user: undefined as
-    | { plan: string; subscriptionExpiresAt: string | Date | null }
+    | {
+        plan: string;
+        subscriptionExpiresAt: string | Date | null;
+        trialEndsAt?: string | Date | null;
+      }
     | undefined,
 };
 
@@ -37,6 +41,11 @@ describe("requireWriteAccess", () => {
 
   it("allows an active PRO user", async () => {
     state.user = { plan: "pro", subscriptionExpiresAt: FUTURE };
+    expect(await requireWriteAccess("u1")).toBeNull();
+  });
+
+  it("allows a user still in the trial window", async () => {
+    state.user = { plan: "free", subscriptionExpiresAt: null, trialEndsAt: FUTURE };
     expect(await requireWriteAccess("u1")).toBeNull();
   });
 

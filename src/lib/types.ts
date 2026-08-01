@@ -138,8 +138,10 @@ export interface AppSettings {
 }
 
 export interface SubscriptionInfo {
-  plan: "free" | "pro";
+  plan: "free" | "trial" | "pro";
   canCreate: boolean; // false = read-only (FREE)
   proActive: boolean;
+  trialEndsAt: string | null;
+  trialDaysLeft: number | null;
   expiresAt: string | null;
 }

@@ -2,6 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users } from "./schema";
+import { TRIAL_DAYS } from "@/lib/plan";
 
 /**
  * User provisioning helpers.
@@ -48,13 +49,18 @@ export async function ensureUserRecord(id: string, email: string) {
     return null;
   }
 
-  // Phase 4.1: new accounts start on the FREE plan (no trial countdown).
+  // New accounts get a TRIAL_DAYS full-access trial; the stored plan stays
+  // "free" (the effective plan is "trial" while trialEndsAt is in the future).
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
+
   const [created] = await db
     .insert(users)
     .values({
       id,
       email,
       plan: "free",
+      trialEndsAt,
     })
     .returning();
   return created;

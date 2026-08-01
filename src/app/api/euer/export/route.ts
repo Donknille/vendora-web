@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { computeEuerReport } from "@/lib/euerReport";
 import { buildEuerCsv, buildEuerPdf, type EuerExportMeta } from "@/lib/server/euerExport";
@@ -21,8 +22,11 @@ export async function GET(request: Request) {
         : now.getFullYear();
     const format = searchParams.get("format") === "pdf" ? "pdf" : "csv";
 
-    // Note: exports/downloads are available on every plan (including read-only
-    // FREE) — users can always get their data out.
+    // Generating the EÜR/GuV year overview is a paid action ("erstellen") →
+    // TRIAL or PRO only. (Re-downloading existing invoice PDFs and the DSGVO
+    // data export stay open for FREE — those endpoints are not gated.)
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const [orders, markets, marketSales, expenses, profile] = await Promise.all([
       storage.getOrders(userId),

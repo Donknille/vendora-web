@@ -2,7 +2,7 @@ import "server-only";
 import { eq, and, sql, inArray, isNull } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
-import { getEffectivePlan, canCreate, type Plan } from "@/lib/plan";
+import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
@@ -60,9 +60,11 @@ export type CompanyProfileResponse = SelectCompanyProfile;
 
 // Plan status returned by /api/subscription (Phase 4).
 export interface SubscriptionInfo {
-  plan: Plan;
+  plan: Plan; // "free" (read-only) | "trial" | "pro"
   canCreate: boolean; // false = read-only (FREE)
   proActive: boolean;
+  trialEndsAt: string | null;
+  trialDaysLeft: number | null; // whole days left if in trial, else null
   expiresAt: string | null; // PRO subscription paid-through date, if any
 }
 
@@ -1028,6 +1030,8 @@ export async function getPlanInfo(userId: string): Promise<SubscriptionInfo | un
     plan,
     canCreate: canCreate(plan),
     proActive: plan === "pro",
+    trialEndsAt: user.trialEndsAt?.toISOString() ?? null,
+    trialDaysLeft: plan === "trial" ? daysLeft(user.trialEndsAt) : null,
     expiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
   };
 }

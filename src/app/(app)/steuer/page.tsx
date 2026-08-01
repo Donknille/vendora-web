@@ -6,11 +6,13 @@ import { FileDown, FileText } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { computeEuerReport, orderIncomeDate } from "@/lib/euerReport";
 import { euerLabel } from "@/lib/euer";
 import { isPaidLike } from "@/lib/orderStatus";
 import { Card } from "@/components/ui/Card";
+import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
@@ -27,6 +29,7 @@ export default function SteuerPage() {
   const isDE = language === "de";
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
+  const canCreate = useCanCreate();
   const { data, isLoading } = useQuery<{
     orders: Order[];
     expenses: Expense[];
@@ -99,21 +102,30 @@ export default function SteuerPage() {
               : "Cash-basis income–expense statement"}
           </p>
         </div>
-        <div className="flex gap-2">
-          <a
-            href={`/api/euer/export?format=csv&year=${year}`}
-            className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
-          >
-            <FileDown className="h-4 w-4" /> CSV
-          </a>
-          <a
-            href={`/api/euer/export?format=pdf&year=${year}`}
-            className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
-          >
-            <FileText className="h-4 w-4" /> PDF
-          </a>
-        </div>
+        {canCreate ? (
+          <div className="flex gap-2">
+            <a
+              href={`/api/euer/export?format=csv&year=${year}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+            >
+              <FileDown className="h-4 w-4" /> CSV
+            </a>
+            <a
+              href={`/api/euer/export?format=pdf&year=${year}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+            >
+              <FileText className="h-4 w-4" /> PDF
+            </a>
+          </div>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-elevated px-3 py-2 text-xs text-faint">
+            <FileDown className="h-3.5 w-3.5" />
+            {isDE ? "Export mit Pro" : "Export with Pro"}
+          </span>
+        )}
       </div>
+
+      <SubscriptionBanner />
 
       {/* Year filter */}
       <div className="flex flex-wrap gap-2">

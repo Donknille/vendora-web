@@ -203,11 +203,15 @@ export default function SettingsPage() {
           : "";
       return `Pro${until}`;
     }
-    return "Free";
+    if (sub.plan === "trial") {
+      const days = sub.trialDaysLeft ?? 0;
+      return language === "de" ? `Testphase (noch ${days} Tage)` : `Trial (${days} days left)`;
+    }
+    return language === "de" ? "Free (Nur-Lese)" : "Free (read-only)";
   })();
 
   const subscriptionColor =
-    sub?.plan === "pro" ? "text-brand-primary" : "text-secondary";
+    sub?.plan === "pro" || sub?.plan === "trial" ? "text-brand-primary" : "text-secondary";
 
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
@@ -253,7 +257,7 @@ export default function SettingsPage() {
             </span>
           </div>
 
-          {sub && sub.plan === "free" && (
+          {sub && sub.plan !== "pro" && (
             <button
               onClick={handleSubscribe}
               disabled={subscribeLoading}

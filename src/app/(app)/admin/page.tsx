@@ -22,7 +22,7 @@ interface AdminUser {
   id: string;
   email: string;
   createdAt: string;
-  plan: "free" | "pro";
+  plan: "free" | "trial" | "pro";
   subscriptionExpiresAt: string | null;
   isBlocked: boolean;
   stats: { orders: number; markets: number; expenses: number };
@@ -30,6 +30,7 @@ interface AdminUser {
 
 const planColors: Record<string, string> = {
   free: "text-secondary",
+  trial: "text-brand-primary",
   pro: "text-green-600",
 };
 

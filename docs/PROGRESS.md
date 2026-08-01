@@ -78,15 +78,16 @@ Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". V
 
 ### ✅ Phase 4 – erledigt (Monetarisierungsmodell **geändert**)
 
-> **Modellwechsel ggü. `REBUILD-PLAN.md` (Entscheidung Inhaber:in):** Statt Freemium mit Feature-Kontingenten + Pay-per-Use/Credits + Jahresexport-Einmalkauf gilt jetzt: **ein Preis – Vendora Pro = 19,90 €/Monat für alles.** Ohne Zahlung ist das Konto **Free = Nur-Lese**: ansehen und **herunterladen/exportieren** geht immer, aber **nichts Neues anlegen**. Damit sind **Credits (alt 4.2) und der Jahresexport-Einmalkauf (alt 4.3) gestrichen**.
+> **Modellwechsel ggü. `REBUILD-PLAN.md` (Entscheidung Inhaber:in):** Statt Freemium mit Feature-Kontingenten + Pay-per-Use/Credits gilt: **ein Preis – Vendora Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff) für neue Nutzer. Nach Trial ohne Zahlung ist das Konto **Free = Nur-Lese**: ansehen + **bestehende Belege (Rechnungs-PDFs) und DSGVO-Datenexport herunterladen** immer möglich; **nichts Neues anlegen** – dazu zählt auch die **GuV/Jahresübersicht (EÜR-Export)**. **Gestrichen:** Credits/Pay-per-Use und der Jahresexport-Einmalkauf.
 
 | Schritt | Commit |
 |---|---|
 | 4.1 Plan-Infrastruktur: `users.plan` (free/pro, Migration 0012 + Datenmigration), `getEffectivePlan` (Auto-Downgrade bei Ablauf), Webhook/Provisioning/Admin/Subscription-API plan-basiert | `21cd656` |
-| 4.2 Read-only-für-Free-Modell: `requireWriteAccess` (403 `PRO_REQUIRED`) auf allen Create-Endpoints; Exporte/Downloads offen; `STRIPE_PRICE_ID` → Env (19,90 €); persistenter Upgrade-Banner + `useCanCreate`-Gating der Create-UIs | `646183d` |
-| 4.4 Referral-Slots: SumUp im Marktmodus (3.3) + generische, env-konfigurierbare `ReferralCard` (Betriebshaftpflicht in Settings), als „Anzeige" (UWG), keine Nutzerdaten an Partner | (dieser Commit) |
+| 4.2 Read-only-für-Free-Modell: `requireWriteAccess` (403 `PRO_REQUIRED`) auf allen Create-Endpoints; `STRIPE_PRICE_ID` → Env (19,90 €); persistenter Upgrade-Banner + `useCanCreate`-Gating der Create-UIs | `646183d` |
+| 4.4 Referral-Slots: SumUp im Marktmodus (3.3) + generische, env-konfigurierbare `ReferralCard` (Betriebshaftpflicht in Settings), als „Anzeige" (UWG), keine Nutzerdaten an Partner | `20166c6` |
+| 4.5 Trial (42 Tage) reaktiviert: `Plan = free\|trial\|pro`, `canCreate = pro\|\|trial`, provisioning setzt `trialEndsAt` (kein Schema-Change – Spalte existierte). GuV/EÜR-Export wieder `requireWriteAccess`-gegatet; **Rechnungs-PDF + DSGVO-Export bleiben offen**. Banner zeigt Trial-Restlaufzeit; `/steuer`-Export-Buttons für Free gegatet | (dieser Commit) |
 
-**Abnahme:** neuer User = Free/Nur-Lese (kein Trial-Countdown) ✅; Create serverseitig 403 `PRO_REQUIRED` ✅; Exporte für Free frei ✅; Alt-User-Migration (aktive Abos → pro) ✅. **Operativ offen:** Stripe-Pro-Produkt (19,90 €) anlegen + `STRIPE_PRICE_ID` setzen; End-to-End-Kauf im Stripe-Testmode verifizieren.
+**Abnahme:** neuer User = Trial (42 Tage, Vollzugriff) ✅; nach Trial Free/Nur-Lese ✅; Create + GuV-Export serverseitig 403 `PRO_REQUIRED` ✅; Rechnungs-PDF/DSGVO-Export für Free frei ✅; Alt-User-Migration (aktive Abos → pro) ✅. **Operativ offen:** Stripe-Pro-Produkt (19,90 €) anlegen + `STRIPE_PRICE_ID` setzen; End-to-End-Kauf im Stripe-Testmode verifizieren.
 
 ---
 

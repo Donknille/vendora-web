@@ -11,7 +11,7 @@ interface UserDetail {
   id: string;
   email: string;
   createdAt: string;
-  plan: "free" | "pro";
+  plan: "free" | "trial" | "pro";
   subscriptionStatus: string;
   subscriptionExpiresAt: string | null;
   isBlocked: boolean;
@@ -25,11 +25,13 @@ interface UserStats {
 
 const planLabels: Record<string, string> = {
   free: "Free",
+  trial: "Testphase",
   pro: "Pro",
 };
 
 const planColors: Record<string, string> = {
   free: "text-secondary",
+  trial: "text-brand-primary",
   pro: "text-green-600",
 };
 

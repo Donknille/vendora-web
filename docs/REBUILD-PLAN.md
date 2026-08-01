@@ -181,14 +181,16 @@ Vorab: Branch `claude/pwa-offline-marktmodus-of3xb2` sichten; Verwertbares über
 ### Phase 4 — Monetarisierungs-Umbau
 
 > **⚠ Bei der Umsetzung geändert (Inhaber-Entscheidung, ersetzt die Vorschläge unten):**
-> **Ein Preis – Vendora Pro = 19,90 €/Monat für alles.** Ohne Zahlung ist das Konto
-> **Free = Nur-Lese**: ansehen und **exportieren/herunterladen** immer möglich, aber
-> **nichts Neues anlegen** (Create-Endpoints → 403 `PRO_REQUIRED`). Umgesetzt via
-> `users.plan` + `getEffectivePlan` (4.1) und `requireWriteAccess` (4.2).
+> **Ein Preis – Vendora Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff)
+> für neue Nutzer. Nach Trial ohne Zahlung: **Free = Nur-Lese** – ansehen und
+> **bestehende Belege (Rechnungs-PDFs) + DSGVO-Datenexport herunterladen** immer möglich,
+> aber **nichts Neues anlegen** (Create-Endpoints → 403 `PRO_REQUIRED`); das schließt die
+> **GuV/Jahresübersicht (EÜR-Export)** ein. Umgesetzt via `users.plan`/Trial + `getEffectivePlan`
+> (`free|trial|pro`) und `requireWriteAccess`.
 > **Gestrichen:** Feature-Kontingente (2 Märkte/5 Rechnungen), Credits/Pay-per-Use (4.2 alt)
-> und der EÜR-Jahresexport-Einmalkauf (4.3 alt) — Exporte sind für alle frei.
-> Referral-Slots (4.4) sind umgesetzt (SumUp + env-konfigurierbare `ReferralCard`).
-> Die folgenden Unterpunkte sind der **ursprüngliche** Plan (Referenz).
+> und der EÜR-Jahresexport-Einmalkauf (4.3 alt). Referral-Slots (4.4) umgesetzt
+> (SumUp + env-konfigurierbare `ReferralCard`). Die folgenden Unterpunkte sind der
+> **ursprüngliche** Plan (Referenz).
 
 **4.1 Free-Basis statt 42-Tage-Trial:** `requireActiveSubscription`-Gates ersetzen durch Feature-Limits (Vorschlag als Default: Free = max. 2 aktive Märkte/Monat, max. 5 Rechnungen/Monat, EÜR-Ansicht ja, Jahres-Export nein). Limits serverseitig durchsetzen (nicht nur UI). Bestehende Trial-/Abo-Statuslogik zu `plan`-Feld (`free`/`pro`/`credits`) migrieren; Admin-Aktionen anpassen.
 
