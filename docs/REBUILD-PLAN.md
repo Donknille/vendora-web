@@ -7,7 +7,8 @@
 > (Marktanalyse-Dossier Juli 2026, Strategiebericht „Monetarisierung ohne Abo-Zwang").
 >
 > **▶ Aktueller Fortschritt & Handoff: [`docs/PROGRESS.md`](./PROGRESS.md).**
-> Stand 2026-07-19: **Phasen 0–3 erledigt** (Branch `migrate/neon-betterauth`). Nächste offene Phase: **Phase 4**.
+> Stand 2026-07-19: **Phasen 0–4 erledigt** (Branch `migrate/neon-betterauth`). Nächste offene Phase: **Phase 5** (nur skizziert).
+> **Hinweis:** Das Monetarisierungsmodell in Phase 4 wurde bei der Umsetzung geändert (Inhaber-Entscheidung) – siehe Kasten unter „Phase 4".
 
 ---
 
@@ -177,7 +178,17 @@ Vorab: Branch `claude/pwa-offline-marktmodus-of3xb2` sichten; Verwertbares über
 
 **Abnahme Phase 3:** Flugmodus-Test: Markt öffnen → 5 Verkäufe erfassen → online gehen → alle 5 exakt einmal auf Server; Lighthouse-PWA-Check installierbar; Tagesabschluss zeigt korrekte Bar/Karte-Summen.
 
-### Phase 4 — Monetarisierungs-Umbau (ohne Abo-Zwang)
+### Phase 4 — Monetarisierungs-Umbau
+
+> **⚠ Bei der Umsetzung geändert (Inhaber-Entscheidung, ersetzt die Vorschläge unten):**
+> **Ein Preis – Vendora Pro = 19,90 €/Monat für alles.** Ohne Zahlung ist das Konto
+> **Free = Nur-Lese**: ansehen und **exportieren/herunterladen** immer möglich, aber
+> **nichts Neues anlegen** (Create-Endpoints → 403 `PRO_REQUIRED`). Umgesetzt via
+> `users.plan` + `getEffectivePlan` (4.1) und `requireWriteAccess` (4.2).
+> **Gestrichen:** Feature-Kontingente (2 Märkte/5 Rechnungen), Credits/Pay-per-Use (4.2 alt)
+> und der EÜR-Jahresexport-Einmalkauf (4.3 alt) — Exporte sind für alle frei.
+> Referral-Slots (4.4) sind umgesetzt (SumUp + env-konfigurierbare `ReferralCard`).
+> Die folgenden Unterpunkte sind der **ursprüngliche** Plan (Referenz).
 
 **4.1 Free-Basis statt 42-Tage-Trial:** `requireActiveSubscription`-Gates ersetzen durch Feature-Limits (Vorschlag als Default: Free = max. 2 aktive Märkte/Monat, max. 5 Rechnungen/Monat, EÜR-Ansicht ja, Jahres-Export nein). Limits serverseitig durchsetzen (nicht nur UI). Bestehende Trial-/Abo-Statuslogik zu `plan`-Feld (`free`/`pro`/`credits`) migrieren; Admin-Aktionen anpassen.
 

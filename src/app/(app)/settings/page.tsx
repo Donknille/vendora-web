@@ -29,6 +29,7 @@ import { queryClient } from "@/lib/api-client";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ReferralCard } from "@/components/ReferralCard";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -281,6 +282,19 @@ export default function SettingsPage() {
           {t.auth.logout}
         </button>
       </Card>
+
+      {/* Referral slot (Phase 4.4): only rendered when a link is configured. */}
+      <ReferralCard
+        url={process.env.NEXT_PUBLIC_INSURANCE_REFERRAL_URL}
+        title={language === "de" ? "Betriebshaftpflicht für Markthändler" : "Trade liability insurance"}
+        description={
+          language === "de"
+            ? "Absicherung für Stand, Waren und Personenschäden auf dem Markt – Tarife vergleichen."
+            : "Cover your stall, goods and liability at the market – compare quotes."
+        }
+        cta={language === "de" ? "Tarife vergleichen" : "Compare quotes"}
+        de={language === "de"}
+      />
 
       {/* ───────── Company Profile ───────── */}
       <Card>

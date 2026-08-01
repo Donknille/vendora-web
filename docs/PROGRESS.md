@@ -11,7 +11,7 @@
 ## So geht es weiter (Quickstart für die nächste Session)
 
 1. **Branch:** `migrate/neon-betterauth` (Basis der Rebuild-Arbeit, offen als PR #10 → `master`).
-2. **Nächste offene Phase:** **Phase 4 – Monetarisierung (ohne Abo-Zwang).** Spec: `docs/REBUILD-PLAN.md`, Abschnitt „Phase 4". (Phasen 0–3 sind abgeschlossen.)
+2. **Nächste offene Phase:** **Phase 5 – Veranstalter-Modul (B2B2C), nur skizziert** – erst bei Kern-Traktion. (Phasen 0–4 sind abgeschlossen.)
 3. **Arbeitsweise (verbindlich, wie bisher):**
    - Phasen **in Reihenfolge**, jede Sub-Aufgabe (z. B. 2.1, 2.2 …) einzeln umsetzen.
    - Nach **jeder** Änderung: `npm run typecheck` → `npm run lint` → `npm test` → `npm run build`. Erst wenn alle vier grün sind, committen.
@@ -39,8 +39,8 @@ npm run build
 | 1 | EÜR & Steuer | ✅ erledigt |
 | 2 | Aufträge & Rechnungen (GoBD) | ✅ erledigt (2.1–2.5) |
 | 3 | Marktmodus (Offline-PWA) | ✅ erledigt (3.1–3.4) |
-| **4** | **Monetarisierung (ohne Abo-Zwang)** | ⬜ **offen ← NÄCHSTE** |
-| 5 | Veranstalter-Modul (B2B2C) | ⬜ nur skizziert |
+| 4 | Monetarisierung | ✅ erledigt (Modell geändert, s. u.) |
+| **5** | **Veranstalter-Modul (B2B2C)** | ⬜ **nur skizziert ← NÄCHSTE** |
 
 ### ✅ Phase 0 – erledigt
 
@@ -76,14 +76,26 @@ Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". V
 
 **Offene Abnahme (manuell, gegen ein deploytes/migriertes Env):** Flugmodus-Test (Markt öffnen → 5 Verkäufe offline → online → alle exakt einmal) und Lighthouse-PWA-Installierbarkeit sind Laufzeit-Checks, die eine laufende Instanz mit angewandten Migrationen brauchen (siehe operative Punkte). Die deterministische Grundlage ist durch die vier grünen Checks + Unit-Tests (Batch-Idempotenz, Tagesabschluss, Kalender/Jahresvergleich) abgedeckt.
 
+### ✅ Phase 4 – erledigt (Monetarisierungsmodell **geändert**)
+
+> **Modellwechsel ggü. `REBUILD-PLAN.md` (Entscheidung Inhaber:in):** Statt Freemium mit Feature-Kontingenten + Pay-per-Use/Credits + Jahresexport-Einmalkauf gilt jetzt: **ein Preis – Vendora Pro = 19,90 €/Monat für alles.** Ohne Zahlung ist das Konto **Free = Nur-Lese**: ansehen und **herunterladen/exportieren** geht immer, aber **nichts Neues anlegen**. Damit sind **Credits (alt 4.2) und der Jahresexport-Einmalkauf (alt 4.3) gestrichen**.
+
+| Schritt | Commit |
+|---|---|
+| 4.1 Plan-Infrastruktur: `users.plan` (free/pro, Migration 0012 + Datenmigration), `getEffectivePlan` (Auto-Downgrade bei Ablauf), Webhook/Provisioning/Admin/Subscription-API plan-basiert | `21cd656` |
+| 4.2 Read-only-für-Free-Modell: `requireWriteAccess` (403 `PRO_REQUIRED`) auf allen Create-Endpoints; Exporte/Downloads offen; `STRIPE_PRICE_ID` → Env (19,90 €); persistenter Upgrade-Banner + `useCanCreate`-Gating der Create-UIs | `646183d` |
+| 4.4 Referral-Slots: SumUp im Marktmodus (3.3) + generische, env-konfigurierbare `ReferralCard` (Betriebshaftpflicht in Settings), als „Anzeige" (UWG), keine Nutzerdaten an Partner | (dieser Commit) |
+
+**Abnahme:** neuer User = Free/Nur-Lese (kein Trial-Countdown) ✅; Create serverseitig 403 `PRO_REQUIRED` ✅; Exporte für Free frei ✅; Alt-User-Migration (aktive Abos → pro) ✅. **Operativ offen:** Stripe-Pro-Produkt (19,90 €) anlegen + `STRIPE_PRICE_ID` setzen; End-to-End-Kauf im Stripe-Testmode verifizieren.
+
 ---
 
 ## Offene operative Punkte (kein Phasen-Inhalt, aber wichtig)
 
 Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst nicht automatisch ausgeführt:
 
-1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0011) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema. Neu seit Phase 3: `market_sales.client_id` (+ Unique-Index, 0009), `market_sales.payment_method` (0010), `market_events.application_deadline` + erweiterter Status (0011). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
-2. **`STRIPE_PRICE_ID`** noch hartkodiert in `src/lib/server/stripe.ts` → wird in **Phase 4** auf Env/Config umgestellt.
+1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0012) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema. Neu seit Phase 3/4: `market_sales.client_id` (0009), `market_sales.payment_method` (0010), `market_events.application_deadline` + Status (0011), `users.plan` (0012, inkl. Datenmigration aktive Abos → pro). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
+2. **Stripe-Pro-Produkt anlegen (blockierend für Billing):** In Stripe ein Produkt mit **monatlichem Preis 19,90 €** anlegen und dessen `price_…`-ID als `STRIPE_PRICE_ID` (Env/Vercel) setzen. Ohne diese Variable liefert der Checkout 500. `src/lib/server/stripe.ts` liest sie jetzt aus der Env (kein Hardcode mehr).
 3. **Webhook `current_period_end`** hat einen +30-Tage-Fallback (Stripe-API-Version-Unsicherheit) → bei Live-Billing gegen Stripe-Testmode verifizieren.
 4. **CI `Security & Quality Check` rot:** `npm audit --audit-level=high` scheitert an einer Next.js-High-Advisory ohne stabilen Fix (+ dev-only vite). Nicht von dieser Arbeit verursacht; separat entscheiden (Allowlist/Gate-Anpassung), nicht durch Downgrade.
 5. **PR #10 → `master` mergen** + Vercel-Env final setzen, sobald die DB-Migration steht.
@@ -105,8 +117,7 @@ Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst 
 
 ## Danach (Kurzfassung, Details im Plan)
 
-- **Phase 4 – Monetarisierung (← NÄCHSTE):** Free-Basis statt Trial (serverseitige Feature-Limits, `plan`-Feld), Credits/Pay-per-Use, EÜR-Jahresexport als Einmalkauf, Referral-Slots (SumUp-Slot ist in 3.3 als `TseNotice` + `NEXT_PUBLIC_SUMUP_REFERRAL_URL` bereits vorbereitet). `STRIPE_PRICE_ID` → Config.
-- **Phase 5 – Veranstalter-Modul (B2B2C):** erst bei Kern-Traktion.
+- **Phase 5 – Veranstalter-Modul (B2B2C, ← NÄCHSTE, nur skizziert):** eigene Rolle „Veranstalter", Markt-Ausschreibungen, Standbewerbungen, Vergabe + Abrechnung (Pro-Stand-Gebühr). Erst bei Kern-Traktion bauen (Benchmarks in `REBUILD-PLAN.md` §6).
 
 ## Querschnitt (in jeder Phase mitführen)
 
