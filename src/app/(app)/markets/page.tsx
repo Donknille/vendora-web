@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Store, MapPin, Calendar, Search, AlarmClock } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useAllMarketSales } from "@/lib/hooks/useMarketSales";
+import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { deadlineInfo, statusLabel, statusClasses } from "@/lib/marketCalendar";
@@ -18,6 +19,7 @@ export default function MarketsPage() {
   const { t, language } = useLanguage();
   const { data: markets, isLoading } = useMarkets();
   const { data: allSales } = useAllMarketSales();
+  const canCreate = useCanCreate();
   const [search, setSearch] = useState("");
 
   const filteredMarkets = useMemo(() => {
@@ -127,13 +129,15 @@ export default function MarketsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">{t.markets.title}</h1>
-        <Link
-          href="/markets/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          {t.markets.newMarket}
-        </Link>
+        {canCreate && (
+          <Link
+            href="/markets/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            {t.markets.newMarket}
+          </Link>
+        )}
       </div>
 
       <SubscriptionBanner />

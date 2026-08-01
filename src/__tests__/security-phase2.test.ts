@@ -120,11 +120,11 @@ describe("2.2 — escapeHtml prevents XSS", () => {
 // ── 2.3 Plan gates for copy and import (updated in Phase 4.1) ─────────
 
 describe("2.3 — Plan-limit gates enforcement", () => {
-  it("copy endpoint enforces the market quota", async () => {
+  it("copy endpoint enforces write access (creates a new market)", async () => {
     const fs = await import("fs");
     const source = fs.readFileSync("src/app/api/markets/[id]/copy/route.ts", "utf-8");
-    // A copy is a new market, so it must go through the monthly market quota.
-    expect(source).toContain("requireMarketQuota");
+    // A copy creates a new market → gated behind PRO write access.
+    expect(source).toContain("requireWriteAccess");
   });
 
   it("migrate endpoint requires PRO (import bypasses free limits)", async () => {

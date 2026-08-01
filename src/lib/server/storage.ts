@@ -1,15 +1,8 @@
 import "server-only";
-import { eq, and, sql, inArray, isNull, gte, lt, count } from "drizzle-orm";
+import { eq, and, sql, inArray, isNull } from "drizzle-orm";
 import { deriveMarketCosts } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
-import {
-  getEffectivePlan,
-  limitsFor,
-  monthKey,
-  monthRange,
-  type Plan,
-  type PlanLimits,
-} from "@/lib/plan";
+import { getEffectivePlan, canCreate, type Plan } from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
@@ -65,13 +58,12 @@ export interface ExpenseResponse extends Omit<SelectExpense, "createdAt"> {
 
 export type CompanyProfileResponse = SelectCompanyProfile;
 
-// Plan + limits + current usage, returned by /api/subscription (Phase 4.1).
+// Plan status returned by /api/subscription (Phase 4).
 export interface SubscriptionInfo {
   plan: Plan;
+  canCreate: boolean; // false = read-only (FREE)
   proActive: boolean;
   expiresAt: string | null; // PRO subscription paid-through date, if any
-  limits: PlanLimits;
-  usage: { marketsThisMonth: number; invoicesThisMonth: number };
 }
 
 // ── Users ──────────────────────────────────────────────────
@@ -1021,63 +1013,21 @@ export async function updateSubscription(
   }
 }
 
-/** Count a user's markets whose event date falls in the given "YYYY-MM" month. */
-export async function countMarketsInMonth(userId: string, key: string): Promise<number> {
-  const { start, end } = monthRange(key);
-  const [row] = await db
-    .select({ n: count() })
-    .from(marketEvents)
-    .where(
-      and(
-        eq(marketEvents.userId, userId),
-        gte(marketEvents.date, start),
-        lt(marketEvents.date, end)
-      )
-    );
-  return row?.n ?? 0;
-}
-
-/**
- * Count a user's issued invoices (type 'invoice', not cancellations) whose issue
- * date falls in the given "YYYY-MM" month. Archived invoices still count.
- */
-export async function countInvoicesInMonth(userId: string, key: string): Promise<number> {
-  const { start, end } = monthRange(key);
-  const [row] = await db
-    .select({ n: count() })
-    .from(invoices)
-    .where(
-      and(
-        eq(invoices.userId, userId),
-        eq(invoices.type, "invoice"),
-        gte(invoices.issueDate, start),
-        lt(invoices.issueDate, end)
-      )
-    );
-  return row?.n ?? 0;
-}
-
 /** Effective plan for a user (PRO only while the subscription is paid through). */
 export async function getUserPlan(userId: string): Promise<Plan> {
   const user = await getUser(userId);
   return user ? getEffectivePlan(user) : "free";
 }
 
-/** Plan + limits + current-month usage for the /api/subscription endpoint. */
+/** Plan status for the /api/subscription endpoint. */
 export async function getPlanInfo(userId: string): Promise<SubscriptionInfo | undefined> {
   const user = await getUser(userId);
   if (!user) return undefined;
   const plan = getEffectivePlan(user);
-  const key = monthKey(new Date());
-  const [marketsThisMonth, invoicesThisMonth] = await Promise.all([
-    countMarketsInMonth(userId, key),
-    countInvoicesInMonth(userId, key),
-  ]);
   return {
     plan,
+    canCreate: canCreate(plan),
     proActive: plan === "pro",
     expiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
-    limits: limitsFor(plan),
-    usage: { marketsThisMonth, invoicesThisMonth },
   };
 }

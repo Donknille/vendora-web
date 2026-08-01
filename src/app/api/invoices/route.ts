@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
-import { requireInvoiceQuota } from "@/lib/server/limits";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
 import { z } from "zod";
@@ -31,6 +31,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    // Issuing an invoice creates a new record → requires PRO (FREE is read-only).
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
+
     const body = await request.json();
     const parsed = issueInvoiceSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,10 +43,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    // Free plan is limited to N issued invoices per month; PRO is unlimited.
-    const quota = await requireInvoiceQuota(userId);
-    if (quota) return quota;
 
     const result = await storage.issueInvoice(userId, parsed.data.orderId);
     if (!result.ok) {

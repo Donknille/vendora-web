@@ -139,12 +139,7 @@ export interface AppSettings {
 
 export interface SubscriptionInfo {
   plan: "free" | "pro";
+  canCreate: boolean; // false = read-only (FREE)
   proActive: boolean;
   expiresAt: string | null;
-  limits: {
-    marketsPerMonth: number | null;
-    invoicesPerMonth: number | null;
-    yearExport: boolean;
-  };
-  usage: { marketsThisMonth: number; invoicesThisMonth: number };
 }

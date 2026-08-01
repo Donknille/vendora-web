@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  getEffectivePlan,
-  limitsFor,
-  monthKey,
-  monthRange,
-  PLAN_LIMITS,
-} from "@/lib/plan";
+import { getEffectivePlan, canCreate } from "@/lib/plan";
 
 describe("getEffectivePlan", () => {
   const now = new Date("2026-08-01T12:00:00Z");
@@ -38,26 +32,9 @@ describe("getEffectivePlan", () => {
   });
 });
 
-describe("limitsFor", () => {
-  it("free is limited, pro is unlimited", () => {
-    expect(limitsFor("free")).toEqual(PLAN_LIMITS.free);
-    expect(limitsFor("free").marketsPerMonth).toBe(2);
-    expect(limitsFor("free").invoicesPerMonth).toBe(5);
-    expect(limitsFor("free").yearExport).toBe(false);
-    expect(limitsFor("pro").marketsPerMonth).toBeNull();
-    expect(limitsFor("pro").invoicesPerMonth).toBeNull();
-    expect(limitsFor("pro").yearExport).toBe(true);
-  });
-});
-
-describe("monthKey / monthRange", () => {
-  it("buckets a date into a YYYY-MM key (UTC)", () => {
-    expect(monthKey("2026-08-15")).toBe("2026-08");
-    expect(monthKey(new Date("2026-01-01T00:00:00Z"))).toBe("2026-01");
-  });
-
-  it("produces a half-open [start, end) month range, wrapping the year", () => {
-    expect(monthRange("2026-08")).toEqual({ start: "2026-08-01", end: "2026-09-01" });
-    expect(monthRange("2026-12")).toEqual({ start: "2026-12-01", end: "2027-01-01" });
+describe("canCreate", () => {
+  it("only PRO may create (FREE is read-only)", () => {
+    expect(canCreate("pro")).toBe(true);
+    expect(canCreate("free")).toBe(false);
   });
 });

@@ -15,6 +15,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    if (!STRIPE_PRICE_ID) {
+      console.error("STRIPE_PRICE_ID is not configured");
+      return NextResponse.json({ message: "Billing is not configured" }, { status: 500 });
+    }
+
     const { origin } = new URL(request.url);
 
     // Check if user already has a Stripe customer ID

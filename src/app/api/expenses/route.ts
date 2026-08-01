@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
 import { EUER_CATEGORIES } from "@/lib/euer";
@@ -33,6 +34,9 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const body = await request.json();
     const parsed = createExpenseSchema.safeParse(body);

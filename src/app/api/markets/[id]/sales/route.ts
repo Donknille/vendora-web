@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
@@ -45,6 +46,9 @@ export async function POST(
     if (!market) {
       return NextResponse.json({ message: "Market not found" }, { status: 404 });
     }
+
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const body = await request.json();
     const parsed = createMarketSaleSchema.safeParse(body);

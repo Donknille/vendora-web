@@ -24,6 +24,7 @@ import {
   useDeleteMarketSale,
 } from "@/lib/hooks/useMarketSales";
 import { useOfflineSales } from "@/lib/offline/useOfflineSales";
+import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { computeDayClosing } from "@/lib/marketDay";
 import { computeYearComparison } from "@/lib/marketCalendar";
 import type { MarketSale } from "@/lib/types";
@@ -46,6 +47,7 @@ export default function MarketDetailPage() {
   const deleteSale = useDeleteMarketSale();
   const copyMarket = useCopyMarket();
   const { pending, syncing, recordSale } = useOfflineSales(marketId);
+  const canCreate = useCanCreate();
 
   const [error, setError] = useState("");
 
@@ -133,8 +135,17 @@ export default function MarketDetailPage() {
     salesByMarketId
   );
 
+  const readOnlyMsg =
+    language === "de"
+      ? "Nur-Lese-Modus – für neue Verkäufe wird Vendora Pro benötigt."
+      : "Read-only – Vendora Pro is required to record sales.";
+
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");
+    if (!canCreate) {
+      setError(readOnlyMsg);
+      return;
+    }
     try {
       await recordSale({ description: item.name, amount: item.price, quantity: 1 });
     } catch {
@@ -145,6 +156,10 @@ export default function MarketDetailPage() {
   const handleAddSale = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!canCreate) {
+      setError(readOnlyMsg);
+      return;
+    }
     if (!saleDescription.trim() || !saleAmount.trim()) return;
 
     try {
@@ -513,14 +528,16 @@ export default function MarketDetailPage() {
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        <button
-          onClick={handleCopy}
-          disabled={copyMarket.isPending}
-          className="w-full flex items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm font-medium text-secondary hover:bg-elevated transition-colors disabled:opacity-50"
-        >
-          <Copy className="h-4 w-4" />
-          {copyMarket.isPending ? t.common.loading : t.markets.copyMarket}
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCopy}
+            disabled={copyMarket.isPending}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm font-medium text-secondary hover:bg-elevated transition-colors disabled:opacity-50"
+          >
+            <Copy className="h-4 w-4" />
+            {copyMarket.isPending ? t.common.loading : t.markets.copyMarket}
+          </button>
+        )}
 
         <button
           onClick={() => setConfirmDeleteMarket(true)}

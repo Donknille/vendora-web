@@ -9,6 +9,7 @@ import { EUER_CATEGORIES, euerLabel, isEuerCategory, type EuerCategory } from "@
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
+import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 
@@ -27,6 +28,7 @@ const categoryColors: Record<EuerCategory, string> = {
 export default function ExpensesPage() {
   const { t, language } = useLanguage();
   const { data: expenses, isLoading } = useExpenses();
+  const canCreate = useCanCreate();
   const createExpense = useCreateExpense();
   const deleteExpense = useDeleteExpense();
 
@@ -90,22 +92,24 @@ export default function ExpensesPage() {
         <h1 className="text-2xl font-bold text-primary">
           {t.expenses.title}
         </h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-        >
-          {showForm ? (
-            <>
-              <X className="h-4 w-4" />
-              {t.expenses.cancel}
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              {t.expenses.newExpense}
-            </>
-          )}
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+          >
+            {showForm ? (
+              <>
+                <X className="h-4 w-4" />
+                {t.expenses.cancel}
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                {t.expenses.newExpense}
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       <SubscriptionBanner />

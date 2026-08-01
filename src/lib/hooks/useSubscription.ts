@@ -17,3 +17,13 @@ export function useSubscription() {
 export function invalidateSubscription() {
   queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
 }
+
+/**
+ * Whether the current user may create new records. FREE accounts are read-only
+ * (Phase 4.2). Optimistic while the plan is still loading — the server enforces
+ * the gate regardless.
+ */
+export function useCanCreate(): boolean {
+  const { data } = useSubscription();
+  return data ? data.canCreate : true;
+}

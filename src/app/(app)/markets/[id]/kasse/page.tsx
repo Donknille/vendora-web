@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useMarketSales, useDeleteMarketSale } from "@/lib/hooks/useMarketSales";
+import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { useOfflineSales } from "@/lib/offline/useOfflineSales";
 import type { SalePaymentMethod } from "@/lib/offline/salesQueue";
 import { computeDayClosing } from "@/lib/marketDay";
@@ -31,6 +32,7 @@ export default function MarketPosPage() {
   const { data: markets, isLoading } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
   const deleteSale = useDeleteMarketSale();
+  const canCreate = useCanCreate();
   const { pending, syncing, recordSale, dequeue } = useOfflineSales(marketId);
 
   const [payment, setPayment] = useState<SalePaymentMethod>("cash");
@@ -99,6 +101,14 @@ export default function MarketPosPage() {
 
   const record = async (description: string, amount: number) => {
     setError("");
+    if (!canCreate) {
+      setError(
+        de
+          ? "Nur-Lese-Modus – für neue Verkäufe wird Vendora Pro benötigt."
+          : "Read-only – Vendora Pro is required to record sales."
+      );
+      return;
+    }
     try {
       const cid = await recordSale({ description, amount, quantity: qty, paymentMethod: payment });
       setUndoStack((s) => [...s, cid]);

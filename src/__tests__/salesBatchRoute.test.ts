@@ -13,6 +13,12 @@ vi.mock("@/lib/server/auth", () => ({
 }));
 
 vi.mock("@/lib/server/storage", () => ({
+  // requireWriteAccess() looks the user up; return an active PRO user so the
+  // write gate passes and the batch assembly logic is what's under test.
+  getUser: async () => ({
+    plan: "pro",
+    subscriptionExpiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+  }),
   getMarket: async () => storageState.market,
   // Emulates the real dedup-by-clientId + return-authoritative-rows contract.
   upsertMarketSalesBatch: async (
