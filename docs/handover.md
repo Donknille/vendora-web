@@ -84,7 +84,7 @@ Framer Motion + react-countup eingebaut, alles respektiert `prefers-reduced-moti
 - [HeroHeadline.tsx](../src/app/landing/_components/HeroHeadline.tsx) — Wort-Carousel (verwaltet/abgerechnet/geplant/analysiert)
 - [MeshGradient.tsx](../src/app/landing/_components/MeshGradient.tsx) — 3 floatende Blur-Blobs (CSS-only)
 - [FeatureGrid.tsx](../src/app/landing/_components/FeatureGrid.tsx) — Stagger-Scroll-Reveal + Hover-Lift + Icon-Rotation
-- [PricingBox.tsx](../src/app/landing/_components/PricingBox.tsx) — CountUp auf 2,99 € + Glow-Pulse
+- [PricingBox.tsx](../src/app/landing/_components/PricingBox.tsx) — CountUp auf 19,90 € + Glow-Pulse
 
 ### Noch offen — Roadmap Sprint 2–4
 

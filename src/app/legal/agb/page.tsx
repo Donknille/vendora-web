@@ -53,10 +53,11 @@ export default function AGBPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">§ 4 Kostenlose Testphase und Abonnement</h2>
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
-          <p>(1) Nach der Registrierung erhält der Nutzer eine kostenlose Testphase von 6 Wochen mit vollem Funktionsumfang.</p>
-          <p>(2) Nach Ablauf der Testphase ist ein kostenpflichtiges Abonnement (2,99 €/Monat) erforderlich, um neue Aufträge, Märkte und Ausgaben zu erstellen.</p>
-          <p>(3) Bestehende Daten bleiben auch ohne aktives Abonnement einsehbar. Bereits erstellte Rechnungen können weiterhin generiert werden.</p>
-          <p>(4) Das Abonnement verlängert sich automatisch um jeweils einen Monat, sofern es nicht vor Ablauf gekündigt wird.</p>
+          <p>(1) Nach der Registrierung erhält der Nutzer eine kostenlose Testphase von 42 Tagen (6 Wochen) mit vollem Funktionsumfang.</p>
+          <p>(2) Nach Ablauf der Testphase ist das kostenpflichtige Abonnement &bdquo;Vendora Pro&ldquo; (19,90 €/Monat) erforderlich, um neue Einträge anzulegen (insbesondere Aufträge, Rechnungen, Märkte, Verkäufe und Ausgaben) sowie um eine GuV-/EÜR-Jahresübersicht zu erstellen und Daten zu importieren.</p>
+          <p>(3) Ohne aktives Abonnement wird das Konto in den Nur-Lese-Modus versetzt. Bestehende Daten bleiben unbegrenzt einsehbar; bereits ausgestellte Rechnungen können weiterhin als PDF heruntergeladen und der vollständige Datenexport (Art. 20 DSGVO) kann jederzeit abgerufen werden.</p>
+          <p>(4) Eine GuV-/EÜR-Jahresübersicht, die während der Testphase oder eines aktiven Abonnements bereits erstellt wurde, bleibt auch im Nur-Lese-Modus abrufbar. Für bislang nicht erstellte Jahre ist ein aktives Abonnement erforderlich.</p>
+          <p>(5) Das Abonnement verlängert sich automatisch um jeweils einen Monat, sofern es nicht vor Ablauf gekündigt wird.</p>
         </div>
       </Card>
 
@@ -112,7 +113,7 @@ export default function AGBPage() {
           <p>(1) Es gilt das Recht der Bundesrepublik Deutschland.</p>
           <p>(2) Sollten einzelne Bestimmungen dieser AGB unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.</p>
         </div>
-        <p className="text-sm text-muted mt-4">Stand: April 2026</p>
+        <p className="text-sm text-muted mt-4">Stand: August 2026</p>
       </Card>
     </div>
   );

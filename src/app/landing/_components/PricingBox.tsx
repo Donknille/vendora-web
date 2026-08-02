@@ -9,7 +9,7 @@ const FEATURES = [
   "Unbegrenzte Aufträge & Rechnungen",
   "Unbegrenzte Märkte & Verkäufe",
   "Ausgabenverwaltung",
-  "Dashboard & GuV-Export",
+  "Dashboard & GuV/EÜR-Export",
   "Backup & Restore",
   "Deutsch & Englisch",
 ];
@@ -39,10 +39,10 @@ export function PricingBox() {
       <div className="flex items-baseline justify-center gap-1 mb-4 relative">
         <span className="text-5xl text-primary tabular-nums">
           {reduceMotion || !inView ? (
-            "2,99 €"
+            "19,90 €"
           ) : (
             <>
-              <CountUp end={2.99} duration={1.2} decimals={2} decimal="," />
+              <CountUp end={19.9} duration={1.2} decimals={2} decimal="," />
               {" €"}
             </>
           )}
@@ -63,7 +63,9 @@ export function PricingBox() {
         6 Wochen kostenlos testen
       </Link>
       <p className="mt-2 text-xs text-faint relative">
-        Jederzeit kündbar. Keine versteckten Kosten.
+        Jederzeit kündbar. Keine versteckten Kosten. Ohne Abo bleibt dein Konto
+        im Nur-Lese-Modus: Daten ansehen sowie Rechnungs-PDFs und Datenexport
+        herunterladen sind weiterhin möglich.
       </p>
     </motion.div>
   );
