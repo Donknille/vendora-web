@@ -1,0 +1,2 @@
+ALTER TABLE "market_sales" ADD COLUMN "payment_method" text;--> statement-breakpoint
+ALTER TABLE "market_sales" ADD CONSTRAINT "chk_market_sales_payment_method" CHECK ("market_sales"."payment_method" is null or "market_sales"."payment_method" in ('cash', 'card'));

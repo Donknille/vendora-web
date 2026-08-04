@@ -1,31 +1,32 @@
 # Vendora Web – Setup-Anleitung
 
-Vendora ist eine Business-Management-Web-App (Bestellungen, Märkte/Marktverkäufe, Ausgaben,
-Rechnungsnummern, Firmenprofil) mit Abo-Modell. Diese Anleitung beschreibt, wie du das Projekt
-lokal einrichtest und deployst.
+Vendora ist eine Business-Management-Web-App für Markthändler:innen (Aufträge & Rechnungen,
+Marktmodus/Marktverkäufe, Ausgaben, EÜR-/Finanzdashboard, Firmenprofil) mit Abo-Modell.
+Diese Anleitung beschreibt das lokale Setup und Deployment.
 
 ## Tech-Stack
 
 | Bereich        | Technologie                                                        |
 | -------------- | ------------------------------------------------------------------ |
-| Framework      | Next.js 16 (App Router), React 19, TypeScript                      |
-| Auth           | Supabase Auth (`@supabase/ssr`)                                    |
-| Datenbank      | Supabase Postgres, Zugriff über Drizzle ORM (`postgres-js`)        |
-| Migrationen    | Drizzle Kit (`drizzle-kit push`)                                   |
+| Framework      | Next.js 16 (App Router), React 19, TypeScript strict               |
+| Auth           | Better Auth (E-Mail/Passwort, Drizzle-Adapter, Session-Cookies)    |
+| Datenbank      | Neon Postgres, Zugriff über Drizzle ORM (`postgres-js`)            |
+| Migrationen    | Drizzle Kit – versioniert in `drizzle/` (`db:generate` + `db:migrate`) |
 | Zahlungen      | Stripe (Subscriptions: Checkout, Customer Portal, Webhook)         |
-| Rate Limiting  | Arcjet (Shield + Fixed Window)                                     |
+| E-Mail         | Resend (Passwort-Reset, E-Mail-Bestätigung)                        |
+| Rate Limiting  | Arcjet (Shield + Fixed Window) in `src/proxy.ts`                   |
 | UI             | Tailwind CSS v4, TanStack Query, lucide-react, motion              |
 | Validierung    | Zod                                                                |
-| Tests          | Vitest, Testing Library                                            |
+| Tests          | Vitest                                                             |
 
 ## 1. Voraussetzungen
 
 - **Node.js 22** (die CI läuft auf Node 22 – siehe `.github/workflows/security.yml`)
 - **npm** (das Repo nutzt `package-lock.json` / `npm ci`)
 - **Git**
-- Ein **Supabase**-Projekt (Auth + Postgres)
+- Ein **Neon**-Projekt (Postgres, EU-Region empfohlen)
 - Ein **Stripe**-Konto (Test- oder Live-Modus)
-- Ein **Arcjet**-Konto (für Rate Limiting; in Production zwingend erforderlich, siehe Schritt 6)
+- Optional: **Resend**-Konto (E-Mail) und **Arcjet**-Konto (Rate Limiting; in Production Pflicht)
 
 ## 2. Schnellstart
 
@@ -38,9 +39,8 @@ npm install
 cp .env.local.example .env.local
 #   -> Werte in .env.local eintragen (siehe Abschnitt 3)
 
-# Datenbank-Schema anlegen
-npm run db:push
-#   -> danach RLS-Policies ausführen (siehe Abschnitt 4)
+# Datenbank-Schema per Migration anlegen
+npm run db:migrate
 
 # Dev-Server starten
 npm run dev
@@ -50,57 +50,53 @@ App läuft anschließend unter **http://localhost:3000**.
 
 ## 3. Umgebungsvariablen
 
-Alle Variablen werden in `.env.local` gesetzt (Vorlage: `.env.local.example`).
+Alle Variablen werden in `.env.local` gesetzt (Vorlage: `.env.local.example`). Sie werden beim
+Start zentral über `src/lib/server/env.ts` per Zod validiert – fehlt eine Pflichtvariable,
+bricht der Dev-Server/Runtime mit einer klaren Meldung ab (fail-fast).
 
-| Variable                            | Pflicht                    | Beschreibung / Bezugsquelle                                                                 |
-| ----------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`          | ✅                         | Projekt-URL: Supabase → Project Settings → API                                              |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`     | ✅                         | Anon/Public Key: Supabase → Project Settings → API                                          |
-| `SUPABASE_SERVICE_ROLE_KEY`         | ✅                         | Service-Role-Key (nur serverseitig!): Supabase → Project Settings → API. Für Admin-Ops (z. B. User löschen) |
-| `DATABASE_URL`                      | ✅                         | Direkte Postgres-Verbindung für Drizzle. Supabase → Connect → **Transaction Pooler** (Port 6543) |
-| `ADMIN_EMAILS`                      | ✅                         | Kommaseparierte Liste der Admin-E-Mails (Zugriff auf `/admin`)                              |
-| `STRIPE_SECRET_KEY`                 | ✅                         | Stripe → Developers → API keys (`sk_test_...` / `sk_live_...`)                              |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`| ➖ aktuell ungenutzt       | In der Vorlage enthalten, wird im Code derzeit **nicht** referenziert (Checkout läuft serverseitig). Nur nötig für künftiges client-seitiges Stripe.js: Stripe → Developers → API keys (`pk_...`) |
-| `STRIPE_WEBHOOK_SECRET`             | ✅                         | Signing-Secret des Webhook-Endpoints (`whsec_...`, siehe Abschnitt 5)                       |
-| `ARCJET_KEY`                        | ⚠️ Prod-Pflicht, lokal optional | Arcjet-Dashboard → API-Key (`ajkey_...`). Siehe Abschnitt 6                             |
+| Variable                | Pflicht                          | Beschreibung / Bezugsquelle                                                                 |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | ✅                               | Gepoolte Neon-Verbindung (Neon-Konsole → Connection Details → **Pooled**). `?sslmode=require` beibehalten. |
+| `BETTER_AUTH_SECRET`    | ✅                               | Secret zum Signieren von Sessions. Erzeugen: `openssl rand -base64 32`                       |
+| `BETTER_AUTH_URL`       | ➖ (empfohlen)                   | Öffentliche Basis-URL ohne Trailing-Slash. Lokal `http://localhost:3000`                     |
+| `ADMIN_EMAILS`          | ➖                               | Kommaseparierte Liste der Admin-E-Mails (Zugriff auf `/admin`)                              |
+| `STRIPE_SECRET_KEY`     | ➖ (Pflicht für Billing)         | Stripe → Developers → API keys (`sk_test_...` / `sk_live_...`)                              |
+| `STRIPE_WEBHOOK_SECRET` | ➖ (Pflicht für Webhook)         | Signing-Secret des Webhook-Endpoints (`whsec_...`, siehe Abschnitt 5)                       |
+| `RESEND_API_KEY`        | ➖ (Pflicht für E-Mail)          | Resend → API keys (`re_...`). Ohne Key werden E-Mails mit Warnung übersprungen.             |
+| `EMAIL_FROM`            | ➖                               | Absenderadresse, z. B. `Vendora <noreply@deine-domain.de>` (verifizierte Resend-Domain)     |
+| `ARCJET_KEY`            | ⚠️ Prod-Pflicht, lokal optional | Arcjet-Dashboard → API-Key (`ajkey_...`). Siehe Abschnitt 6                                  |
 
-> **Hinweis zu `DATABASE_URL`:** Es wird der Supabase **Transaction Pooler** (Port `6543`) verwendet.
-> Der DB-Client läuft daher mit `prepare: false` und `ssl: "require"` (`src/lib/server/db.ts`).
+> **Hinweis zu `DATABASE_URL`:** Es wird die **gepoolte** Neon-Verbindung verwendet. Der DB-Client
+> läuft daher mit `prepare: false` und `ssl: "require"` (`src/lib/server/db.ts`).
 
-## 4. Datenbank einrichten
+> **Auth-Tabellen:** Better Auth verwaltet `user`/`session`/`account`/`verification`
+> (`src/lib/server/auth-schema.ts`). Die App-`users`-Tabelle ist das Profil, gekeyt auf die
+> Better-Auth-`user.id`. E-Mail-Verifizierung ist aktuell deaktiviert
+> (`requireEmailVerification: false` in `src/lib/auth.ts`), bis eine Resend-Domain live ist.
 
-1. **Schema pushen** – erzeugt alle Tabellen aus `src/lib/server/schema.ts` in der Supabase-DB:
+## 4. Datenbank einrichten (Migrationen)
 
-   ```bash
-   npm run db:push
-   ```
+Das Schema liegt in `src/lib/server/schema.ts` (+ Auth-Tabellen in `auth-schema.ts`). Änderungen
+werden **versioniert** als Migration in `drizzle/` abgelegt und angewendet.
 
-   Tabellen: `users`, `orders`, `order_items`, `market_events`, `market_sales`, `expenses`,
-   `company_profiles`, `app_settings`, `invoice_counters`.
+```bash
+npm run db:migrate     # alle Migrationen aus drizzle/ auf die DB anwenden
+```
 
-2. **Row Level Security aktivieren** – die Datei `src/sql/rls-policies.sql` im
-   **Supabase SQL Editor** ausführen. Sie aktiviert RLS auf allen Tabellen und stellt sicher,
-   dass jede*r Nutzer*in ausschließlich eigene Daten sehen/ändern kann – auch bei direktem
-   Zugriff über den Supabase-Client.
+Workflow bei Schemaänderungen:
 
-Weitere DB-Skripte:
+| Skript                | Zweck                                                                 |
+| --------------------- | --------------------------------------------------------------------- |
+| `npm run db:generate` | Neue Migration aus Schemadiff erzeugen (Datei in `drizzle/` committen) |
+| `npm run db:migrate`  | Ausstehende Migrationen anwenden (Dev **und** Prod/Deploy)            |
+| `npm run db:push`     | Schema ohne Migration direkt pushen – **nur für lokale Experimente**  |
+| `npm run db:studio`   | Drizzle Studio (DB-Browser) öffnen                                    |
 
-| Skript                | Zweck                                                     |
-| --------------------- | --------------------------------------------------------- |
-| `npm run db:push`     | Schema direkt in die DB pushen (Dev)                      |
-| `npm run db:generate` | SQL-Migrationsdateien aus dem Schema generieren           |
-| `npm run db:studio`   | Drizzle Studio (DB-Browser) öffnen                        |
+> Es gibt **kein** Row Level Security wie unter Supabase. Zugriffsschutz erfolgt
+> anwendungsseitig: jede Query ist über `getAuthUserId()` + `WHERE user_id = ?` an den
+> eingeloggten Account gebunden.
 
-## 5. Supabase Auth konfigurieren
-
-- **Redirect-URLs** (Supabase → Authentication → URL Configuration): für lokale Entwicklung
-  `http://localhost:3000/**`, für Production die Prod-Domain ergänzen. Der Auth-Callback läuft
-  über `/api/auth/callback`.
-- **E-Mail-Templates**: Unter `src/emails/` liegen fertige HTML-Vorlagen
-  (`confirm-signup.html`, `magic-link.html`, `reset-password.html`, `invite-user.html`,
-  `change-email.html`). Diese können in Supabase → Authentication → Email Templates hinterlegt werden.
-
-## 6. Stripe einrichten
+## 5. Stripe einrichten
 
 1. **Produkt + Preis** anlegen (Stripe → Product catalog). Der Code referenziert aktuell eine
    **fest hinterlegte Price-ID** in `src/lib/server/stripe.ts`:
@@ -109,17 +105,16 @@ Weitere DB-Skripte:
    export const STRIPE_PRICE_ID = "price_1TLMf7RvBVbOJnhsnhujvSmR";
    ```
 
-   Für ein eigenes Stripe-Konto muss diese ID auf den eigenen Preis angepasst werden.
+   Für ein eigenes Stripe-Konto muss diese ID angepasst werden. (Wird in einer späteren Phase
+   auf Env/Config umgestellt – siehe `docs/REBUILD-PLAN.md`, Phase 4.)
 
 2. **Webhook-Endpoint** anlegen (Stripe → Developers → Webhooks):
    - URL: `https://<deine-domain>/api/stripe/webhook` (lokal via Stripe CLI, siehe unten)
-   - Zu abonnierende Events:
-     - `checkout.session.completed`
-     - `invoice.payment_succeeded`
-     - `customer.subscription.deleted`
+   - Events: `checkout.session.completed`, `invoice.payment_succeeded`, `customer.subscription.deleted`
    - Das **Signing Secret** (`whsec_...`) als `STRIPE_WEBHOOK_SECRET` eintragen.
 
    > Ohne gültiges `STRIPE_WEBHOOK_SECRET` weist der Endpoint alle Webhooks ab (fail-closed).
+   > Events werden idempotent verarbeitet (Event-ID in `webhook_events`), Replays werden ignoriert.
 
 3. **Lokales Testen** mit der Stripe CLI:
 
@@ -127,82 +122,58 @@ Weitere DB-Skripte:
    stripe listen --forward-to localhost:3000/api/stripe/webhook
    ```
 
-## 7. Arcjet (Rate Limiting) einrichten
+## 6. Arcjet (Rate Limiting)
 
-Arcjet schützt die App (Shield gegen gängige Angriffe + Rate Limits, u. a. strenger für
-Auth-Endpoints). Konfiguration in `src/lib/server/arcjet.ts`, Einbindung in `src/middleware.ts`.
+Arcjet schützt die App (Shield + Rate Limits, strenger für Auth-Endpoints). Konfiguration in
+`src/lib/server/arcjet.ts`, Einbindung in `src/proxy.ts` (Node-Runtime-Proxy statt `middleware.ts`).
 
-- **Lokal**: `ARCJET_KEY` ist optional. Fehlt er (und `NODE_ENV !== production`), wird Rate
-  Limiting einfach übersprungen.
-- **Production**: `ARCJET_KEY` ist **Pflicht**. Ist er nicht gesetzt, antwortet die Middleware
-  mit `503` auf **alle** Requests (fail-closed). Vor jedem Prod-Deploy also unbedingt setzen.
+- **Lokal**: `ARCJET_KEY` optional. Fehlt er (und `NODE_ENV !== production`), wird Rate Limiting übersprungen.
+- **Production**: `ARCJET_KEY` ist **Pflicht**. Ohne Key antwortet der Proxy fail-closed mit `503`.
 
-## 8. Admin-Zugang
+## 7. Admin-Zugang
 
 Der Admin-Bereich (`/admin`) ist nur für E-Mails erreichbar, die in `ADMIN_EMAILS`
 (kommasepariert) hinterlegt sind – siehe `src/lib/server/admin.ts`.
 
-## 9. Skripte
+## 8. Tests & Qualitätssicherung
 
-| Skript                | Zweck                                             |
-| --------------------- | ------------------------------------------------- |
-| `npm run dev`         | Dev-Server (http://localhost:3000)                |
-| `npm run build`       | Production-Build                                  |
-| `npm start`           | Production-Server (nach `build`)                  |
-| `npm run lint`        | ESLint                                            |
-| `npm test`            | Tests einmalig (Vitest)                           |
-| `npm run test:watch`  | Tests im Watch-Modus                              |
-| `npm run db:push`     | DB-Schema pushen                                  |
-| `npm run db:generate` | Migrationen generieren                            |
-| `npm run db:studio`   | Drizzle Studio                                    |
-
-## 10. Tests & Qualitätssicherung
-
-Vor einem Commit/Push sollten dieselben Checks wie in der CI grün sein
-(`.github/workflows/security.yml`):
+Vor Commit/Push dieselben Checks wie in der CI (`.github/workflows/security.yml`) grün ziehen:
 
 ```bash
 npm audit --audit-level=high
-npx tsc --noEmit
+npm run typecheck
 npm run lint
 npm test
 npm run build
 ```
 
-## 11. Deployment (Vercel)
+## 9. Deployment (Vercel)
 
 1. Repo mit Vercel verbinden (Framework: Next.js).
-2. **Alle** Umgebungsvariablen aus Abschnitt 3 in Vercel setzen –
-   inkl. **`ARCJET_KEY` (Prod-Pflicht)** und `SUPABASE_SERVICE_ROLE_KEY`.
-3. Stripe-Webhook-URL auf die Production-Domain aktualisieren
-   (`https://<prod-domain>/api/stripe/webhook`) und das neue `STRIPE_WEBHOOK_SECRET` in Vercel hinterlegen.
-4. Supabase Redirect-URLs um die Production-Domain ergänzen.
+2. **Alle** Umgebungsvariablen aus Abschnitt 3 in Vercel setzen – inkl. **`ARCJET_KEY` (Prod-Pflicht)**.
+3. Migrationen auf die Prod-DB anwenden: `npm run db:migrate` (mit Prod-`DATABASE_URL`).
+4. Stripe-Webhook-URL auf die Production-Domain aktualisieren und das neue `STRIPE_WEBHOOK_SECRET` hinterlegen.
+5. `BETTER_AUTH_URL` auf die Production-Domain setzen; in Resend die Absender-Domain verifizieren.
 
-Security-Header (HSTS, CSP, X-Frame-Options u. a.) sind bereits in `next.config.ts` konfiguriert.
+Security-Header (HSTS, CSP, X-Frame-Options u. a.) sind in `next.config.ts` konfiguriert.
 
-## 12. Projektstruktur (Kurzüberblick)
+## 10. Projektstruktur (Kurzüberblick)
 
 ```
+drizzle/                # Versionierte SQL-Migrationen
 src/
-  app/                # Next.js App Router
-    (app)/            # Eingeloggter Bereich (dashboard, orders, markets, expenses, admin, settings)
-    api/              # Route Handler (auth, orders, markets, expenses, stripe, admin, migrate, ...)
-    auth/             # Login, Registrierung, Passwort-Reset
-    legal/            # AGB, Datenschutz, Impressum, Changelog
-  components/         # UI-Komponenten (Sidebar, ui/*)
-  emails/             # HTML-Vorlagen für Supabase Auth-Mails
+  app/
+    (app)/              # Eingeloggter Bereich (dashboard, orders, markets, expenses, admin, settings)
+    api/                # Route Handler (auth, orders, markets, market-sales, expenses, profile, stripe, admin, export, migrate)
+    auth/               # Login, Registrierung, Passwort-Reset
+    legal/              # AGB, Datenschutz, Impressum, Changelog
+  components/           # UI-Komponenten (Sidebar, ui/*)
   lib/
-    server/           # DB (Drizzle), Schema, Auth, Storage, Stripe, Arcjet, Admin
-    supabase/         # Supabase-Clients (client, server, middleware, admin)
-    hooks/            # React-Query-Hooks
-  sql/rls-policies.sql # Row-Level-Security-Policies (im Supabase SQL Editor ausführen)
-  middleware.ts       # Auth-Session + Rate Limiting
+    auth.ts             # Better Auth Instanz
+    formatCurrency.ts   # Cent<->Euro-Konvertierung
+    server/             # db, schema, auth, admin, storage, stripe, arcjet, email, env, pagination
+    hooks/              # React-Query-Hooks
+  proxy.ts              # Better-Auth-Cookie-Check + Arcjet Rate Limiting (Node-Runtime)
 ```
 
-## 13. Sicherheit (Kurzüberblick)
-
-- **Row Level Security** auf allen Tabellen (`src/sql/rls-policies.sql`).
-- **Rate Limiting / Shield** via Arcjet (fail-closed in Production).
-- **Stripe-Webhooks** mit Signaturprüfung (fail-closed ohne Secret).
-- **Security-Header** inkl. Content-Security-Policy in `next.config.ts`.
-- **Service-Role-Key** wird ausschließlich serverseitig verwendet (`src/lib/supabase/admin.ts`).
+Weiterführend: `docs/REBUILD-PLAN.md` (Überarbeitungsplan), `CLAUDE.md` / `AGENTS.md` (Agent-/Coding-Regeln).

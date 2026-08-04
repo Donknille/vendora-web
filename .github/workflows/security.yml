@@ -2,9 +2,7 @@ name: Security & Quality Check
 
 on:
   push:
-    branches: [master]
   pull_request:
-    branches: [master]
   schedule:
     - cron: "0 8 * * 1" # Every Monday at 8:00 UTC
 
@@ -25,7 +23,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Type check
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Lint
         run: npm run lint
@@ -35,3 +33,6 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Secrets are injected at deploy time, not in CI; skip env validation.
+          SKIP_ENV_VALIDATION: "true"

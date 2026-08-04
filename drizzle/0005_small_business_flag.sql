@@ -1,0 +1,1 @@
+ALTER TABLE "company_profiles" ADD COLUMN "is_small_business" boolean DEFAULT true NOT NULL;

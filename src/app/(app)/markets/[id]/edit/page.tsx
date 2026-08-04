@@ -6,7 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useMarkets, useUpdateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { parseAmount } from "@/lib/formatCurrency";
+import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
+import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
 
 interface QuickItem {
   name: string;
@@ -14,7 +15,7 @@ interface QuickItem {
 }
 
 export default function EditMarketPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const marketId = params.id as string;
@@ -27,6 +28,8 @@ export default function EditMarketPage() {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
+  const [status, setStatus] = useState("open");
+  const [applicationDeadline, setApplicationDeadline] = useState("");
   const [standFee, setStandFee] = useState("");
   const [travelCost, setTravelCost] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,22 +44,16 @@ export default function EditMarketPage() {
       setName(market.name || "");
       setDate(market.date || "");
       setLocation(market.location || "");
-      setStandFee(
-        Number(market.standFee)
-          ? Number(market.standFee).toFixed(2).replace(".", ",")
-          : ""
-      );
-      setTravelCost(
-        Number(market.travelCost)
-          ? Number(market.travelCost).toFixed(2).replace(".", ",")
-          : ""
-      );
+      setStatus(market.status || "open");
+      setApplicationDeadline(market.applicationDeadline || "");
+      setStandFee(market.standFee ? formatAmountInput(market.standFee) : "");
+      setTravelCost(market.travelCost ? formatAmountInput(market.travelCost) : "");
       setNotes(market.notes || "");
       if (market.quickItems && market.quickItems.length > 0) {
         setQuickItems(
           market.quickItems.map((item) => ({
             name: item.name,
-            price: item.price.toFixed(2).replace(".", ","),
+            price: formatAmountInput(item.price),
           }))
         );
       }
@@ -110,6 +107,8 @@ export default function EditMarketPage() {
         name: name.trim(),
         date,
         location: location.trim(),
+        status,
+        applicationDeadline: applicationDeadline || null,
         standFee: parseAmount(standFee),
         travelCost: parseAmount(travelCost),
         notes: notes.trim(),
@@ -157,6 +156,24 @@ export default function EditMarketPage() {
           <div>
             <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.location}</label>
             <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder={t.markets.location} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary">Status</label>
+              <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
+                {MARKET_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {statusLabel(s, language === "de")}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary">
+                {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
+              </label>
+              <input type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} className={inputClass} />
+            </div>
           </div>
         </div>
 

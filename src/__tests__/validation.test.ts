@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 
-// Replicate the Zod schemas from API routes to test validation
+// Replicate the Zod schemas from API routes to test validation.
+// Money fields are integer cents (mirrors src/app/api/*/route.ts).
 const createOrderSchema = z.object({
   customerName: z.string().min(1).max(200),
   customerEmail: z.string().max(254).default(""),
@@ -15,13 +16,13 @@ const createOrderSchema = z.object({
   items: z.array(z.object({
     name: z.string().min(1).max(200),
     quantity: z.number().int().min(1).max(9999),
-    price: z.number().min(0).max(999999.99),
+    price: z.number().int().min(0).max(99999999), // cents
   })).min(1).max(100),
 });
 
 const createExpenseSchema = z.object({
   description: z.string().min(1).max(200),
-  amount: z.number().min(0).max(999999.99),
+  amount: z.number().int().min(0).max(99999999), // cents
   category: z.string().min(1).max(100),
   expenseDate: z.string().min(1).max(50),
 });
@@ -34,7 +35,7 @@ describe("Order validation", () => {
       customerZip: "12345",
       customerCity: "Berlin",
       orderDate: "2026-04-10",
-      items: [{ name: "Ring", quantity: 1, price: 12.5 }],
+      items: [{ name: "Ring", quantity: 1, price: 1250 }],
     });
     expect(result.success).toBe(true);
   });
@@ -70,7 +71,7 @@ describe("Order validation", () => {
       customerZip: "12345",
       customerCity: "Berlin",
       orderDate: "2026-04-10",
-      items: [{ name: "Ring", quantity: 1, price: 1000000 }],
+      items: [{ name: "Ring", quantity: 1, price: 100000000 }],
     });
     expect(result.success).toBe(false);
   });
@@ -109,7 +110,7 @@ describe("Expense validation", () => {
   it("accepts valid expense", () => {
     const result = createExpenseSchema.safeParse({
       description: "Materialien",
-      amount: 50.99,
+      amount: 5099,
       category: "Materials",
       expenseDate: "2026-04-10",
     });
@@ -139,7 +140,7 @@ describe("Expense validation", () => {
   it("rejects amount exceeding max", () => {
     const result = createExpenseSchema.safeParse({
       description: "Test",
-      amount: 1000000,
+      amount: 100000000,
       category: "Materials",
       expenseDate: "2026-04-10",
     });

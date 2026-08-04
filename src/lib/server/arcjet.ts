@@ -1,8 +1,10 @@
+import "server-only";
 import arcjet, { fixedWindow, shield } from "@arcjet/next";
+import { env } from "./env";
 
 // Global Arcjet instance with bot protection and rate limiting
 export const aj = arcjet({
-  key: process.env.ARCJET_KEY!,
+  key: env.ARCJET_KEY!,
   characteristics: ["ip.src"],
   rules: [
     // Shield: protect against common attacks (SQL injection, XSS probes, etc.)
@@ -18,7 +20,7 @@ export const aj = arcjet({
 
 // Stricter rate limit for auth endpoints (login, signup, password reset)
 export const ajAuth = arcjet({
-  key: process.env.ARCJET_KEY!,
+  key: env.ARCJET_KEY!,
   characteristics: ["ip.src"],
   rules: [
     shield({ mode: "LIVE" }),
@@ -33,7 +35,7 @@ export const ajAuth = arcjet({
 
 // Rate limit for API write operations (POST, PUT, DELETE)
 export const ajWrite = arcjet({
-  key: process.env.ARCJET_KEY!,
+  key: env.ARCJET_KEY!,
   characteristics: ["ip.src"],
   rules: [
     shield({ mode: "LIVE" }),

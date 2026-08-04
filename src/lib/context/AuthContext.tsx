@@ -1,46 +1,23 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createContext, useContext, useEffect, useRef } from "react";
+import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/lib/api-client";
 
 const AuthContext = createContext<string | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id ?? null;
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    // Load initial user
-    supabase.auth.getUser().then(({ data }) => {
-      const id = data.user?.id ?? null;
-      setUserId(id);
-      lastUserId.current = id;
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      const newUserId = session?.user?.id ?? null;
-
-      if (event === "SIGNED_OUT") {
-        queryClient.clear();
-        setUserId(null);
-        lastUserId.current = null;
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        // If user changed (different account), clear stale cache
-        if (lastUserId.current && lastUserId.current !== newUserId) {
-          queryClient.clear();
-        }
-        setUserId(newUserId);
-        lastUserId.current = newUserId;
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    // Clear stale React Query cache when the user changes (sign-out or account switch)
+    if (lastUserId.current !== null && lastUserId.current !== userId) {
+      queryClient.clear();
+    }
+    lastUserId.current = userId;
+  }, [userId]);
 
   return <AuthContext.Provider value={userId}>{children}</AuthContext.Provider>;
 }

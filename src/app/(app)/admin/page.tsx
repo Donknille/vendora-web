@@ -22,18 +22,16 @@ interface AdminUser {
   id: string;
   email: string;
   createdAt: string;
-  subscriptionStatus: string;
-  trialEndsAt: string | null;
+  plan: "free" | "trial" | "pro";
   subscriptionExpiresAt: string | null;
   isBlocked: boolean;
   stats: { orders: number; markets: number; expenses: number };
 }
 
-const statusColors: Record<string, string> = {
-  trial: "text-yellow-500",
-  active: "text-green-600",
-  expired: "text-brand-primary",
-  cancelled: "text-brand-primary",
+const planColors: Record<string, string> = {
+  free: "text-secondary",
+  trial: "text-brand-primary",
+  pro: "text-green-600",
 };
 
 export default function AdminDashboardPage() {
@@ -166,8 +164,8 @@ export default function AdminDashboardPage() {
                     </div>
                   </td>
                   <td className="py-3">
-                    <span className={`font-medium capitalize ${statusColors[user.subscriptionStatus] || "text-muted"}`}>
-                      {user.subscriptionStatus}
+                    <span className={`font-medium capitalize ${planColors[user.plan] || "text-muted"}`}>
+                      {user.plan}
                     </span>
                   </td>
                   <td className="py-3 text-center text-secondary">{user.stats.orders}</td>

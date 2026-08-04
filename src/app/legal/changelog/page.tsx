@@ -6,6 +6,18 @@ import { Card } from "@/components/ui/Card";
 
 const releases = [
   {
+    version: "1.1.0",
+    date: "2026-07-18",
+    title: "Infrastruktur-Umstellung",
+    changes: [
+      "Umzug der Datenbank von Supabase auf Neon (PostgreSQL, EU-Region)",
+      "Neue Authentifizierung mit Better Auth (E-Mail/Passwort, selbst betrieben)",
+      "Transaktionale E-Mails jetzt über Resend",
+      "Rate-Limiting und Bot-Schutz über Arcjet",
+      "Aktualisierte Datenschutzerklärung mit den tatsächlichen Auftragsverarbeitern",
+    ],
+  },
+  {
     version: "1.0.0",
     date: "2026-04-10",
     title: "Erster Release",

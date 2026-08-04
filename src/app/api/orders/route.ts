@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
+import { parsePagination } from "@/lib/server/pagination";
 import { z } from "zod";
 
 const orderItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(200),
   quantity: z.number().int().min(1).max(9999),
-  price: z.number().min(0).max(999999.99),
+  price: z.number().int().min(0).max(99999999), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
 });
@@ -22,20 +24,22 @@ const createOrderSchema = z.object({
   notes: z.string().max(5000).default(""),
   orderDate: z.string().min(1, "Order date is required").max(50),
   serviceDate: z.string().max(50).optional(),
-  shippingCost: z.number().min(0).max(99999.99).optional(),
+  paidAt: z.string().max(50).optional(),
+  paymentMethod: z.enum(["cash", "card", "transfer", "paypal", "other"]).optional(),
+  shippingCost: z.number().int().min(0).max(9999999).optional(), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required").max(100),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await storage.getOrders(userId);
+    const data = await storage.getOrders(userId, parsePagination(request));
     return NextResponse.json(data);
   } catch (error) {
     console.error("GET /api/orders error:", error);
@@ -50,8 +54,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const body = await request.json();
     const parsed = createOrderSchema.safeParse(body);

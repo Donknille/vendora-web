@@ -9,27 +9,27 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const [orders, markets, marketSales, expenses, profile, settings, invoiceCounter] =
+    const [orders, markets, marketSales, expenses, profile, invoiceCounter, invoices] =
       await Promise.all([
         storage.getOrders(userId),
         storage.getMarkets(userId),
         storage.getAllMarketSales(userId),
         storage.getExpenses(userId),
         storage.getProfile(userId),
-        storage.getSettings(userId),
         storage.getInvoiceCounter(userId),
+        storage.getInvoices(userId),
       ]);
 
     return NextResponse.json({
-      schemaVersion: 1,
+      schemaVersion: 2, // money as integer cents
       exportedAt: new Date().toISOString(),
       orders,
       markets,
       marketSales,
       expenses,
       profile,
-      settings,
       invoiceCounter,
+      invoices,
     });
   } catch (error) {
     console.error("GET /api/export error:", error);

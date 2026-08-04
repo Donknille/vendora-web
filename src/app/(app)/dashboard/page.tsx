@@ -2,16 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { FileDown } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { euerLabel, isEuerCategory } from "@/lib/euer";
 import { escapeHtml } from "@/lib/escapeHtml";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { Card } from "@/components/ui/Card";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
+
+// Charts are client-only (recharts needs the DOM); avoids SSR/hydration churn.
+const MonthlyChart = dynamic(
+  () => import("@/components/MonthlyChart").then((m) => m.MonthlyChart),
+  { ssr: false },
+);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -170,6 +178,35 @@ export default function DashboardPage() {
       });
   }, [paidOrders, filteredSales, filteredExpenses]);
 
+  // ----- Chart data (chronological asc) -----
+  const chartData = useMemo(
+    () =>
+      [...monthlyData].reverse().map((r) => ({
+        label: `${t.months[r.monthIndex].slice(0, 3)} ${String(r.year).slice(2)}`,
+        revenue: r.revenue,
+        expenses: r.expenses,
+      })),
+    [monthlyData, t],
+  );
+
+  // ----- Profit per market ranking (Kern-Kennzahl) -----
+  const marketRanking = useMemo(() => {
+    const revById: Record<string, number> = {};
+    (marketSales ?? []).forEach((s) => {
+      revById[s.marketId] = (revById[s.marketId] || 0) + (Number(s.amount) || 0) * (Number(s.quantity) || 1);
+    });
+    return (markets ?? [])
+      .filter((m) => matchesYear(m.date))
+      .map((m) => {
+        const revenue = revById[m.id] || 0;
+        const costs = (Number(m.standFee) || 0) + (Number(m.travelCost) || 0);
+        return { id: m.id, name: m.name || "—", revenue, costs, profit: revenue - costs };
+      })
+      .sort((a, b) => b.profit - a.profit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markets, marketSales, selectedYear]);
+  const maxMarketProfit = Math.max(1, ...marketRanking.map((m) => Math.abs(m.profit)));
+
   // ----- Loading state -----
   if (isLoading) return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -196,13 +233,13 @@ export default function DashboardPage() {
 
     const expensesByCategory: Record<string, number> = {};
     filteredExpenses.forEach((e) => {
-      const cat = e.category || (isDE ? "Sonstiges" : "Other");
+      const cat = isEuerCategory(e.category) ? e.category : "sonstiges";
       expensesByCategory[cat] = (expensesByCategory[cat] || 0) + (Number(e.amount) || 0);
     });
 
     const categoryRows = Object.entries(expensesByCategory)
       .sort(([, a], [, b]) => b - a)
-      .map(([cat, amount]) => `<tr><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#4b5563;">${escapeHtml(cat)}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:right;">${formatCurrency(amount)}</td></tr>`)
+      .map(([cat, amount]) => `<tr><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#4b5563;">${escapeHtml(euerLabel(cat, language))}</td><td style="padding:8px 16px;border-bottom:1px solid #e5e7eb;color:#1f2937;text-align:right;">${formatCurrency(amount)}</td></tr>`)
       .join("");
 
     const monthRows = monthlyData
@@ -359,6 +396,16 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
           {t.dashboard.monthlyPerformance}
         </h2>
 
+        {chartData.length > 0 && (
+          <div className="mb-6 text-muted">
+            <MonthlyChart
+              data={chartData}
+              revenueLabel={t.dashboard.revenue}
+              expensesLabel={t.dashboard.expenses}
+            />
+          </div>
+        )}
+
         {monthlyData.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted">--</p>
         ) : (
@@ -401,6 +448,35 @@ ${pTaxNote || pSmallBiz ? `<div class="tax-notice">${pTaxNote}${pTaxNote && pSma
           </div>
         )}
       </Card>
+
+      {/* Profit per market (Kern-Kennzahl der Zielgruppe) */}
+      {marketRanking.length > 0 && (
+        <Card>
+          <h2 className="mb-4 text-lg font-semibold text-primary">
+            {language === "de" ? "Gewinn je Markt" : "Profit per market"}
+          </h2>
+          <div className="space-y-3">
+            {marketRanking.map((m) => (
+              <div key={m.id}>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="truncate pr-2 text-secondary">{m.name}</span>
+                  <span
+                    className={`shrink-0 font-medium ${m.profit >= 0 ? "text-green-600" : "text-red-500"}`}
+                  >
+                    {formatCurrency(m.profit)}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-elevated">
+                  <div
+                    className={`h-full rounded-full ${m.profit >= 0 ? "bg-green-500" : "bg-red-500"}`}
+                    style={{ width: `${Math.round((Math.abs(m.profit) / maxMarketProfit) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

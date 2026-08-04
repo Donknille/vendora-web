@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,9 +15,9 @@ export default function ResetPasswordPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/update-password`,
+    const { error: resetError } = await authClient.requestPasswordReset({
+      email,
+      redirectTo: "/auth/update-password",
     });
 
     if (resetError) {

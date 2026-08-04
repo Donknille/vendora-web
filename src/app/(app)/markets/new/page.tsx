@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCreateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
+import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
 
 interface QuickItem {
   name: string;
@@ -14,13 +15,15 @@ interface QuickItem {
 }
 
 export default function NewMarketPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const createMarket = useCreateMarket();
 
   const [name, setName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [location, setLocation] = useState("");
+  const [status, setStatus] = useState("open");
+  const [applicationDeadline, setApplicationDeadline] = useState("");
   const [standFee, setStandFee] = useState("");
   const [travelCost, setTravelCost] = useState("");
   const [notes, setNotes] = useState("");
@@ -56,6 +59,8 @@ export default function NewMarketPage() {
       name: name.trim(),
       date,
       location: location.trim(),
+      status,
+      applicationDeadline: applicationDeadline || null,
       standFee: parseAmount(standFee),
       travelCost: parseAmount(travelCost),
       notes: notes.trim(),
@@ -130,6 +135,36 @@ export default function NewMarketPage() {
               className={inputClass}
               placeholder={t.markets.location}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary">
+                Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className={inputClass}
+              >
+                {MARKET_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {statusLabel(s, language === "de")}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary">
+                {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
+              </label>
+              <input
+                type="date"
+                value={applicationDeadline}
+                onChange={(e) => setApplicationDeadline(e.target.value)}
+                className={inputClass}
+              />
+            </div>
           </div>
         </div>
 

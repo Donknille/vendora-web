@@ -23,6 +23,8 @@ export function useCreateMarket() {
       standFee: number;
       travelCost: number;
       notes: string;
+      status?: string;
+      applicationDeadline?: string | null;
       quickItems?: { name: string; price: number }[];
     }) => {
       const res = await apiRequest("POST", "/api/markets", data);
@@ -44,6 +46,8 @@ export function useUpdateMarket() {
       standFee: number;
       travelCost: number;
       notes: string;
+      status: string;
+      applicationDeadline: string | null;
       quickItems: { name: string; price: number }[];
     }>) => {
       const res = await apiRequest("PUT", `/api/markets/${id}`, data);

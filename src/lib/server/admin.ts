@@ -1,9 +1,11 @@
+import "server-only";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "./auth";
 import * as storage from "./storage";
+import { env } from "./env";
 
 const getAdminEmails = (): string[] =>
-  (process.env.ADMIN_EMAILS || "")
+  (env.ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);

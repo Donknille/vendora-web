@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,8 +17,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { error: authError } = await authClient.signIn.email({
       email,
       password,
     });
@@ -29,8 +28,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Ensure user record exists in our DB
-    await fetch("/api/auth/ensure-user", { method: "POST" });
     router.push("/dashboard");
     router.refresh();
   };

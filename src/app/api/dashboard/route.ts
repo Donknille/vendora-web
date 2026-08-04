@@ -9,10 +9,12 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Single auth check, parallel data fetch
+    // Single auth check, parallel data fetch.
+    // getReportingExpenses includes derived market cost rows so the GuV/EÜR
+    // counts stand fees and travel costs exactly once.
     const [orders, expenses, markets, marketSales] = await Promise.all([
       storage.getOrders(userId),
-      storage.getExpenses(userId),
+      storage.getReportingExpenses(userId),
       storage.getMarkets(userId),
       storage.getAllMarketSales(userId),
     ]);

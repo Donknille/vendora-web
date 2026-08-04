@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -30,29 +30,29 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await authClient.signUp.email({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-      },
+      name: email.split("@")[0] || email,
     });
 
     if (authError) {
-      setError("Konto konnte nicht erstellt werden. E-Mail ist möglicherweise bereits vergeben.");
+      setError(
+        authError.message ||
+          "Konto konnte nicht erstellt werden. E-Mail ist möglicherweise bereits vergeben."
+      );
       setLoading(false);
       return;
     }
 
-    // If "Confirm email" is off, user is immediately logged in
-    if (data.user && data.session) {
-      await fetch("/api/auth/ensure-user", { method: "POST" });
+    // With email verification off, the user is signed in immediately.
+    if (data?.token) {
       router.push("/dashboard");
+      router.refresh();
       return;
     }
 
-    // If "Confirm email" is on, show confirmation message
+    // Email verification required — show confirmation message
     setSuccess(true);
     setLoading(false);
   };

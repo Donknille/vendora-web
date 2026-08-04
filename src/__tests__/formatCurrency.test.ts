@@ -1,31 +1,43 @@
 import { describe, it, expect } from "vitest";
-import { formatCurrency, parseAmount, formatDate } from "@/lib/formatCurrency";
+import { formatCurrency, formatAmountInput, parseAmount, formatDate } from "@/lib/formatCurrency";
+
+// Money is integer cents throughout the app.
 
 describe("formatCurrency", () => {
-  it("formats positive amounts with euro sign and comma", () => {
-    expect(formatCurrency(12.5)).toBe("€12,50");
+  it("formats positive cents with euro sign and comma", () => {
+    expect(formatCurrency(1250)).toBe("€12,50");
     expect(formatCurrency(0)).toBe("€0,00");
-    expect(formatCurrency(1000)).toBe("€1000,00");
+    expect(formatCurrency(100000)).toBe("€1000,00");
+    expect(formatCurrency(5)).toBe("€0,05");
   });
 
-  it("formats negative amounts", () => {
-    expect(formatCurrency(-5.5)).toBe("€-5,50");
+  it("formats negative cents", () => {
+    expect(formatCurrency(-550)).toBe("€-5,50");
   });
 
   it("uses custom currency symbol", () => {
-    expect(formatCurrency(10, "$")).toBe("$10,00");
+    expect(formatCurrency(1000, "$")).toBe("$10,00");
+  });
+});
+
+describe("formatAmountInput", () => {
+  it("formats cents as a plain comma-decimal string", () => {
+    expect(formatAmountInput(1234)).toBe("12,34");
+    expect(formatAmountInput(0)).toBe("0,00");
+    expect(formatAmountInput(5)).toBe("0,05");
+    expect(formatAmountInput(-550)).toBe("-5,50");
   });
 });
 
 describe("parseAmount", () => {
-  it("parses comma-decimal input", () => {
-    expect(parseAmount("8,50")).toBe(8.5);
-    expect(parseAmount("12,00")).toBe(12);
+  it("parses comma-decimal euro input into cents", () => {
+    expect(parseAmount("8,50")).toBe(850);
+    expect(parseAmount("12,00")).toBe(1200);
     // parseAmount handles simple comma-decimal, not thousand separators
   });
 
-  it("parses dot-decimal input", () => {
-    expect(parseAmount("8.50")).toBe(8.5);
+  it("parses dot-decimal input into cents", () => {
+    expect(parseAmount("8.50")).toBe(850);
   });
 
   it("handles empty and invalid input", () => {
@@ -34,13 +46,13 @@ describe("parseAmount", () => {
   });
 
   it("strips non-numeric characters", () => {
-    expect(parseAmount("€12,50")).toBe(12.5);
-    expect(parseAmount("  8,50 €")).toBe(8.5);
+    expect(parseAmount("€12,50")).toBe(1250);
+    expect(parseAmount("  8,50 €")).toBe(850);
   });
 
-  it("rounds to 2 decimal places", () => {
-    expect(parseAmount("1,999")).toBe(2);
-    expect(parseAmount("1,001")).toBe(1);
+  it("rounds to whole cents", () => {
+    expect(parseAmount("1,999")).toBe(200);
+    expect(parseAmount("1,001")).toBe(100);
   });
 });
 

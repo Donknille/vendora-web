@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const createMarketSaleSchema = z.object({
   description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().min(0).max(999999.99),
+  amount: z.number().int().min(0).max(99999999), // cents
   quantity: z.number().int().min(1).max(9999).default(1),
 });
 
@@ -46,8 +47,8 @@ export async function POST(
       return NextResponse.json({ message: "Market not found" }, { status: 404 });
     }
 
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const body = await request.json();
     const parsed = createMarketSaleSchema.safeParse(body);

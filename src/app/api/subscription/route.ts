@@ -9,13 +9,12 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await storage.getUser(userId);
-    if (!user) {
+    const info = await storage.getPlanInfo(userId);
+    if (!info) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const subscription = storage.getSubscriptionStatus(user);
-    return NextResponse.json(subscription);
+    return NextResponse.json(info);
   } catch (error) {
     console.error("GET /api/subscription error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

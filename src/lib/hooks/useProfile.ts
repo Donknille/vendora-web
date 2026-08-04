@@ -23,6 +23,7 @@ export function useUpdateProfile() {
       phone: string;
       taxNote: string;
       smallBusinessNote?: string;
+      isSmallBusiness?: boolean;
       defaultShippingCost?: number;
     }) => {
       const res = await apiRequest("PUT", "/api/profile", data);

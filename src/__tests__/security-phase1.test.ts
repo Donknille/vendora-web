@@ -76,10 +76,13 @@ describe("1.2 — Account deletion completeness", () => {
     const source = fs.readFileSync("src/app/api/account/route.ts", "utf-8");
     expect(source).toContain("db.transaction");
     expect(source).toContain("deleteAllUserData");
-    // Stripe deletion before DB transaction
+    // Stripe deletion (external) before DB transaction
     expect(source.indexOf("customers.del")).toBeLessThan(source.indexOf("db.transaction"));
-    // Supabase auth deletion before DB transaction
-    expect(source.indexOf("admin.deleteUser")).toBeLessThan(source.indexOf("db.transaction"));
+    // Better Auth identity deletion happens inside the transaction (atomic with data wipe)
+    expect(source).toContain("tx.delete(authUser)");
+    expect(source.indexOf("db.transaction")).toBeLessThan(source.indexOf("tx.delete(authUser)"));
+    // Soft-delete guard retained to block re-registration
+    expect(source).toContain("deletedAt");
   });
 });
 

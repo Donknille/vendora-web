@@ -1,21 +1,31 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId, requireActiveSubscription } from "@/lib/server/auth";
+import { getAuthUserId } from "@/lib/server/auth";
+import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
 
 const quickItemSchema = z.object({
   name: z.string().min(1).max(200),
-  price: z.number().min(0).max(999999.99),
+  price: z.number().int().min(0).max(99999999), // cents
 });
+
+const marketStatusEnum = z.enum([
+  "open",
+  "applied",
+  "confirmed",
+  "completed",
+  "cancelled",
+]);
 
 const createMarketSchema = z.object({
   name: z.string().min(1, "Market name is required").max(200),
   date: z.string().min(1, "Date is required").max(50),
   location: z.string().max(300).default(""),
-  standFee: z.number().min(0).max(99999.99).default(0),
-  travelCost: z.number().min(0).max(99999.99).default(0),
+  standFee: z.number().int().min(0).max(9999999).default(0), // cents
+  travelCost: z.number().int().min(0).max(9999999).default(0), // cents
   notes: z.string().max(5000).default(""),
-  status: z.string().max(50).optional(),
+  status: marketStatusEnum.optional(),
+  applicationDeadline: z.string().min(1).max(50).nullish(),
   quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 
@@ -41,8 +51,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const subCheck = await requireActiveSubscription(userId);
-    if (subCheck) return subCheck;
+    // Creating a market requires PRO (FREE is read-only).
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const body = await request.json();
     const parsed = createMarketSchema.safeParse(body);
