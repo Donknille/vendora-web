@@ -27,20 +27,11 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "connect-src 'self'",
-              "font-src 'self'",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join("; "),
-          },
+          // The Content-Security-Policy is NOT set here. It carries a
+          // per-request nonce and is therefore built in `src/proxy.ts`.
+          // A static header here cannot contain a nonce, and without one
+          // `script-src 'self'` blocks Next.js' inline bootstrap scripts —
+          // which silently prevents React from hydrating at all.
         ],
       },
       {

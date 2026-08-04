@@ -1,105 +1,275 @@
-# DB-Migration auf Neon anwenden
+# Von Supabase auf Neon umstellen — Schritt für Schritt
 
-**Ziel:** Die Neon-Datenbank auf den aktuellen Migrationsstand (`drizzle/0000`–`0005`) bringen.
+Vollständige 1:1-Anleitung. Alle Befehle in **PowerShell** im Projektordner
+`C:\Users\sebgr\Coding\Vendora`.
 
-**Ausgangslage:** Die DB wurde ursprünglich per `db:push` mit dem **alten** Schema erstellt
-(numeric/text, ohne `paid_at`, `expenses.market_id/source`, `is_small_business`, `webhook_events`).
-Ein `db:migrate` würde deshalb an „Tabelle existiert bereits" scheitern. Lösung: **sauberer
-Neustart** — Tabellen weg, dann Migrationen 0000–0005 frisch anwenden. Laut Projektstand gibt es
-keine wertvollen Daten (bewusst „frischer Start").
+## Was „Umstellung" überhaupt bedeutet
 
-> Alle Befehle in PowerShell im Projektordner `C:\Users\sebgr\Coding\Vendora`.
+Die Umstellung besteht aus vier unabhängigen Teilen. Zwei davon sind erledigt:
+
+| # | Teil | Status |
+|---|---|---|
+| 1 | **Code** — Supabase-Client raus, Better Auth + Drizzle/Neon rein | ✅ erledigt (Branch `migrate/neon-betterauth`) |
+| 2 | **Lokale DB** — Neon-Schema auf Migrationsstand `0000`–`0013` | ✅ erledigt (2026-08-02) |
+| 3 | **Vercel Production** — Env-Variablen von Supabase auf Neon | ⬜ **offen — Teil A unten** |
+| 4 | **Supabase abschalten** — Projekt löschen, Kosten stoppen | ⬜ **offen — Teil C unten** |
+
+Wenn du nur wissen willst, was noch zu tun ist: **Teil A → B → C**. Teil 0 und der
+Anhang sind Referenz, falls du das Ganze nochmal von vorn machen musst.
 
 ---
 
-## Variante A — bestehende Neon-DB zurücksetzen (empfohlen)
+## Teil 0 — Grundwissen (einmal lesen, dann vergessen)
 
-**1. Sicherheits-Snapshot (empfohlen, Neon-spezifisch & gratis):**
-Neon-Konsole → **Branches** → *Create branch* (von `main`). Sofortiger Point-in-Time-Snapshot als
-Rollback-Punkt.
+**Neon hat zwei Connection-Strings pro Datenbank.** Der Unterschied ist ein `-pooler`
+im Hostnamen:
 
-**2. Tabellen leeren** — Neon-Konsole → **SQL Editor** (richtige Datenbank/Branch) → ausführen:
+```
+# DIREKT (ohne -pooler)  -> für Migrationen (db:migrate)
+postgresql://USER:PASS@ep-tiny-mountain-as2f9l3u.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require
+
+# POOLED (mit -pooler)   -> für die laufende App (Vercel)
+postgresql://USER:PASS@ep-tiny-mountain-as2f9l3u-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require
+```
+
+Merksatz: **App = pooled, Migration = direkt.** Die App auf Vercel öffnet sehr viele
+kurze Verbindungen (Serverless) — dafür ist der Pooler da. Migrationen ändern das
+Schema und brauchen eine echte Session, die der Pooler nicht garantiert.
+
+Beide findest du in der Neon-Konsole unter **Project → Connect** (Schalter
+„Connection pooling" an/aus).
+
+---
+
+## Teil A — Vercel Production auf Neon umstellen
+
+Hier liegt der eigentliche offene Schritt. Vercel kennt aktuell noch die
+Supabase-Variablen.
+
+### A.1 — Alte Variablen entfernen
+
+Vercel → Projekt **vendora-web** → **Settings** → **Environment Variables**.
+Diese drei löschen (alle Environments):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+### A.2 — Neue Variablen anlegen
+
+Jeweils für **Production**, **Preview** und **Development** setzen:
+
+| Variable | Wert | Pflicht? |
+|---|---|---|
+| `DATABASE_URL` | Neon-**pooled**-String (mit `-pooler`) | **ja** |
+| `BETTER_AUTH_SECRET` | Zufalls-Secret, siehe unten | **ja** |
+| `BETTER_AUTH_URL` | `https://vendora-web-peach.vercel.app` (bzw. deine Domain) | **ja** |
+| `STRIPE_SECRET_KEY` | `sk_live_…` bzw. `sk_test_…` | für Billing |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_…` aus dem Stripe-Webhook | für Billing |
+| `STRIPE_PRICE_ID` | `price_…` des Pro-Produkts (19,90 €/Monat) | für Billing |
+| `ARCJET_KEY` | Arcjet-Key | empfohlen |
+| `RESEND_API_KEY` | Resend-Key | für E-Mails |
+| `EMAIL_FROM` | z. B. `Vendora <noreply@deine-domain.de>` | für E-Mails |
+| `ADMIN_EMAILS` | `seb.grueber@gmail.com` | für `/admin` |
+
+Ein Secret erzeugst du so:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+> **Wichtig:** `BETTER_AUTH_SECRET` in Production **nicht** identisch mit dem lokalen
+> Wert wählen, und niemals als `NEXT_PUBLIC_*` anlegen — es ist ein Server-Secret.
+
+### A.3 — Migrationen auf die Production-DB anwenden
+
+Nutzt Production dieselbe Neon-DB wie lokal (aktuell der Fall), ist dieser Schritt
+**schon erledigt** — überspringen und bei A.4 weitermachen.
+
+Nutzt Production eine **eigene** Neon-DB, einmalig lokal gegen diese DB migrieren.
+Dafür den **direkten** String (ohne `-pooler`) nur für diese eine Shell-Session setzen:
+
+```powershell
+$env:DATABASE_URL="postgresql://USER:PASS@ep-....neon.tech/neondb?sslmode=require"
+npm run db:migrate
+```
+
+Danach das PowerShell-Fenster schließen, damit die Variable nicht hängen bleibt.
+
+### A.4 — Deployen
+
+```bash
+gh pr merge 10 --merge
+```
+
+Oder in GitHub auf [PR #10](https://github.com/Donknille/vendora-web/pull/10) →
+**Merge**. Das löst automatisch den Production-Deploy aus.
+
+> Der aktuelle Production-Deploy ist rot („Edge Function `_middleware` size is 1.11 MB").
+> Der Merge behebt das mit, weil im Branch `middleware.ts` → `proxy.ts` (Node-Runtime)
+> umgestellt wurde.
+
+---
+
+## Teil B — Prüfen, ob es funktioniert hat
+
+Nach dem Deploy auf der Production-URL:
+
+1. **Registrieren** mit einer echten E-Mail → du landest im Dashboard.
+   Klappt das, funktionieren Neon + Better Auth zusammen.
+2. **Auftrag anlegen**, Status auf **„bezahlt"** setzen (prüft `paid_at`).
+3. **Rechnung ausstellen** → **PDF herunterladen** (prüft die `invoices`-Tabelle).
+4. **Ausgabe erfassen** und **Markt mit Standgebühr** anlegen.
+5. **`/steuer`** öffnen → Einnahmen/Ausgaben/Überschuss müssen stimmen → **CSV** und
+   **PDF** exportieren.
+6. **`/admin`** öffnen (geht nur mit einer E-Mail aus `ADMIN_EMAILS`).
+
+Gegenprobe direkt in der DB — Neon-Konsole → **SQL Editor**:
+
+```sql
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public' ORDER BY 1;
+```
+
+Erwartet werden diese 16 Tabellen:
+
+```
+account, company_profiles, customers, euer_exports, expenses, invoice_counters,
+invoices, market_events, market_sales, order_items, orders, session, user, users,
+verification, webhook_events
+```
+
+Und der Migrationsstand (muss **14** Zeilen liefern, `0000`–`0013`):
+
+```sql
+SELECT count(*) FROM drizzle.__drizzle_migrations;
+```
+
+---
+
+## Teil C — Supabase abschalten
+
+**Erst machen, wenn Teil B vollständig grün ist.** Danach gibt es kein Zurück.
+
+1. Sicherstellen, dass in Supabase keine Daten liegen, die du noch brauchst
+   (Supabase-Konsole → **Table Editor** durchsehen). Im Zweifel:
+   **Database** → **Backups** → Dump herunterladen und lokal ablegen.
+2. Supabase-Konsole → **Project Settings** → **General** → ganz unten
+   **Delete project**.
+3. Im Repo prüfen, dass nichts mehr auf Supabase zeigt:
+
+   ```bash
+   git grep -in supabase -- ":!docs" ":!*.md"
+   ```
+
+   Erwartet sind genau **zwei** Treffer, beide in
+   `src/app/legal/changelog/page.tsx` — das ist der historische Changelog-Text
+   („Umzug der Datenbank von Supabase auf Neon"), kein aktiver Code. Jeder
+   weitere Treffer wäre ein echter Rest.
+
+---
+
+## Anhang 1 — Lokale Umgebung neu aufbauen
+
+Falls du das Setup auf einem anderen Rechner oder von Null brauchst.
+
+**1. Abhängigkeiten:**
+
+```bash
+npm install
+```
+
+**2. `.env.local` anlegen** — Vorlage kopieren und ausfüllen:
+
+```powershell
+Copy-Item .env.local.example .env.local
+```
+
+Minimal nötig, damit die App startet: `DATABASE_URL` (Neon **direkt**) und
+`BETTER_AUTH_SECRET`. Alles andere ist optional — die Features schalten sich
+sauber ab, wenn die Keys fehlen.
+
+**3. Schema anlegen:**
+
+```bash
+npm run db:migrate
+```
+
+`drizzle.config.ts` liest `.env.local` selbst ein — du musst `DATABASE_URL` also
+**nicht** von Hand exportieren.
+
+**4. Starten:**
+
+```bash
+npm run dev
+```
+
+→ http://localhost:3000
+
+**5. Optional, Daten ansehen:**
+
+```bash
+npm run db:studio
+```
+
+---
+
+## Anhang 2 — Eine DB mit altem Schema zurücksetzen
+
+Nötig, wenn eine Datenbank ursprünglich per `db:push` entstanden ist. Sie hat dann
+Tabellen, aber **kein** Migrations-Journal — `db:migrate` scheitert an
+`relation "..." already exists`.
+
+> **Das löscht alle Daten dieser Datenbank.** Vorher in der Neon-Konsole →
+> **Branches** → *Create branch* einen Point-in-Time-Snapshot als Rollback-Punkt
+> anlegen (gratis und sofort).
+
+Neon-Konsole → **SQL Editor** (richtige DB/Branch auswählen!):
 
 ```sql
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO PUBLIC;
--- Falls aus früheren Versuchen vorhanden (sonst ignorieren):
 DROP SCHEMA IF EXISTS drizzle CASCADE;
 ```
 
-Entfernt alle alten Tabellen (App **und** Better Auth: `user/session/account/verification`) —
-Nutzer registrieren sich danach neu, das ist gewollt.
+Danach lokal:
 
-**3. Migrationen anwenden (lokal):**
-
-```powershell
+```bash
 npm run db:migrate
 ```
 
-Wendet `0000_init` … `0005_small_business_flag` der Reihe nach an. Nutzt dieselbe `DATABASE_URL`
-wie zuvor `db:push` (aus `.env.local` via `drizzle.config.ts`).
+Das legt alle 16 Tabellen frisch an und schreibt das Journal mit. Bestehende Konten
+sind weg — alle registrieren sich neu, das ist so gewollt.
 
-**4. Prüfen:**
-
-```powershell
-npm run db:studio
-```
-
-Oder im Neon SQL Editor:
-
-```sql
-SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1;
-```
-
-Erwartet u. a.: `orders` (mit `paid_at`, `payment_method`), `expenses` (mit `market_id`, `source`),
-`company_profiles` (mit `is_small_business`), `webhook_events`, plus `user/session/account/verification`.
+**Alternative ohne Datenverlust:** in Neon eine **neue Branch** anlegen, deren
+Connection-String in `.env.local` eintragen und dort `npm run db:migrate` laufen
+lassen. Die alte DB bleibt unangetastet.
 
 ---
 
-## Variante B — neue Neon-Branch/DB (noch sauberere Trennung)
+## Ab jetzt: die Dauerregel
 
-1. Neon-Konsole → neue **Branch** oder neue **Datenbank** anlegen.
-2. Deren **pooled** Connection-String kopieren (`…-pooler.…neon.tech/neondb?sslmode=require`).
-3. In `.env.local` `DATABASE_URL` auf die neue DB setzen.
-4. `npm run db:migrate` — läuft auf leerer DB direkt durch.
+Jede Schemaänderung läuft ab sofort so:
 
----
-
-## Danach: App gegenprüfen
-
-```powershell
-npm run dev
+```bash
+npm run db:generate   # erzeugt drizzle/00XX_*.sql aus schema.ts
+npm run db:migrate    # wendet sie auf die DB an
 ```
 
-Im Browser (localhost:3000): registrieren → Auftrag anlegen und auf **„bezahlt"** setzen (prüft
-`paid_at`) → Ausgabe erfassen → Markt mit Standgebühr anlegen → **`/steuer`** öffnen
-(Einnahmen/Ausgaben/Überschuss) → **CSV** und **PDF** exportieren.
-
-**Ab jetzt gilt:** Schemaänderung → `npm run db:generate` (Migration mitcommitten) →
-`npm run db:migrate`. **Kein `db:push`** mehr (außer Wegwerf-Experimente).
-
----
-
-## Für die Produktion (Vercel), beim Go-Live
-
-Reihenfolge:
-
-1. **Migration auf die Prod-DB** anwenden — denselben `db:migrate`-Befehl lokal mit der **Prod**-`DATABASE_URL`
-   ausführen. Wenn lokal und Prod dieselbe Neon-DB nutzen, reicht ein Lauf.
-2. **Vercel-Env** final setzen (`DATABASE_URL` = Neon **pooled**, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
-   `STRIPE_*`, `ARCJET_KEY`, optional `RESEND_API_KEY`/`EMAIL_FROM`).
-3. **PR #10 → `master`** mergen (löst den Prod-Deploy aus).
+Die erzeugte SQL-Datei **immer mitcommitten**. **Kein `db:push` mehr** — das umgeht
+das Journal und führt genau zu dem Zustand, den Anhang 2 repariert.
 
 ---
 
 ## Troubleshooting
 
-- **`DATABASE_URL is not defined`** bei `db:migrate` → in der PowerShell-Session setzen und erneut:
-  ```powershell
-  $env:DATABASE_URL="postgresql://USER:PASS@ep-...-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-  npm run db:migrate
-  ```
-- **`relation "..." already exists`** → Tabellen waren nicht (vollständig) gedroppt; Schritt 2
-  (Variante A) nochmal ausführen.
-- **SSL-/Verbindungsfehler** → sicherstellen, dass die **pooled** URL mit `?sslmode=require` verwendet wird.
+| Fehler | Ursache & Lösung |
+|---|---|
+| `DATABASE_URL is required` bei `npm run dev` | `.env.local` fehlt oder die Zeile fehlt. Server neu starten — Next liest `.env.local` nur beim Start. |
+| `DATABASE_URL is not defined` bei `db:migrate` | `.env.local` liegt nicht im Projektordner. Notfalls: `$env:DATABASE_URL="postgresql://…"` in der Shell setzen. |
+| `relation "..." already exists` | DB hat Tabellen ohne Journal → **Anhang 2**. |
+| `password authentication failed` | Falscher/abgelaufener String. In Neon → **Connect** neu kopieren; bei Bedarf **Reset password**. |
+| SSL-/Verbindungsfehler | `?sslmode=require` fehlt am Ende des Strings. |
+| `ECONNREFUSED` / Timeout | Neon-Compute schläft (Scale-to-Zero). Einmal in der Konsole eine Query absetzen, dann geht es. |
+| Deploy `ERROR`, Build war grün | Meist Env-Problem oder das Edge-Size-Limit. Log lesen: Vercel → Deployment → **Building**. |

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import Script from "next/script";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -24,11 +25,19 @@ export const viewport: Viewport = {
   themeColor: "#D4AF37",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Nonce-based CSP requires every page to render per request — a page
+  // prerendered at build time could only ever carry a stale nonce.
+  // Next.js reads the nonce out of the CSP header set in src/proxy.ts and
+  // applies it to its own script tags, so nothing needs to be passed down
+  // by hand (doing so causes a hydration mismatch: browsers strip the nonce
+  // attribute from the DOM, so the client would compare against an empty one).
+  await connection();
+
   return (
     <html lang="de" suppressHydrationWarning>
       <head>
