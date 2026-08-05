@@ -13,6 +13,11 @@ export type Plan = "free" | "trial" | "pro";
 // Length of the free trial for new accounts (days).
 export const TRIAL_DAYS = 42;
 
+// List price of Vendora Pro in cents. The authoritative amount charged is the
+// Stripe Price behind STRIPE_PRICE_ID; this constant exists so the platform's
+// own revenue can be reported without reading anything from user data.
+export const PRO_PRICE_CENTS = 1990;
+
 /** Whether the plan may create new records / generate the GuV. FREE is read-only. */
 export function canCreate(plan: Plan): boolean {
   return plan === "pro" || plan === "trial";

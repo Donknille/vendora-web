@@ -371,6 +371,33 @@ export const webhookEvents = pgTable("webhook_events", {
 });
 
 // ============================================================
+// Admin Audit Log — every administrative action on a foreign account.
+//
+// Deliberately holds NO foreign keys: the entry has to outlive both the actor
+// and the target account, otherwise deleting a user would erase the evidence
+// that they were deleted. Email and id are stored as a snapshot for the same
+// reason. `metadata` carries action-specific detail (e.g. granted days) and
+// must never contain business figures.
+// ============================================================
+export const adminAuditLog = pgTable("admin_audit_log", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  actorUserId: varchar("actor_user_id").notNull(),
+  actorEmail: text("actor_email").notNull(),
+  action: text("action").notNull(),
+  targetUserId: varchar("target_user_id").notNull(),
+  targetEmail: text("target_email").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, string | number | boolean>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("idx_admin_audit_log_created_at").on(t.createdAt),
+  index("idx_admin_audit_log_target").on(t.targetUserId),
+]);
+
+export type SelectAdminAuditLog = typeof adminAuditLog.$inferSelect;
+
+// ============================================================
 // Better Auth tables (user / session / account / verification)
 // Re-exported so drizzle-kit (schema: schema.ts) creates them too.
 // ============================================================

@@ -70,10 +70,11 @@ describe("1.2 — Account deletion completeness", () => {
     expect(storage.deleteAllUserData.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("account route handler uses db.transaction for data deletion", async () => {
-    // Read the source to verify transactional usage
+  it("account deletion uses db.transaction for data deletion", async () => {
+    // The deletion sequence lives in lib/server/accountDeletion.ts so the user's
+    // own deletion (/api/account) and the admin action share one implementation.
     const fs = await import("fs");
-    const source = fs.readFileSync("src/app/api/account/route.ts", "utf-8");
+    const source = fs.readFileSync("src/lib/server/accountDeletion.ts", "utf-8");
     expect(source).toContain("db.transaction");
     expect(source).toContain("deleteAllUserData");
     // Stripe deletion (external) before DB transaction

@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/server/admin";
-import { listUsers } from "@/lib/server/adminData";
+import { listAuditLog } from "@/lib/server/adminData";
 
 const querySchema = z.object({
-  search: z.string().trim().max(200).optional(),
-  plan: z.enum(["free", "trial", "pro"]).optional(),
-  status: z.enum(["trial", "active", "expired", "cancelled"]).optional(),
-  blocked: z.enum(["true", "false"]).optional(),
+  targetUserId: z.string().trim().max(64).optional(),
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  pageSize: z.coerce.number().int().min(1).max(100).default(50),
 });
 
 export async function GET(request: Request) {
@@ -26,20 +23,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const { search, plan, status, blocked, page, pageSize } = parsed.data;
-
-    const result = await listUsers({
-      search: search || undefined,
-      plan,
-      status,
-      blocked: blocked === undefined ? undefined : blocked === "true",
-      page,
-      pageSize,
-    });
-
-    return NextResponse.json(result);
+    const { targetUserId, page, pageSize } = parsed.data;
+    return NextResponse.json(
+      await listAuditLog({ targetUserId: targetUserId || undefined, page, pageSize })
+    );
   } catch (error) {
-    console.error("GET /api/admin/users error:", error);
+    console.error("GET /api/admin/audit error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

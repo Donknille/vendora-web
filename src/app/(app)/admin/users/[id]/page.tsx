@@ -1,238 +1,294 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shield, Mail, Calendar, ShoppingCart, Store, Receipt, Clock, Ban, CheckCircle, Plus } from "lucide-react";
+import {
+  ArrowLeft, Mail, Calendar, ShoppingCart, Store, Receipt, Clock,
+  Ban, CheckCircle, Plus, Trash2, LogIn,
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatDate } from "@/lib/formatCurrency";
+import type { AdminUserRow } from "../../_components/AdminUserTable";
 
-interface UserDetail {
-  id: string;
-  email: string;
-  createdAt: string;
-  plan: "free" | "trial" | "pro";
-  subscriptionStatus: string;
-  subscriptionExpiresAt: string | null;
-  isBlocked: boolean;
-}
-
-interface UserStats {
-  orders: number;
-  markets: number;
-  expenses: number;
-}
-
-const planLabels: Record<string, string> = {
-  free: "Free",
-  trial: "Testphase",
-  pro: "Pro",
-};
-
+const planLabels: Record<string, string> = { free: "Free", trial: "Testphase", pro: "Pro" };
 const planColors: Record<string, string> = {
   free: "text-secondary",
   trial: "text-brand-primary",
   pro: "text-green-600",
 };
 
+type AuditEntry = {
+  id: string;
+  actorEmail: string;
+  action: string;
+  createdAt: string;
+  metadata: Record<string, string | number | boolean> | null;
+};
+
+const actionLabels: Record<string, string> = {
+  grant_pro: "Pro gewährt",
+  revoke_pro: "Pro entzogen",
+  extend_trial: "Testphase verlängert",
+  block: "gesperrt",
+  unblock: "entsperrt",
+  delete_user: "Konto gelöscht",
+};
+
 export default function AdminUserDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
 
-  const [user, setUser] = useState<UserDetail | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);
+  const [user, setUser] = useState<AdminUserRow | null>(null);
+  const [history, setHistory] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [confirm, setConfirm] = useState<null | "block" | "delete">(null);
+  const [grantDays, setGrantDays] = useState(30);
+  const [trialDays, setTrialDays] = useState(14);
 
-  const fetchUser = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      const [userData, usersData] = await Promise.all([
-        fetch(`/api/admin/users/${id}`).then((r) => r.json()),
-        fetch("/api/admin/users").then((r) => r.json()),
+      const [u, a] = await Promise.all([
+        fetch(`/api/admin/users/${id}`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`/api/admin/audit?targetUserId=${id}&pageSize=20`).then((r) =>
+          r.ok ? r.json() : { entries: [] }
+        ),
       ]);
-      setUser(userData);
-      const found = Array.isArray(usersData) ? usersData.find((u: { id: string }) => u.id === id) : null;
-      setStats(found?.stats ?? null);
+      setUser(u);
+      setHistory(a.entries ?? []);
     } catch {
-      // ignore
+      setError("Daten konnten nicht geladen werden.");
     }
     setLoading(false);
   }, [id]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchUser(); }, [fetchUser]);
+  useEffect(() => {
+    // Legitimate effect use: loads the account from the API on mount; the state
+    // comes from the response, not from props during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
-  const handleAction = async (body: Record<string, unknown>) => {
-    setActionLoading(true);
+  async function act(body: Record<string, unknown>) {
+    setBusy(true);
+    setError("");
     try {
-      await fetch(`/api/admin/users/${id}`, {
+      const res = await fetch(`/api/admin/users/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      await fetchUser();
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message ?? "Aktion fehlgeschlagen.");
+      } else if (body.action === "delete_user") {
+        router.push("/admin");
+        return;
+      } else {
+        await load();
+      }
     } catch {
-      // ignore
+      setError("Aktion fehlgeschlagen.");
     }
-    setActionLoading(false);
-  };
+    setBusy(false);
+  }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">Laden...</p>
-      </div>
-    );
+    return <div className="flex items-center justify-center py-20"><p className="text-muted">Laden…</p></div>;
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">User nicht gefunden</p>
+      <div className="mx-auto max-w-2xl py-20 text-center space-y-4">
+        <p className="text-muted">Konto nicht gefunden.</p>
+        <Link href="/admin" className="text-brand-primary text-sm">Zurück zur Übersicht</Link>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin"
-          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-primary">{user.email}</h1>
-          <p className="text-sm text-muted flex items-center gap-1">
-            <Shield className="h-3.5 w-3.5" /> User-Verwaltung
-          </p>
-        </div>
-      </div>
+      <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Übersicht
+      </Link>
 
-      {/* Account Info */}
-      <Card>
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">Account</h2>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm">
-            <Mail className="h-4 w-4 text-muted" />
-            <span className="text-primary">{user.email}</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <Calendar className="h-4 w-4 text-muted" />
-            <span className="text-secondary">
-              Registriert: {new Date(user.createdAt).toLocaleDateString("de-DE")}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <PlanIcon plan={user.plan} />
-            <span className={planColors[user.plan] || "text-muted"}>
-              {planLabels[user.plan] || user.plan}
-              {user.plan === "pro" && user.subscriptionExpiresAt && (
-                <span className="text-faint ml-1">
-                  (bis {new Date(user.subscriptionExpiresAt).toLocaleDateString("de-DE")})
-                </span>
-              )}
-            </span>
-          </div>
-          {user.isBlocked && (
-            <div className="flex items-center gap-3 text-sm">
-              <Ban className="h-4 w-4 text-brand-primary" />
-              <span className="text-brand-primary font-medium">Gesperrt</span>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Activity Stats */}
-      {stats && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <div className="flex items-center gap-2 mb-1">
-              <ShoppingCart className="h-4 w-4 text-muted" />
-              <span className="text-xs text-muted">Aufträge</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">{stats.orders}</p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-2 mb-1">
-              <Store className="h-4 w-4 text-muted" />
-              <span className="text-xs text-muted">Märkte</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">{stats.markets}</p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-2 mb-1">
-              <Receipt className="h-4 w-4 text-muted" />
-              <span className="text-xs text-muted">Ausgaben</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">{stats.expenses}</p>
-          </Card>
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-500 text-sm">
+          {error}
         </div>
       )}
 
-      {/* Actions */}
       <Card>
-        <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">Aktionen</h2>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => handleAction({ action: "grant_pro", days: 365 })}
-            disabled={actionLoading}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
-          >
-            <CheckCircle className="h-4 w-4" />
-            Pro freischalten (1 Jahr)
-          </button>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-primary font-medium break-all">
+              <Mail className="h-4 w-4 shrink-0 text-muted" />
+              {user.email}
+            </div>
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
+                seit {formatDate(user.createdAt, "de-DE")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <LogIn className="h-3.5 w-3.5" />
+                {user.lastSeenAt ? `zuletzt ${formatDate(user.lastSeenAt, "de-DE")}` : "nie angemeldet"}
+              </span>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className={`font-semibold ${planColors[user.plan]}`}>{planLabels[user.plan]}</p>
+            {user.isBlocked && <p className="text-xs text-red-500 mt-1">gesperrt</p>}
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-muted" /><span className="text-sm text-muted">Aufträge</span></div>
+          <p className="text-xl font-bold text-primary mt-1">{user.counts.orders}</p>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-2"><Store className="h-4 w-4 text-muted" /><span className="text-sm text-muted">Märkte</span></div>
+          <p className="text-xl font-bold text-primary mt-1">{user.counts.markets}</p>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-2"><Receipt className="h-4 w-4 text-muted" /><span className="text-sm text-muted">Ausgaben</span></div>
+          <p className="text-xl font-bold text-primary mt-1">{user.counts.expenses}</p>
+        </Card>
+      </div>
+      <p className="text-xs text-faint -mt-3">
+        Nur Anzahlen. Inhalte und Beträge dieser Datensätze sind für die Administration nicht einsehbar.
+      </p>
+
+      {/* Abo & Testphase */}
+      <Card>
+        <h2 className="text-base font-semibold text-primary mb-4">Zugang</h2>
+
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="grantDays" className="text-sm text-secondary mr-auto">Pro gewähren</label>
+            <input
+              id="grantDays"
+              type="number" min={1} max={3650} value={grantDays}
+              onChange={(e) => setGrantDays(Number(e.target.value))}
+              className="w-20 bg-page border border-line rounded-lg px-2 py-1.5 text-sm text-primary"
+            />
+            <span className="text-sm text-muted">Tage</span>
+            <button
+              onClick={() => act({ action: "grant_pro", days: grantDays })}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 bg-brand-primary text-white text-sm px-3 py-1.5 rounded-lg disabled:opacity-50"
+            >
+              <Plus className="h-3.5 w-3.5" /> Gewähren
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="trialDays" className="text-sm text-secondary mr-auto">Testphase verlängern</label>
+            <input
+              id="trialDays"
+              type="number" min={1} max={365} value={trialDays}
+              onChange={(e) => setTrialDays(Number(e.target.value))}
+              className="w-20 bg-page border border-line rounded-lg px-2 py-1.5 text-sm text-primary"
+            />
+            <span className="text-sm text-muted">Tage</span>
+            <button
+              onClick={() => act({ action: "extend_trial", days: trialDays })}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 border border-line text-primary text-sm px-3 py-1.5 rounded-lg disabled:opacity-50"
+            >
+              <Clock className="h-3.5 w-3.5" /> Verlängern
+            </button>
+          </div>
 
           {user.plan === "pro" && (
             <button
-              onClick={() => handleAction({ action: "revoke_pro" })}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+              onClick={() => act({ action: "revoke_pro" })}
+              disabled={busy}
+              className="text-sm text-muted hover:text-primary transition-colors"
             >
-              <Plus className="h-4 w-4 rotate-45" />
               Pro entziehen
-            </button>
-          )}
-
-          {user.isBlocked ? (
-            <button
-              onClick={() => handleAction({ action: "unblock" })}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-2 rounded-lg border border-brand-primary/20 bg-brand-primary/5 px-4 py-2.5 text-sm font-medium text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50 transition-colors"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Entsperren
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowBlockDialog(true)}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
-            >
-              <Ban className="h-4 w-4" />
-              Sperren
             </button>
           )}
         </div>
       </Card>
 
+      {/* Sperren / Löschen */}
+      <Card>
+        <h2 className="text-base font-semibold text-primary mb-4">Konto</h2>
+        <div className="flex flex-wrap gap-2">
+          {user.isBlocked ? (
+            <button
+              onClick={() => act({ action: "unblock" })}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 border border-line text-primary text-sm px-3 py-1.5 rounded-lg disabled:opacity-50"
+            >
+              <CheckCircle className="h-3.5 w-3.5" /> Entsperren
+            </button>
+          ) : (
+            <button
+              onClick={() => setConfirm("block")}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 border border-line text-primary text-sm px-3 py-1.5 rounded-lg disabled:opacity-50"
+            >
+              <Ban className="h-3.5 w-3.5" /> Sperren
+            </button>
+          )}
+
+          <button
+            onClick={() => setConfirm("delete")}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 border border-red-500/40 text-red-500 text-sm px-3 py-1.5 rounded-lg disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Konto löschen
+          </button>
+        </div>
+      </Card>
+
+      {/* Verlauf */}
+      <Card>
+        <h2 className="text-base font-semibold text-primary mb-3">Verlauf</h2>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted">Keine administrativen Eingriffe auf diesem Konto.</p>
+        ) : (
+          <ul className="space-y-2 text-sm">
+            {history.map((e) => (
+              <li key={e.id} className="flex flex-wrap justify-between gap-2 border-b border-line-subtle pb-2 last:border-0">
+                <span className="text-primary">
+                  {actionLabels[e.action] ?? e.action}
+                  {e.metadata?.days ? ` (${e.metadata.days} Tage)` : ""}
+                </span>
+                <span className="text-faint">
+                  {formatDate(e.createdAt, "de-DE")} · {e.actorEmail}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
       <ConfirmDialog
-        open={showBlockDialog}
-        onClose={() => setShowBlockDialog(false)}
-        onConfirm={() => { handleAction({ action: "block" }); setShowBlockDialog(false); }}
-        title="User sperren"
-        message={`${user.email} wird gesperrt. Der User kann sich weiterhin einloggen, aber keine Aktionen mehr durchführen.`}
+        open={confirm === "block"}
+        title="Konto sperren?"
+        message={`${user.email} kann sich danach nicht mehr anmelden. Die Daten bleiben erhalten und die Sperre lässt sich jederzeit aufheben.`}
         confirmText="Sperren"
-        cancelText="Abbrechen"
+        onConfirm={() => act({ action: "block" })}
+        onClose={() => setConfirm(null)}
+      />
+
+      <ConfirmDialog
+        open={confirm === "delete"}
+        title="Konto endgültig löschen?"
+        message={`Alle Daten von ${user.email} werden gelöscht — Aufträge, Märkte, Verkäufe, Ausgaben und das Firmenprofil. Ausgestellte Rechnungen werden nicht gelöscht, sondern gesetzlich vorgeschrieben archiviert. Der Vorgang ist nicht umkehrbar.`}
+        confirmText="Endgültig löschen"
+        onConfirm={() => act({ action: "delete_user", confirmEmail: user.email })}
+        onClose={() => setConfirm(null)}
       />
     </div>
   );
-}
-
-function PlanIcon({ plan }: { plan: string }) {
-  if (plan === "pro") return <CheckCircle className="h-4 w-4 text-green-600" />;
-  return <Clock className="h-4 w-4 text-muted" />;
 }

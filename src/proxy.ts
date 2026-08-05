@@ -52,19 +52,33 @@ export async function proxy(request: NextRequest) {
   if (process.env.ARCJET_KEY) {
     const { pathname } = request.nextUrl;
 
-    // Pick the appropriate rate limiter
+    // Pick the appropriate rate limiter.
+    //
+    // The strict auth bucket (5/min) is deliberately narrow: only credential
+    // *mutations* belong in it. It must NOT cover
+    //  - the /auth/* pages, whose documents and RSC prefetches (every <Link
+    //    href="/auth/register"> on the landing page prefetches one) would eat
+    //    the budget before the user even submits the form, and
+    //  - GET /api/auth/get-session, which the Better Auth client fires on
+    //    every page load, so throttling it logs the user out of a working app.
+    // Both fall through to the global 100/min limiter instead.
     let arcjetClient = aj;
-    if (pathname.startsWith("/api/auth") || pathname.startsWith("/auth")) {
-      arcjetClient = ajAuth; // 5 req/min for auth endpoints
-    } else if (request.method !== "GET" && pathname.startsWith("/api")) {
-      arcjetClient = ajWrite; // 20 req/min for API writes
+    if (request.method !== "GET") {
+      if (pathname.startsWith("/api/auth")) {
+        arcjetClient = ajAuth; // 5 req/min for login/signup/password reset
+      } else if (pathname.startsWith("/api")) {
+        arcjetClient = ajWrite; // 20 req/min for API writes
+      }
     }
 
     const decision = await arcjetClient.protect(request);
     if (decision.isDenied()) {
-      return withCsp(
-        NextResponse.json({ message: "Too many requests" }, { status: 429 })
+      const response = NextResponse.json(
+        { message: "Too many requests" },
+        { status: 429 }
       );
+      response.headers.set("Retry-After", "60");
+      return withCsp(response);
     }
   } else if (process.env.NODE_ENV === "production") {
     // Fail-closed: reject all requests in production if rate limiting is not configured

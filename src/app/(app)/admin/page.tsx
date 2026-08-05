@@ -2,191 +2,208 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, Users, CreditCard, Clock, Ban, ShoppingCart, Store, Receipt, ChevronRight } from "lucide-react";
-import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatDate } from "@/lib/formatCurrency";
+import dynamic from "next/dynamic";
+import {
+  Shield, Users, CreditCard, Clock, Ban, Activity, TrendingUp, Lock, ScrollText,
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { formatCurrency } from "@/lib/formatCurrency";
+import { AdminUserTable } from "./_components/AdminUserTable";
 
-interface AdminStats {
-  totalUsers: number;
-  activeSubscriptions: number;
-  trialUsers: number;
-  expiredUsers: number;
-  blockedUsers: number;
-  totalOrders: number;
-  totalMarkets: number;
-  totalExpenses: number;
-}
+// recharts needs the DOM; keep it off the server render.
+const SignupChart = dynamic(() => import("./_components/SignupChart"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-muted py-8 text-center">Chart lädt…</p>,
+});
 
-interface AdminUser {
-  id: string;
-  email: string;
-  createdAt: string;
-  plan: "free" | "trial" | "pro";
-  subscriptionExpiresAt: string | null;
-  isBlocked: boolean;
-  stats: { orders: number; markets: number; expenses: number };
-}
-
-const planColors: Record<string, string> = {
-  free: "text-secondary",
-  trial: "text-brand-primary",
-  pro: "text-green-600",
+type Stats = {
+  overview: {
+    totalUsers: number; activeSubscriptions: number; trialUsers: number;
+    expiredUsers: number; cancelledUsers: number; blockedUsers: number; deletedUsers: number;
+  };
+  growth: { month: string; signups: number; cumulative: number }[];
+  conversion: { trialRunning: number; converted: number; lapsed: number; conversionRate: number | null };
+  activity: { activeLast7Days: number; activeLast30Days: number; neverSignedIn: number };
+  adoption: {
+    totalUsers: number; withOrders: number; withInvoices: number; withMarkets: number;
+    withMarketSales: number; withExpenses: number; withEuerExport: number; emptyAccounts: number;
+  };
+  revenue: { payingAccounts: number; monthlyRecurringCents: number; pricePerAccountCents: number };
 };
 
+function Metric({ icon, value, label, tone = "text-primary" }: {
+  icon: React.ReactNode; value: string | number; label: string; tone?: string;
+}) {
+  return (
+    <Card>
+      <div className="flex items-center gap-3">
+        {icon}
+        <div>
+          <p className={`text-2xl font-bold ${tone}`}>{value}</p>
+          <p className="text-xs text-muted">{label}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function AdoptionBar({ label, value, total }: { label: string; value: number; total: number }) {
+  const pct = total === 0 ? 0 : Math.round((value / total) * 100);
+  return (
+    <div>
+      <div className="flex justify-between text-sm mb-1">
+        <span className="text-secondary">{label}</span>
+        <span className="text-muted">{value} · {pct}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-page overflow-hidden">
+        <div className="h-full bg-brand-primary rounded-full" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
-  const { language } = useLanguage();
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/users").then((r) => r.json()),
-    ]).then(([s, u]) => {
-      setStats(s);
-      setUsers(Array.isArray(u) ? u : []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    fetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then((s) => { setStats(s); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">Laden...</p>
-      </div>
-    );
+    return <div className="flex items-center justify-center py-20"><p className="text-muted">Laden…</p></div>;
   }
 
+  if (!stats?.overview) {
+    return <div className="py-20 text-center"><p className="text-muted">Statistiken konnten nicht geladen werden.</p></div>;
+  }
+
+  const { overview, growth, conversion, activity, adoption, revenue } = stats;
+  const rate = conversion.conversionRate;
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-brand-primary" />
-        <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Shield className="h-6 w-6 text-brand-primary" />
+          <h1 className="text-2xl font-bold text-primary">Plattform-Administration</h1>
+        </div>
+        <Link
+          href="/admin/audit"
+          className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+        >
+          <ScrollText className="h-4 w-4" />
+          Audit-Log
+        </Link>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-brand-primary" />
-              <div>
-                <p className="text-2xl font-bold text-primary">{stats.totalUsers}</p>
-                <p className="text-xs text-muted">User gesamt</p>
-              </div>
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-brand-primary" />
-              <div>
-                <p className="text-2xl font-bold text-primary">{stats.activeSubscriptions}</p>
-                <p className="text-xs text-muted">Aktive Abos</p>
-              </div>
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-yellow-500" />
-              <div>
-                <p className="text-2xl font-bold text-primary">{stats.trialUsers}</p>
-                <p className="text-xs text-muted">Trial</p>
-              </div>
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3">
-              <Ban className="h-5 w-5 text-brand-primary" />
-              <div>
-                <p className="text-2xl font-bold text-primary">{stats.expiredUsers}</p>
-                <p className="text-xs text-muted">Abgelaufen</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* The separation the operator asked for, stated where it is relied on. */}
+      <div className="flex items-start gap-3 rounded-xl border border-line bg-surface/60 p-3">
+        <Lock className="h-4 w-4 text-brand-primary mt-0.5 shrink-0" />
+        <p className="text-xs text-muted leading-relaxed">
+          Diese Ansicht zeigt ausschließlich Konten-Metadaten und plattformweite Summen.
+          Umsätze, Belege, Rechnungen und Ausgaben einzelner Nutzer sind hier technisch
+          nicht abrufbar — der Admin-Bereich hat keinen Zugriff auf diese Daten.
+        </p>
+      </div>
 
-      {/* Platform Activity */}
-      {stats && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-muted" />
-              <span className="text-sm text-muted">Aufträge</span>
-            </div>
-            <p className="text-xl font-bold text-primary mt-1">{stats.totalOrders}</p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-2">
-              <Store className="h-4 w-4 text-muted" />
-              <span className="text-sm text-muted">Märkte</span>
-            </div>
-            <p className="text-xl font-bold text-primary mt-1">{stats.totalMarkets}</p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-muted" />
-              <span className="text-sm text-muted">Ausgaben</span>
-            </div>
-            <p className="text-xl font-bold text-primary mt-1">{stats.totalExpenses}</p>
-          </Card>
-        </div>
-      )}
+      {/* Konten */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Metric icon={<Users className="h-5 w-5 text-brand-primary" />} value={overview.totalUsers} label="Konten" />
+        <Metric icon={<CreditCard className="h-5 w-5 text-green-600" />} value={overview.activeSubscriptions} label="Zahlende Abos" />
+        <Metric icon={<Clock className="h-5 w-5 text-yellow-500" />} value={overview.trialUsers} label="In Testphase" />
+        <Metric icon={<Ban className="h-5 w-5 text-red-500" />} value={overview.blockedUsers} label="Gesperrt" />
+      </div>
 
-      {/* User List */}
+      {/* Eigener Umsatz */}
       <Card>
-        <h2 className="text-base font-semibold text-primary mb-4">
-          Alle User ({users.length})
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="pb-2 text-left font-medium text-muted">E-Mail</th>
-                <th className="pb-2 text-left font-medium text-muted">Status</th>
-                <th className="pb-2 text-center font-medium text-muted">Aufträge</th>
-                <th className="pb-2 text-center font-medium text-muted">Märkte</th>
-                <th className="pb-2 text-right font-medium text-muted">Registriert</th>
-                <th className="pb-2 w-8"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-line-subtle">
-                  <td className="py-3 text-primary">
-                    <div className="flex items-center gap-2">
-                      {user.isBlocked && <Ban className="h-3.5 w-3.5 text-brand-primary" />}
-                      <span className={user.isBlocked ? "line-through text-muted" : ""}>
-                        {user.email}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3">
-                    <span className={`font-medium capitalize ${planColors[user.plan] || "text-muted"}`}>
-                      {user.plan}
-                    </span>
-                  </td>
-                  <td className="py-3 text-center text-secondary">{user.stats.orders}</td>
-                  <td className="py-3 text-center text-secondary">{user.stats.markets}</td>
-                  <td className="py-3 text-right text-faint">
-                    {formatDate(user.createdAt, language === "de" ? "de-DE" : "en-US")}
-                  </td>
-                  <td className="py-3 text-right">
-                    <Link
-                      href={`/admin/users/${user.id}`}
-                      className="text-faint hover:text-primary transition-colors"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp className="h-4 w-4 text-brand-primary" />
+          <h2 className="text-base font-semibold text-primary">Deine Abo-Einnahmen</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-2xl font-bold text-green-600">
+              {formatCurrency(revenue.monthlyRecurringCents)}
+            </p>
+            <p className="text-xs text-muted">wiederkehrend pro Monat</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-primary">{revenue.payingAccounts}</p>
+            <p className="text-xs text-muted">zahlende Konten</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-primary">
+              {formatCurrency(revenue.pricePerAccountCents)}
+            </p>
+            <p className="text-xs text-muted">Listenpreis je Konto</p>
+          </div>
+        </div>
+        <p className="text-xs text-faint mt-3">
+          Hochgerechnet aus zahlenden Konten × Listenpreis. Maßgeblich abgerechnet wird über Stripe.
+        </p>
+      </Card>
+
+      {/* Wachstum */}
+      <Card>
+        <h2 className="text-base font-semibold text-primary mb-3">Registrierungen je Monat</h2>
+        <SignupChart data={growth} />
+      </Card>
+
+      {/* Konversion + Aktivität */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <h2 className="text-base font-semibold text-primary mb-3">Testphase → Pro</h2>
+          <p className="text-3xl font-bold text-primary">
+            {rate === null ? "—" : `${Math.round(rate * 100)} %`}
+          </p>
+          <p className="text-xs text-muted mb-3">
+            {rate === null
+              ? "Noch keine Testphase abgelaufen."
+              : "gemessen an abgelaufenen Testphasen"}
+          </p>
+          <dl className="space-y-1 text-sm">
+            <div className="flex justify-between"><dt className="text-secondary">läuft noch</dt><dd className="text-primary">{conversion.trialRunning}</dd></div>
+            <div className="flex justify-between"><dt className="text-secondary">konvertiert</dt><dd className="text-green-600">{conversion.converted}</dd></div>
+            <div className="flex justify-between"><dt className="text-secondary">abgesprungen</dt><dd className="text-muted">{conversion.lapsed}</dd></div>
+          </dl>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-4 w-4 text-brand-primary" />
+            <h2 className="text-base font-semibold text-primary">Aktivität</h2>
+          </div>
+          <dl className="space-y-1 text-sm">
+            <div className="flex justify-between"><dt className="text-secondary">aktiv (7 Tage)</dt><dd className="text-primary">{activity.activeLast7Days}</dd></div>
+            <div className="flex justify-between"><dt className="text-secondary">aktiv (30 Tage)</dt><dd className="text-primary">{activity.activeLast30Days}</dd></div>
+            <div className="flex justify-between"><dt className="text-secondary">nie angemeldet</dt><dd className="text-muted">{activity.neverSignedIn}</dd></div>
+            <div className="flex justify-between"><dt className="text-secondary">leere Konten</dt><dd className="text-muted">{adoption.emptyAccounts}</dd></div>
+          </dl>
+          <p className="text-xs text-faint mt-3">Basiert auf Anmeldungen, nicht auf Inhalten.</p>
+        </Card>
+      </div>
+
+      {/* Feature-Nutzung */}
+      <Card>
+        <h2 className="text-base font-semibold text-primary mb-1">Welche Funktionen genutzt werden</h2>
+        <p className="text-xs text-muted mb-4">
+          Anteil der Konten, die eine Funktion mindestens einmal verwendet haben.
+        </p>
+        <div className="space-y-3">
+          <AdoptionBar label="Aufträge" value={adoption.withOrders} total={adoption.totalUsers} />
+          <AdoptionBar label="Rechnungen" value={adoption.withInvoices} total={adoption.totalUsers} />
+          <AdoptionBar label="Märkte" value={adoption.withMarkets} total={adoption.totalUsers} />
+          <AdoptionBar label="Marktverkäufe (Kasse)" value={adoption.withMarketSales} total={adoption.totalUsers} />
+          <AdoptionBar label="Ausgaben" value={adoption.withExpenses} total={adoption.totalUsers} />
+          <AdoptionBar label="EÜR-Export" value={adoption.withEuerExport} total={adoption.totalUsers} />
         </div>
       </Card>
+
+      <AdminUserTable />
     </div>
   );
 }
