@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { computeEuerReport, type EuerInput } from "@/lib/euerReport";
+import {
+  computeEuerReport,
+  computeEuerReports,
+  aggregateEuerReports,
+  euerAvailableYears,
+  type EuerInput,
+  type EuerData,
+} from "@/lib/euerReport";
 import type { Order, MarketEvent, MarketSale, Expense } from "@/lib/types";
 
 const order = (o: Partial<Order>): Order =>
@@ -79,5 +86,110 @@ describe("computeEuerReport — Zuflussprinzip", () => {
     expect(report.lines).toHaveLength(6);
     const dates = report.lines.map((l) => l.date);
     expect([...dates]).toEqual([...dates].sort());
+  });
+
+  it("recognises a December order paid in January in the following year", () => {
+    const data: EuerData = {
+      orders: [order({ id: "D", status: "paid", orderDate: "2024-12-28", paidAt: "2025-01-05", total: 7000 })],
+      markets: [],
+      marketSales: [],
+      expenses: [],
+    };
+    expect(computeEuerReport({ ...data, year: 2024 }).incomeTotal).toBe(0);
+    const y2025 = computeEuerReport({ ...data, year: 2025 });
+    expect(y2025.incomeTotal).toBe(7000);
+    expect(y2025.incomeByMonth[0]).toBe(7000); // January
+  });
+});
+
+describe("aggregateEuerReports — mehrere Jahre", () => {
+  const data: EuerData = {
+    orders: [
+      order({ id: "A", status: "paid", paidAt: "2024-07-10", total: 1000 }),
+      order({ id: "B", status: "paid", paidAt: "2025-07-10", total: 2000 }),
+    ],
+    markets: [],
+    marketSales: [],
+    expenses: [
+      expense({ id: "E1", category: "fahrtkosten", amount: 100, expenseDate: "2024-07-15" }),
+      expense({ id: "E2", category: "fahrtkosten", amount: 100, expenseDate: "2025-07-15" }),
+      expense({ id: "E3", category: "marketing", amount: 150, expenseDate: "2025-03-01" }),
+    ],
+  };
+
+  it("returns zeros for an empty list", () => {
+    const agg = aggregateEuerReports([]);
+    expect(agg).toEqual({
+      years: [], incomeTotal: 0, expenseTotal: 0, surplus: 0, expensesByCategory: [], months: [],
+    });
+  });
+
+  it("keeps the same month of different years apart", () => {
+    const agg = aggregateEuerReports(computeEuerReports(data, [2024, 2025]));
+    const july = agg.months.filter((m) => m.monthIndex === 6);
+    expect(july.map((m) => m.key)).toEqual(["2024-07", "2025-07"]);
+    expect(july.map((m) => m.income)).toEqual([1000, 2000]);
+    expect(july.map((m) => m.expenses)).toEqual([100, 100]);
+  });
+
+  it("sums the totals across years and sorts months ascending", () => {
+    const agg = aggregateEuerReports(computeEuerReports(data, [2025, 2024]));
+    expect(agg.incomeTotal).toBe(3000);
+    expect(agg.expenseTotal).toBe(350);
+    expect(agg.surplus).toBe(2650);
+    expect(agg.years).toEqual([2024, 2025]);
+    // only months with movement, ascending
+    expect(agg.months.map((m) => m.key)).toEqual(["2024-07", "2025-03", "2025-07"]);
+  });
+
+  it("folds categories across years and re-sorts them descending", () => {
+    const agg = aggregateEuerReports(computeEuerReports(data, [2024, 2025]));
+    expect(agg.expensesByCategory).toEqual([
+      { category: "fahrtkosten", amount: 200 }, // 100 + 100 beats the single 150
+      { category: "marketing", amount: 150 },
+    ]);
+  });
+
+  it("matches the single-year report exactly (Dashboard(Jahr) === Steuer(Jahr))", () => {
+    const report = computeEuerReport({ ...data, year: 2025 });
+    const agg = aggregateEuerReports([report]);
+    expect(agg.incomeTotal).toBe(report.incomeTotal);
+    expect(agg.expenseTotal).toBe(report.expenseTotal);
+    expect(agg.surplus).toBe(report.surplus);
+    expect(agg.expensesByCategory).toEqual(report.expensesByCategory);
+  });
+});
+
+describe("euerAvailableYears", () => {
+  it("uses the same dating rules as the report", () => {
+    const years = euerAvailableYears({
+      // paidAt year counts, orderDate year does not
+      orders: [order({ id: "A", status: "paid", orderDate: "2019-12-01", paidAt: "2020-01-05", total: 100 })],
+      markets: [market({ id: "m1", date: "2021-07-01" })],
+      // market day counts, createdAt year does not
+      marketSales: [sale({ marketId: "m1", amount: 100, createdAt: "2022-01-05T00:00:00Z" })],
+      expenses: [expense({ expenseDate: "2023-04-01", amount: 100 })],
+    });
+    expect(years).toEqual([2023, 2021, 2020]);
+  });
+
+  it("ignores years that only hold unpaid orders", () => {
+    const years = euerAvailableYears({
+      orders: [order({ id: "C", status: "open", orderDate: "2018-05-01", total: 100 })],
+      markets: [], marketSales: [], expenses: [],
+    });
+    expect(years).toEqual([]);
+  });
+
+  it("always includes includeYear, deduplicated and descending", () => {
+    const years = euerAvailableYears(
+      {
+        orders: [order({ id: "A", status: "paid", paidAt: "2024-01-01", total: 100 })],
+        markets: [], marketSales: [],
+        expenses: [expense({ expenseDate: "2024-06-01", amount: 50 })],
+      },
+      { includeYear: 2026 },
+    );
+    expect(years).toEqual([2026, 2024]);
   });
 });
