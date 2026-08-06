@@ -45,8 +45,9 @@ src/
     ├── api-client.ts       # React Query Client + Query-Keys
     ├── formatCurrency.ts   # Cent<->Euro-Konvertierung (Anzeige/Eingabe)
     ├── euer.ts             # EÜR-Kategorien (Labels, SKR03-Vorbereitung)
-    ├── euerReport.ts       # EÜR-Berechnung nach Zuflussprinzip (rein, testbar)
-    ├── marketCosts.ts      # Ableitung Marktkosten -> Ausgaben (rein, testbar)
+    ├── euerReport.ts       # EÜR-Berechnung nach Zuflussprinzip + Mehrjahres-Aggregat (rein, testbar)
+    ├── marketCosts.ts      # Ableitung Marktkosten -> Ausgaben inkl. Status-Gate (rein, testbar)
+    ├── marketRanking.ts    # Gewinn je Markt aus gebuchten Kosten (rein, testbar)
     ├── orderStatus.ts / payments.ts # geteilte Domänen-Helfer
     └── server/
         ├── schema.ts       # Drizzle DB-Schema (single source of truth)
@@ -135,6 +136,9 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 
 ## Bekannte Architektur-Entscheidungen
 
+- **Eine Buchungslogik.** Dashboard, `/steuer` und der Server-Export leiten ihre Zahlen aus `computeEuerReport` ab (Zuflussprinzip: Aufträge auf `paidAt`, Marktverkäufe auf den Markttag, Datumsparsing per String-Slice ohne `Date()`). „Alle Jahre" ist die Summe der Jahresberichte (`aggregateEuerReports`), keine zweite Rechnung. Keine Seite baut das noch einmal nach — Guards in `euerSingleSource.test.ts`.
+- **Marktkosten** (Standgebühr, Fahrtkosten) sind abgeleitete `expenses`-Zeilen (`source = market_fee|market_travel`), gebucht nur bei Marktstatus `confirmed`/`completed` (`shouldBookMarketCosts`). Sie sind in `/expenses` sichtbar, aber nur am Markt änderbar (`DELETE` → 409 `DERIVED_EXPENSE`). Die Regel steht doppelt: `src/lib/marketCosts.ts` und `drizzle/0015_market_cost_status_gate.sql` — beide müssen synchron bleiben (`marketCostGate.test.ts`).
+- `storage.getExpenses(userId)` **ohne** Opts ist der Reporting-Pfad: alle Quellen, unpaginiert. `{ source: "manual" }` nutzt nur der Backup-Export, weil der Restore die Marktkosten neu ableitet.
 - Direkte Postgres-Verbindung via Drizzle (db.ts) gegen Neon. Auth-Tabellen (`user`/`session`/`account`/`verification`) verwaltet Better Auth (auth-schema.ts); die App-`users`-Tabelle ist das Profil, gekeyt auf `better-auth user.id`.
 - **Geld = Integer-Cents** in DB, API und State. Umrechnung Euro↔Cent nur an der UI-Grenze (`formatCurrency.ts`: `parseAmount` bei Eingabe, `formatCurrency`/`formatAmountInput` bei Anzeige). Keine Float-Arithmetik auf Beträgen.
 - **Datumsfelder** der Domäne sind `date` (ISO-String), `createdAt`/`updatedAt` sind `timestamptz` (im Response als ISO-String serialisiert).
