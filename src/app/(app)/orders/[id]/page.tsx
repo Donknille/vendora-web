@@ -62,11 +62,13 @@ export default function OrderDetailPage() {
   }
 
   const items = order.items || [];
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum: number, item) =>
       sum + Number(item.price || 0) * Number(item.quantity || 1),
     0
   );
+  const shippingCost = order.shippingCost ?? 0;
+  const total = subtotal + shippingCost;
 
   // Invoices issued for this order (newest first). At most one is "active"
   // (issued, not a cancellation); the rest are cancellations / cancelled originals.
@@ -228,12 +230,26 @@ export default function OrderDetailPage() {
           </table>
         </div>
 
-        {/* Total */}
-        <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
-          <span className="font-medium text-secondary">{t.orders.total}</span>
-          <span className="text-lg font-bold text-green-600">
-            {formatCurrency(total)}
-          </span>
+        {/* Totals */}
+        <div className="mt-4 space-y-2 border-t border-line pt-4">
+          {shippingCost !== 0 && (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-secondary">{t.orders.invoiceSubtotal}</span>
+                <span className="text-primary">{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-secondary">{t.orders.shippingCostLabel}</span>
+                <span className="text-primary">{formatCurrency(shippingCost)}</span>
+              </div>
+            </>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-secondary">{t.orders.total}</span>
+            <span className="text-lg font-bold text-green-600">
+              {formatCurrency(total)}
+            </span>
+          </div>
         </div>
       </Card>
 

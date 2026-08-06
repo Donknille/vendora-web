@@ -6,6 +6,7 @@ import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
+  computeInvoiceTotals,
   computeRetentionUntil,
   type InvoiceSnapshot,
   type InvoiceType,
@@ -156,8 +157,11 @@ export async function createOrder(
   // Orders no longer consume an invoice number at creation — the counter is the
   // authoritative sequence for *issued* invoices (Phase 2.1/2.2). An order is a
   // working document; its legal number is assigned when an invoice is issued.
-  // All amounts are integer cents — pure integer arithmetic, no floats.
-  const total = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // All amounts are integer cents — pure integer arithmetic, no floats. The stored
+  // total is computed with the same helper the invoice uses, so an order and the
+  // invoice issued from it can never disagree: line items + shipping.
+  const shippingCost = data.shippingCost ?? null;
+  const { total } = computeInvoiceTotals(data.items, shippingCost ?? 0);
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
 
@@ -190,7 +194,7 @@ export async function createOrder(
       // Zuflussdatum: übernommen falls angegeben, sonst heute bei bezahltem Status.
       paidAt: data.paidAt || (isPaidLike(data.status) ? today : null),
       paymentMethod: data.paymentMethod || null,
-      shippingCost: data.shippingCost ?? null,
+      shippingCost,
       total,
       processingStatus: data.processingStatus,
       comment: data.comment,
@@ -293,11 +297,17 @@ export async function updateOrder(
     });
   }
 
+  // The stored total is line items + shipping, so it has to be recomputed whenever
+  // either side changes — including a shipping-only edit that leaves the items alone.
+  if (newItems || fields.shippingCost !== undefined) {
+    const effectiveItems = newItems ?? existing.items;
+    const effectiveShipping = fields.shippingCost ?? existing.shippingCost ?? 0;
+    dbUpdates.total = computeInvoiceTotals(effectiveItems, effectiveShipping).total;
+  }
+
   // Wrap item replacement + order update in a transaction to prevent data loss
   await db.transaction(async (tx) => {
     if (newItems) {
-      const total = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      dbUpdates.total = total;
       await tx.delete(orderItems).where(eq(orderItems.orderId, id));
       if (newItems.length > 0) {
         await tx.insert(orderItems).values(

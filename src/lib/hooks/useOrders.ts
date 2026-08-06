@@ -34,6 +34,7 @@ export function useCreateOrder() {
       orderDate: string;
       paidAt?: string;
       paymentMethod?: string;
+      shippingCost?: number; // cents
       items: { name: string; quantity: number; price: number }[];
     }) => {
       const res = await apiRequest("POST", "/api/orders", data);
@@ -60,6 +61,7 @@ export function useUpdateOrder() {
       orderDate: string;
       paidAt: string;
       paymentMethod: string;
+      shippingCost: number; // cents
       items: { name: string; quantity: number; price: number }[];
     }>) => {
       const res = await apiRequest("PUT", `/api/orders/${id}`, data);

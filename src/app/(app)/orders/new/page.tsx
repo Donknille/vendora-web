@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCreateOrder, useCustomers } from "@/lib/hooks/useOrders";
+import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 
 interface OrderItem {
   name: string;
@@ -19,6 +20,7 @@ export default function NewOrderPage() {
   const router = useRouter();
   const createOrder = useCreateOrder();
   const { data: customers } = useCustomers();
+  const { data: profile } = useProfile();
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -30,10 +32,25 @@ export default function NewOrderPage() {
     new Date().toISOString().split("T")[0]
   );
   const [notes, setNotes] = useState("");
+  const [shippingCost, setShippingCost] = useState("");
+  const [shippingPrefilled, setShippingPrefilled] = useState(false);
   const [items, setItems] = useState<OrderItem[]>([
     { name: "", quantity: "1", price: "" },
   ]);
   const [error, setError] = useState("");
+
+  // Seed the shipping field from the company default once the profile arrives
+  // (sync from external system). The value stays editable — it is only a default.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (profile && !shippingPrefilled) {
+      if (profile.defaultShippingCost) {
+        setShippingCost(formatAmountInput(profile.defaultShippingCost));
+      }
+      setShippingPrefilled(true);
+    }
+  }, [profile, shippingPrefilled]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Pick an existing customer by name → prefill the address snapshot.
   const handleCustomerNameChange = (value: string) => {
@@ -63,11 +80,13 @@ export default function NewOrderPage() {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const total = items.reduce((sum, item) => {
+  const subtotal = items.reduce((sum, item) => {
     const qty = Number(item.quantity) || 0;
     const price = parseAmount(item.price);
     return sum + qty * price;
   }, 0);
+  const shippingCents = parseAmount(shippingCost);
+  const total = subtotal + shippingCents;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +119,7 @@ export default function NewOrderPage() {
         customerCountry: customerCountry.trim(),
         orderDate,
         notes: notes.trim(),
+        shippingCost: shippingCents,
         items: orderItems,
         status: "open",
       });
@@ -304,14 +324,43 @@ export default function NewOrderPage() {
             ))}
           </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between rounded-lg border border-line bg-surface px-4 py-3">
-            <span className="text-sm font-medium text-secondary">
-              {t.orders.total}
-            </span>
-            <span className="text-lg font-bold text-green-600">
-              {formatCurrency(total)}
-            </span>
+          {/* Shipping + Total */}
+          <div className="space-y-3 rounded-lg border border-line bg-surface px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-secondary">
+                {t.orders.invoiceSubtotal}
+              </span>
+              <span className="text-sm text-primary">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <label
+                htmlFor="shipping-cost"
+                className="text-sm text-secondary"
+              >
+                {t.orders.shippingCostLabel}
+              </label>
+              <input
+                id="shipping-cost"
+                type="text"
+                inputMode="decimal"
+                value={shippingCost}
+                onChange={(e) => setShippingCost(e.target.value)}
+                className="w-28 rounded-lg border border-line bg-page px-3 py-2 text-right text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="flex items-center justify-between border-t border-line pt-3">
+              <span className="text-sm font-medium text-secondary">
+                {t.orders.total}
+              </span>
+              <span className="text-lg font-bold text-green-600">
+                {formatCurrency(total)}
+              </span>
+            </div>
           </div>
         </div>
 

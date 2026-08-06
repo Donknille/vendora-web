@@ -36,6 +36,7 @@ export default function EditOrderPage() {
   const [status, setStatus] = useState("open");
   const [paidAt, setPaidAt] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [shippingCost, setShippingCost] = useState("");
   const [items, setItems] = useState<OrderItem[]>([
     { name: "", quantity: "1", price: "" },
   ]);
@@ -61,6 +62,9 @@ export default function EditOrderPage() {
       setStatus(order.status || "open");
       setPaidAt(order.paidAt ? order.paidAt.slice(0, 10) : "");
       setPaymentMethod(order.paymentMethod ?? "");
+      // Show what the order actually carries — no profile default here, editing an
+      // existing order must not silently change its total.
+      setShippingCost(order.shippingCost ? formatAmountInput(order.shippingCost) : "");
 
       if (order.items && order.items.length > 0) {
         setItems(
@@ -104,11 +108,13 @@ export default function EditOrderPage() {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const total = items.reduce((sum, item) => {
+  const subtotal = items.reduce((sum, item) => {
     const qty = Number(item.quantity) || 0;
     const price = parseAmount(item.price);
     return sum + qty * price;
   }, 0);
+  const shippingCents = parseAmount(shippingCost);
+  const total = subtotal + shippingCents;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +150,7 @@ export default function EditOrderPage() {
         notes: notes.trim() || undefined,
         paidAt: paidAt || undefined,
         paymentMethod: paymentMethod || undefined,
+        shippingCost: shippingCents,
         items: orderItems,
         status,
       });
@@ -396,14 +403,43 @@ export default function EditOrderPage() {
             ))}
           </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between rounded-lg border border-line bg-surface px-4 py-3">
-            <span className="text-sm font-medium text-secondary">
-              {t.orders.total}
-            </span>
-            <span className="text-lg font-bold text-green-600">
-              {formatCurrency(total)}
-            </span>
+          {/* Shipping + Total */}
+          <div className="space-y-3 rounded-lg border border-line bg-surface px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-secondary">
+                {t.orders.invoiceSubtotal}
+              </span>
+              <span className="text-sm text-primary">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <label
+                htmlFor="shipping-cost"
+                className="text-sm text-secondary"
+              >
+                {t.orders.shippingCostLabel}
+              </label>
+              <input
+                id="shipping-cost"
+                type="text"
+                inputMode="decimal"
+                value={shippingCost}
+                onChange={(e) => setShippingCost(e.target.value)}
+                className="w-28 rounded-lg border border-line bg-page px-3 py-2 text-right text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="flex items-center justify-between border-t border-line pt-3">
+              <span className="text-sm font-medium text-secondary">
+                {t.orders.total}
+              </span>
+              <span className="text-lg font-bold text-green-600">
+                {formatCurrency(total)}
+              </span>
+            </div>
           </div>
         </div>
 
