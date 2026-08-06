@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import { useOrders, useUpdateOrder, useDeleteOrder } from "@/lib/hooks/useOrders";
 import { useInvoices, useIssueInvoice, useCancelInvoice } from "@/lib/hooks/useInvoices";
+import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
+import { isInvoiceReadyProfile } from "@/lib/invoice";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -34,6 +36,9 @@ export default function OrderDetailPage() {
 
   const { data: orders, isLoading, isError, refetch } = useOrders();
   const { data: invoices } = useInvoices();
+  // Nur fuer das Ausstell-Gate. Bewusst nicht in isLoading/isError: ein Fehler
+  // hier darf die Auftragsseite nicht ersetzen.
+  const { data: profile } = useProfile();
   const updateOrder = useUpdateOrder();
   const deleteOrder = useDeleteOrder();
   const issueInvoice = useIssueInvoice();
@@ -81,6 +86,9 @@ export default function OrderDetailPage() {
   const activeInvoice = orderInvoices.find(
     (inv) => inv.type === "invoice" && inv.status === "issued"
   );
+  // Dieselbe Regel wie serverseitig in issueInvoice — Button und Endpoint
+  // koennen dadurch nicht auseinanderlaufen.
+  const profileReady = isInvoiceReadyProfile(profile);
 
   const handleStatusChange = async (newStatus: string) => {
     setShowStatusMenu(false);
@@ -368,15 +376,41 @@ export default function OrderDetailPage() {
               <Ban className="h-4 w-4" />
               {t.orders.cancelInvoice}
             </button>
+          ) : profileReady ? (
+            <>
+              <button
+                onClick={handleIssueInvoice}
+                disabled={issueInvoice.isPending}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors disabled:opacity-60"
+              >
+                <FileText className="h-4 w-4" />
+                {t.orders.issueInvoice}
+              </button>
+              {/* Nicht blockierend: die Steuernummer ist erst ab 250 € Pflicht. */}
+              {!profile?.taxNote?.trim() && (
+                <p className="text-xs text-muted">
+                  {language === "de"
+                    ? "Hinweis: Im Firmenprofil ist kein Steuerhinweis hinterlegt. Ab 250 € Rechnungsbetrag ist die Steuernummer oder USt-IdNr. Pflicht."
+                    : "Note: no tax reference is set in your company profile. From €250 the tax number or VAT ID is mandatory."}
+                </p>
+              )}
+            </>
           ) : (
-            <button
-              onClick={handleIssueInvoice}
-              disabled={issueInvoice.isPending}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors disabled:opacity-60"
-            >
-              <FileText className="h-4 w-4" />
-              {t.orders.issueInvoice}
-            </button>
+            /* § 14 Abs. 4 UStG: ohne Absender keine Rechnung. Der Server lehnt
+               das ohnehin mit 409 ab — hier steht, wie man es behebt. */
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-2">
+              <p className="text-sm text-amber-600">
+                {language === "de"
+                  ? "Zum Ausstellen fehlen Firmenname und Anschrift — sie müssen nach § 14 Abs. 4 UStG auf jeder Rechnung stehen."
+                  : "Issuing requires your company name and address — every invoice must show them by law."}
+              </p>
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-primary hover:bg-elevated transition-colors"
+              >
+                {language === "de" ? "Firmenprofil vervollständigen" : "Complete company profile"}
+              </Link>
+            </div>
           )}
         </div>
 

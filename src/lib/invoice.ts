@@ -71,6 +71,22 @@ export interface InvoiceProfileInput {
 }
 
 /**
+ * Whether a company profile carries the minimum an invoice must show.
+ *
+ * § 14 Abs. 4 Nr. 1 UStG demands the full name **and** address of the issuer.
+ * The snapshot is immutable, so an invoice issued without them can only be
+ * repaired by a cancellation — hence this is checked before issuing, not after.
+ *
+ * Shared by the server (fail-closed in `issueInvoice`) and the order page, so
+ * the button and the endpoint can never disagree.
+ */
+export function isInvoiceReadyProfile(
+  profile: Pick<InvoiceProfileInput, "name" | "address"> | null | undefined
+): boolean {
+  return !!profile?.name?.trim() && !!profile?.address?.trim();
+}
+
+/**
  * Statutory retention deadline for an invoice. Under §147 Abs. 3 AO the 10-year
  * period starts at the end of the calendar year the document was issued, so the
  * deadline is 31 Dec of (issue year + 10). Returns a YYYY-MM-DD date string.

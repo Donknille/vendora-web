@@ -32,6 +32,7 @@ export default function EditOrderPage() {
   const [customerCity, setCustomerCity] = useState("");
   const [customerCountry, setCustomerCountry] = useState("");
   const [orderDate, setOrderDate] = useState("");
+  const [serviceDate, setServiceDate] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("open");
   const [paidAt, setPaidAt] = useState("");
@@ -58,6 +59,7 @@ export default function EditOrderPage() {
       setOrderDate(
         order.orderDate || order.createdAt?.split("T")[0] || ""
       );
+      setServiceDate(order.serviceDate ? order.serviceDate.slice(0, 10) : "");
       setNotes(order.notes || "");
       setStatus(order.status || "open");
       setPaidAt(order.paidAt ? order.paidAt.slice(0, 10) : "");
@@ -147,6 +149,9 @@ export default function EditOrderPage() {
         customerCity: customerCity.trim() || undefined,
         customerCountry: customerCountry.trim() || undefined,
         orderDate,
+        // Bewusst ohne `|| undefined`: nur so laesst sich ein einmal gesetztes
+        // Leistungsdatum wieder leeren (Storage macht aus "" ein NULL).
+        serviceDate,
         notes: notes.trim() || undefined,
         paidAt: paidAt || undefined,
         paymentMethod: paymentMethod || undefined,
@@ -293,6 +298,25 @@ export default function EditOrderPage() {
               onChange={(e) => setOrderDate(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
             />
+          </div>
+
+          {/* Leistungsdatum: § 14 Abs. 4 Nr. 6 UStG. Aendert eine bereits
+              ausgestellte Rechnung nicht — deren Snapshot ist unveraenderlich. */}
+          <div>
+            <label className="block text-sm font-medium text-secondary mb-1.5">
+              {t.orders.serviceDateLabel}
+            </label>
+            <input
+              type="date"
+              value={serviceDate}
+              onChange={(e) => setServiceDate(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            />
+            <p className="mt-1 text-xs text-muted">
+              {language === "de"
+                ? "Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum."
+                : "When the goods or service were delivered. Left empty, the invoice date applies."}
+            </p>
           </div>
 
           {/* Payment (Zufluss for the EÜR) */}

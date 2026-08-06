@@ -49,6 +49,16 @@ export async function POST(request: Request) {
       if (result.code === "order_not_found") {
         return NextResponse.json({ message: "Order not found" }, { status: 404 });
       }
+      if (result.code === "profile_incomplete") {
+        // § 14 Abs. 4 UStG: ohne Name und Anschrift des Ausstellers keine Rechnung.
+        return NextResponse.json(
+          {
+            message: "Firmenname und Anschrift fehlen im Firmenprofil.",
+            code: "PROFILE_INCOMPLETE",
+          },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
         { message: "An active invoice already exists for this order", code: "ALREADY_ISSUED" },
         { status: 409 }

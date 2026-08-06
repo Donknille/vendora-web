@@ -8,6 +8,7 @@ import {
   buildCancellationSnapshot,
   computeInvoiceTotals,
   computeRetentionUntil,
+  isInvoiceReadyProfile,
   type InvoiceSnapshot,
   type InvoiceType,
 } from "@/lib/invoice";
@@ -900,12 +901,17 @@ export async function getInvoice(userId: string, id: string): Promise<InvoiceRes
 
 export type IssueInvoiceResult =
   | { ok: true; invoice: InvoiceResponse }
-  | { ok: false; code: "order_not_found" | "already_issued" };
+  | { ok: false; code: "order_not_found" | "already_issued" | "profile_incomplete" };
 
 /**
  * Issue an immutable invoice for an order: freeze a snapshot of seller, recipient,
  * positions, amounts and tax notice, and consume the next invoice number. At most
  * one active (issued) invoice per order — re-issuance after a Storno is allowed.
+ *
+ * Fails closed without a seller: § 14 Abs. 4 UStG requires the full name and
+ * address of the issuer. Whoever never opened the settings used to get an invoice
+ * with an empty sender — and since the snapshot is immutable, the only way to
+ * repair it afterwards is a cancellation invoice.
  */
 export async function issueInvoice(userId: string, orderId: string): Promise<IssueInvoiceResult> {
   const order = await getOrder(userId, orderId);
@@ -925,6 +931,8 @@ export async function issueInvoice(userId: string, orderId: string): Promise<Iss
   if (existing) return { ok: false, code: "already_issued" };
 
   const profile = await getProfile(userId);
+  if (!isInvoiceReadyProfile(profile)) return { ok: false, code: "profile_incomplete" };
+
   const today = new Date().toISOString().slice(0, 10);
 
   const row = await db.transaction(async (tx) => {
