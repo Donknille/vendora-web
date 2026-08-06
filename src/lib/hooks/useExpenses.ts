@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { Expense } from "@/lib/types";
 
 function useKey() {
@@ -8,13 +9,23 @@ function useKey() {
   return [userId, "/api/expenses"] as const;
 }
 
+/** An expense write changes the dashboard/EÜR figures too. */
+function useInvalidateExpenseWrites() {
+  const userId = useCurrentUserId();
+  return () => {
+    for (const path of ["/api/expenses", "/api/dashboard"]) {
+      queryClient.invalidateQueries({ queryKey: [userId, path] });
+    }
+  };
+}
+
 export function useExpenses() {
   const key = useKey();
-  return useQuery<Expense[]>({ queryKey: [...key], enabled: !!key[0] });
+  return useAppQuery<Expense[]>([...key]);
 }
 
 export function useCreateExpense() {
-  const key = useKey();
+  const invalidate = useInvalidateExpenseWrites();
   return useMutation({
     mutationFn: async (data: {
       description: string;
@@ -25,20 +36,16 @@ export function useCreateExpense() {
       const res = await apiRequest("POST", "/api/expenses", data);
       return res.json() as Promise<Expense>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...key] });
-    },
+    onSuccess: invalidate,
   });
 }
 
 export function useDeleteExpense() {
-  const key = useKey();
+  const invalidate = useInvalidateExpenseWrites();
   return useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/expenses/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...key] });
-    },
+    onSuccess: invalidate,
   });
 }

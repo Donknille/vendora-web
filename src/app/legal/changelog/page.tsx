@@ -6,6 +6,21 @@ import { Card } from "@/components/ui/Card";
 
 const releases = [
   {
+    version: "1.2.0",
+    date: "2026-08-06",
+    title: "Datenwahrheit",
+    changes: [
+      "Dashboard und Steuer-Übersicht rechnen jetzt mit derselben Logik — gleiche Zahlen für denselben Zeitraum",
+      "Einnahmen werden überall nach dem Zuflussprinzip erfasst (Zahlungsdatum, bei Marktverkäufen der Markttag)",
+      "Das Dashboard startet wie die Steuer-Übersicht im laufenden Jahr; „Alle Jahre“ bleibt einen Klick entfernt",
+      "Auftragsliste zeigt den Gesamtbetrag inklusive Versandkosten — wie Detailseite, Rechnung und EÜR",
+      "Standgebühren und Fahrtkosten eines Markts erscheinen jetzt in der Ausgabenliste (mit Markt-Hinweis, änderbar nur am Markt)",
+      "Marktkosten werden nur noch gebucht, wenn der Markt zugesagt oder abgeschlossen ist — beworbene und abgesagte Märkte belasten die EÜR nicht mehr",
+      "Ausgabenliste hat einen Jahresfilter und zeigt damit dieselbe Summe wie Dashboard und Steuer-Übersicht",
+      "Der GuV-Export liegt jetzt gebündelt unter Steuer (CSV und PDF)",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "2026-07-18",
     title: "Infrastruktur-Umstellung",

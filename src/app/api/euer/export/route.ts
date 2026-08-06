@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       storage.getOrders(userId),
       storage.getMarkets(userId),
       storage.getAllMarketSales(userId),
-      storage.getReportingExpenses(userId),
+      storage.getExpenses(userId), // reporting path: alle Quellen, unpaginiert
       storage.getProfile(userId),
     ]);
 

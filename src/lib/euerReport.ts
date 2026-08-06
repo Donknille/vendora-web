@@ -38,6 +38,35 @@ export interface EuerInput {
   expenses: Expense[]; // reporting expenses (incl. derived market costs)
 }
 
+/** Same data as EuerInput, without committing to a single year. */
+export type EuerData = Omit<EuerInput, "year">;
+
+/** One month of one year — never merged across years (the key carries both). */
+export interface EuerMonthRow {
+  key: string; // "YYYY-MM"
+  year: number;
+  monthIndex: number; // 0-11
+  income: number;
+  expenses: number;
+  surplus: number;
+}
+
+/**
+ * Several yearly reports rolled into one view (the dashboard's "all years").
+ *
+ * Deliberately built *from* EuerReport instead of re-implementing the booking
+ * rules: `incomeByMonth[12]` cannot be added across years, so the months are
+ * unfolded into rows keyed by year+month first.
+ */
+export interface EuerAggregate {
+  years: number[]; // asc
+  incomeTotal: number;
+  expenseTotal: number;
+  surplus: number;
+  expensesByCategory: { category: EuerCategory; amount: number }[]; // desc by amount
+  months: EuerMonthRow[]; // asc by key, only months with movement
+}
+
 // Parse a leading YYYY-MM from a date string ("2026-07-18" or full ISO) without
 // going through Date() (avoids timezone drift on date-only strings).
 function parseYearMonth(dateStr: string | null | undefined): { year: number; monthIndex: number } | null {
@@ -137,4 +166,81 @@ export function computeEuerReport(input: EuerInput): EuerReport {
     expensesByCategory,
     lines,
   };
+}
+
+/** One report per year, all from the same data set. */
+export function computeEuerReports(data: EuerData, years: number[]): EuerReport[] {
+  return years.map((year) => computeEuerReport({ ...data, year }));
+}
+
+/**
+ * Roll several yearly reports into one aggregate. The only place the app is
+ * allowed to combine years — everything it returns comes from computeEuerReport.
+ */
+export function aggregateEuerReports(reports: EuerReport[]): EuerAggregate {
+  const categoryTotals = new Map<EuerCategory, number>();
+  const months: EuerMonthRow[] = [];
+  let incomeTotal = 0;
+  let expenseTotal = 0;
+
+  for (const report of reports) {
+    incomeTotal += report.incomeTotal;
+    expenseTotal += report.expenseTotal;
+    for (const { category, amount } of report.expensesByCategory) {
+      categoryTotals.set(category, (categoryTotals.get(category) || 0) + amount);
+    }
+    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+      const income = report.incomeByMonth[monthIndex] || 0;
+      const expenses = report.expenseByMonth[monthIndex] || 0;
+      if (income === 0 && expenses === 0) continue;
+      months.push({
+        key: `${report.year}-${String(monthIndex + 1).padStart(2, "0")}`,
+        year: report.year,
+        monthIndex,
+        income,
+        expenses,
+        surplus: income - expenses,
+      });
+    }
+  }
+
+  months.sort((a, b) => a.key.localeCompare(b.key));
+  const expensesByCategory = Array.from(categoryTotals.entries())
+    .map(([category, amount]) => ({ category, amount }))
+    .sort((a, b) => b.amount - a.amount || a.category.localeCompare(b.category));
+
+  return {
+    years: Array.from(new Set(reports.map((r) => r.year))).sort((a, b) => a - b),
+    incomeTotal,
+    expenseTotal,
+    surplus: incomeTotal - expenseTotal,
+    expensesByCategory,
+    months,
+  };
+}
+
+/**
+ * The years that actually carry bookings, newest first — using the same dating
+ * rules as the report (Zufluss for orders, market day for sales). A year that
+ * only holds unpaid orders is not a reporting year and is left out.
+ */
+export function euerAvailableYears(data: EuerData, opts?: { includeYear?: number }): number[] {
+  const years = new Set<number>();
+  const add = (dateStr: string | null | undefined) => {
+    const ym = parseYearMonth(dateStr);
+    if (ym) years.add(ym.year);
+  };
+
+  for (const order of data.orders) {
+    if (!isPaidLike(order.status)) continue;
+    add(orderIncomeDate(order));
+  }
+  const marketById = new Map(data.markets.map((m) => [m.id, m]));
+  for (const sale of data.marketSales) {
+    add(marketById.get(sale.marketId)?.date || sale.createdAt);
+  }
+  for (const expense of data.expenses) add(expense.expenseDate);
+  if (opts?.includeYear !== undefined) years.add(opts.includeYear);
+
+  return Array.from(years).sort((a, b) => b - a);
 }

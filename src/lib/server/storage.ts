@@ -1,6 +1,6 @@
 import "server-only";
 import { eq, and, sql, inArray, isNull } from "drizzle-orm";
-import { deriveMarketCosts } from "@/lib/marketCosts";
+import { planMarketCostRows, type MarketCostSource } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
 import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
@@ -437,18 +437,27 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
  * (source `market_fee` / `market_travel`). Delete-and-reinsert inside the caller's
  * transaction so market costs land in the expenses table exactly once — this is
  * what makes them show up correctly in the dashboard/EÜR.
+ *
+ * Runs on every create/update, so the status gate maintains itself: a market
+ * moved to "cancelled" derives no rows and the delete alone releases its costs.
  */
 async function syncMarketExpenses(
   tx: DbTransaction,
   userId: string,
   marketId: string,
-  market: { name: string; date: string; standFee: number; travelCost: number }
+  market: MarketCostSource
 ): Promise<void> {
   await tx
     .delete(expenses)
-    .where(and(eq(expenses.marketId, marketId), inArray(expenses.source, ["market_fee", "market_travel"])));
+    .where(
+      and(
+        eq(expenses.userId, userId),
+        eq(expenses.marketId, marketId),
+        inArray(expenses.source, ["market_fee", "market_travel"])
+      )
+    );
 
-  const rows = deriveMarketCosts(market).map((r) => ({ ...r, userId, marketId }));
+  const rows = planMarketCostRows(market, { userId, marketId });
   if (rows.length > 0) await tx.insert(expenses).values(rows);
 }
 
@@ -478,6 +487,7 @@ export async function createMarket(
       date: m.date,
       standFee: data.standFee,
       travelCost: data.travelCost,
+      status: m.status, // aus der eingefuegten Zeile, damit der DB-Default greift
     });
     return m;
   });
@@ -513,6 +523,7 @@ export async function updateMarket(
       date: updates.date ?? existing.date,
       standFee: updates.standFee ?? existing.standFee,
       travelCost: updates.travelCost ?? existing.travelCost,
+      status: updates.status ?? existing.status,
     });
   });
   return getMarket(userId, id);
@@ -638,28 +649,40 @@ function toExpenseResponse(e: SelectExpense): ExpenseResponse {
   return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
-// Manual expenses only — market cost rows (source market_fee/market_travel)
-// are managed via the market form and hidden from the expenses list.
-export async function getExpenses(userId: string, opts?: PageOpts): Promise<ExpenseResponse[]> {
+export interface ExpenseQueryOpts extends PageOpts {
+  /**
+   * `"manual"` restricts the result to hand-entered rows — only the backup
+   * export needs that (the restore re-derives market costs from the markets,
+   * so exporting them too would double-book on import).
+   */
+  source?: "manual" | "all";
+}
+
+/**
+ * Expenses of a user, newest receipt first.
+ *
+ * Without `opts` this returns **every** row incl. the derived market cost rows
+ * and is not paginated — that is the reporting path (dashboard, EÜR), where a
+ * cap would silently truncate the totals.
+ *
+ * Ordered by `expense_date`, not `created_at`: a derived row carries the market
+ * day as its receipt date while its `created_at` only says when the market was
+ * last edited, which would scatter those rows randomly through the list.
+ */
+export async function getExpenses(userId: string, opts?: ExpenseQueryOpts): Promise<ExpenseResponse[]> {
+  const where =
+    opts?.source === "manual"
+      ? and(eq(expenses.userId, userId), eq(expenses.source, "manual"))
+      : eq(expenses.userId, userId);
   let q = db
     .select()
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.source, "manual")))
-    .orderBy(sql`${expenses.createdAt} DESC`)
+    .where(where)
+    .orderBy(sql`${expenses.expenseDate} DESC, ${expenses.createdAt} DESC`)
     .$dynamic();
   if (opts?.limit != null) q = q.limit(opts.limit);
   if (opts?.offset != null) q = q.offset(opts.offset);
   const rows = await q;
-  return rows.map(toExpenseResponse);
-}
-
-// All expense rows incl. derived market costs — for dashboard/EÜR aggregation.
-export async function getReportingExpenses(userId: string): Promise<ExpenseResponse[]> {
-  const rows = await db
-    .select()
-    .from(expenses)
-    .where(eq(expenses.userId, userId))
-    .orderBy(sql`${expenses.expenseDate} DESC`);
   return rows.map(toExpenseResponse);
 }
 
@@ -682,9 +705,27 @@ export async function createExpense(
   return toExpenseResponse(expense);
 }
 
-export async function deleteExpense(userId: string, id: string): Promise<boolean> {
-  const [deleted] = await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId))).returning({ id: expenses.id });
-  return !!deleted;
+export type DeleteExpenseResult = "deleted" | "not_found" | "derived";
+
+/**
+ * Only manual rows can be deleted. Market cost rows are owned by their market —
+ * deleting one here would make it reappear on the next market edit, so the
+ * caller gets `"derived"` and the UI points at the market instead. A UI-only
+ * guard is not enough: the ids are visible in the dashboard payload.
+ */
+export async function deleteExpense(userId: string, id: string): Promise<DeleteExpenseResult> {
+  const [deleted] = await db
+    .delete(expenses)
+    .where(and(eq(expenses.id, id), eq(expenses.userId, userId), eq(expenses.source, "manual")))
+    .returning({ id: expenses.id });
+  if (deleted) return "deleted";
+
+  // Nothing deleted: tell "does not exist" apart from "is derived".
+  const [existing] = await db
+    .select({ id: expenses.id })
+    .from(expenses)
+    .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+  return existing ? "derived" : "not_found";
 }
 
 // ── Profile ────────────────────────────────────────────────

@@ -1,28 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FileDown, FileText } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
-import { computeEuerReport, orderIncomeDate } from "@/lib/euerReport";
+import { computeEuerReport, euerAvailableYears, type EuerData } from "@/lib/euerReport";
 import { euerLabel } from "@/lib/euer";
-import { isPaidLike } from "@/lib/orderStatus";
 import { Card } from "@/components/ui/Card";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-function yearOf(dateStr: string | null | undefined): number | null {
-  if (!dateStr || dateStr.length < 4) return null;
-  const y = Number(dateStr.slice(0, 4));
-  return Number.isInteger(y) ? y : null;
-}
 
 export default function SteuerPage() {
   const { language } = useLanguage();
@@ -30,50 +24,35 @@ export default function SteuerPage() {
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   const canCreate = useCanCreate();
-  const { data: unlocks } = useQuery<{ years: number[] }>({
-    queryKey: [userId, "/api/euer/unlocks"],
-    enabled: !!userId,
-  });
-  const { data, isLoading } = useQuery<{
+  const { data: unlocks } = useAppQuery<{ years: number[] }>([
+    userId,
+    "/api/euer/unlocks",
+  ]);
+  const { data, isLoading, isError, refetch } = useAppQuery<{
     orders: Order[];
     expenses: Expense[];
     markets: MarketEvent[];
     marketSales: MarketSale[];
-  }>({ queryKey: [userId, "/api/dashboard"], enabled: !!userId });
+  }>([userId, "/api/dashboard"]);
 
   const [year, setYear] = useState<number>(() => new Date().getFullYear());
 
-  const availableYears = useMemo(() => {
-    const years = new Set<number>([new Date().getFullYear()]);
-    const marketById = new Map((data?.markets ?? []).map((m) => [m.id, m]));
-    (data?.orders ?? []).forEach((o) => {
-      if (isPaidLike(o.status)) {
-        const y = yearOf(orderIncomeDate(o));
-        if (y) years.add(y);
-      }
-    });
-    (data?.marketSales ?? []).forEach((s) => {
-      const y = yearOf(marketById.get(s.marketId)?.date ?? s.createdAt);
-      if (y) years.add(y);
-    });
-    (data?.expenses ?? []).forEach((e) => {
-      const y = yearOf(e.expenseDate);
-      if (y) years.add(y);
-    });
-    return Array.from(years).sort((a, b) => b - a);
-  }, [data]);
-
-  const report = useMemo(
-    () =>
-      computeEuerReport({
-        year,
-        orders: data?.orders ?? [],
-        markets: data?.markets ?? [],
-        marketSales: data?.marketSales ?? [],
-        expenses: data?.expenses ?? [],
-      }),
-    [data, year],
+  const euerData: EuerData = useMemo(
+    () => ({
+      orders: data?.orders ?? [],
+      markets: data?.markets ?? [],
+      marketSales: data?.marketSales ?? [],
+      expenses: data?.expenses ?? [],
+    }),
+    [data],
   );
+
+  const availableYears = useMemo(
+    () => euerAvailableYears(euerData, { includeYear: new Date().getFullYear() }),
+    [euerData],
+  );
+
+  const report = useMemo(() => computeEuerReport({ ...euerData, year }), [euerData, year]);
 
   const incomeOrders = report.lines
     .filter((l) => l.kind === "income_order")
@@ -88,6 +67,14 @@ export default function SteuerPage() {
           <CardSkeleton /><CardSkeleton /><CardSkeleton />
         </div>
         <CardSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <ErrorState onRetry={() => refetch()} />
       </div>
     );
   }

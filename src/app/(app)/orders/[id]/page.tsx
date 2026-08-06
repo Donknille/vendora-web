@@ -22,6 +22,7 @@ import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
@@ -31,7 +32,7 @@ export default function OrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data: orders, isLoading } = useOrders();
+  const { data: orders, isLoading, isError, refetch } = useOrders();
   const { data: invoices } = useInvoices();
   const updateOrder = useUpdateOrder();
   const deleteOrder = useDeleteOrder();
@@ -51,6 +52,10 @@ export default function OrderDetailPage() {
         <p className="text-muted">{t.common.loading}</p>
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
 
   if (!order) {

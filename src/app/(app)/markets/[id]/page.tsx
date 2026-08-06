@@ -32,6 +32,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { TseNotice } from "@/components/markets/TseNotice";
 
 export default function MarketDetailPage() {
@@ -40,7 +41,7 @@ export default function MarketDetailPage() {
   const params = useParams();
   const marketId = params.id as string;
 
-  const { data: markets, isLoading } = useMarkets();
+  const { data: markets, isLoading, isError, refetch } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
   const { data: allSales } = useAllMarketSales();
   const deleteMarket = useDeleteMarket();
@@ -69,6 +70,10 @@ export default function MarketDetailPage() {
         <p className="text-muted">{t.common.loading}</p>
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
 
   if (!market) {

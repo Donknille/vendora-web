@@ -41,6 +41,16 @@ export default async function RootLayout({
   return (
     <html lang="de" suppressHydrationWarning>
       <head>
+        {/*
+          KNOWN ISSUE (verified 2026-08-06, Next 16.2.3 + Turbopack): this emits
+          only <link rel="preload"> into the server HTML, while the client
+          inserts the real <script> into <head>. That difference makes React
+          bail out of hydration (error #418) on every page load, for every user
+          — independent of locale or theme. Moving it into <body> as the
+          next/script docs prescribe does NOT change what the server emits.
+          Fix is to drop next/script here and decide the theme server-side from
+          a cookie, so no script has to run before paint at all. See plan E1.
+        */}
         <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="font-body antialiased">

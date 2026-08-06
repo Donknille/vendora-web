@@ -9,16 +9,24 @@ import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { deadlineInfo, statusLabel, statusClasses } from "@/lib/marketCalendar";
+import { shouldBookMarketCosts } from "@/lib/marketCosts";
 import type { MarketEvent, MarketSale } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function MarketsPage() {
   const { t, language } = useLanguage();
-  const { data: markets, isLoading } = useMarkets();
-  const { data: allSales } = useAllMarketSales();
+  const marketsQuery = useMarkets();
+  const salesQuery = useAllMarketSales();
+  const { data: markets } = marketsQuery;
+  const { data: allSales } = salesQuery;
+  // Sales drive the revenue and profit on every card, so waiting for both keeps
+  // the cards from flashing 0,00 € and a profit that is only the costs.
+  const isLoading = marketsQuery.isLoading || salesQuery.isLoading;
+  const isError = marketsQuery.isError || salesQuery.isError;
   const canCreate = useCanCreate();
   const [search, setSearch] = useState("");
 
@@ -52,8 +60,14 @@ export default function MarketsPage() {
     );
     const standFee = Number(market.standFee) || 0;
     const travelCost = Number(market.travelCost) || 0;
+    // Bewusst die *geplanten* Kosten: diese Karte ist die Planungssicht. Das
+    // Dashboard-Ranking (computeMarketRanking) rechnet dagegen mit den
+    // tatsaechlich gebuchten Ausgabenzeilen — der Hinweis unten macht den
+    // Unterschied sichtbar, statt ihn zu verstecken.
     const profit = totalSales - standFee - travelCost;
     const dl = deadlineInfo(market.applicationDeadline, today, market.status);
+    const costsUnbooked =
+      standFee + travelCost > 0 && !shouldBookMarketCosts(market.status) && market.date < today;
 
     return (
       <Link key={market.id} href={`/markets/${market.id}`}>
@@ -100,6 +114,14 @@ export default function MarketsPage() {
                       : ""}
                 </span>
               )}
+              {costsUnbooked && (
+                <span className="mt-1.5 flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-600">
+                  <AlarmClock className="h-3 w-3" />
+                  {language === "de"
+                    ? `Kosten nicht in der EÜR — Status „${statusLabel(market.status, true)}“`
+                    : `Costs not in the P&L — status “${statusLabel(market.status, false)}”`}
+                </span>
+              )}
             </div>
             <div className="shrink-0 text-right">
               <p className="text-sm text-faint">
@@ -123,6 +145,7 @@ export default function MarketsPage() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
+  if (isError) return <div className="mx-auto max-w-2xl"><ErrorState onRetry={() => { marketsQuery.refetch(); salesQuery.refetch(); }} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

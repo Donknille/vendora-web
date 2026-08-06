@@ -10,11 +10,12 @@ export async function GET() {
     }
 
     // Single auth check, parallel data fetch.
-    // getReportingExpenses includes derived market cost rows so the GuV/EÜR
-    // counts stand fees and travel costs exactly once.
+    // getExpenses without opts is the reporting path: every source (incl. the
+    // derived market cost rows) and unpaginated, so the GuV/EÜR totals are not
+    // silently truncated.
     const [orders, expenses, markets, marketSales] = await Promise.all([
       storage.getOrders(userId),
-      storage.getReportingExpenses(userId),
+      storage.getExpenses(userId),
       storage.getMarkets(userId),
       storage.getAllMarketSales(userId),
     ]);

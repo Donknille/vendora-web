@@ -13,9 +13,20 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const deleted = await storage.deleteExpense(userId, id);
-    if (!deleted) {
+    // Kein requireWriteAccess: das Gate in lib/server/limits.ts ist bewusst
+    // create-only — ein abgelaufenes Konto muss seine Daten loeschen koennen.
+    const result = await storage.deleteExpense(userId, id);
+    if (result === "not_found") {
       return NextResponse.json({ message: "Expense not found" }, { status: 404 });
+    }
+    if (result === "derived") {
+      return NextResponse.json(
+        {
+          message: "Marktkosten werden über den Markt gepflegt.",
+          code: "DERIVED_EXPENSE",
+        },
+        { status: 409 }
+      );
     }
     return NextResponse.json({ message: "Expense deleted" });
   } catch (error) {
