@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { MarketEvent } from "@/lib/types";
 
 function useKey() {
@@ -10,7 +11,7 @@ function useKey() {
 
 export function useMarkets() {
   const key = useKey();
-  return useQuery<MarketEvent[]>({ queryKey: [...key], enabled: !!key[0] });
+  return useAppQuery<MarketEvent[]>([...key]);
 }
 
 export function useCreateMarket() {

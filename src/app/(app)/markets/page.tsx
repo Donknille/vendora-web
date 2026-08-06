@@ -14,11 +14,18 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function MarketsPage() {
   const { t, language } = useLanguage();
-  const { data: markets, isLoading } = useMarkets();
-  const { data: allSales } = useAllMarketSales();
+  const marketsQuery = useMarkets();
+  const salesQuery = useAllMarketSales();
+  const { data: markets } = marketsQuery;
+  const { data: allSales } = salesQuery;
+  // Sales drive the revenue and profit on every card, so waiting for both keeps
+  // the cards from flashing 0,00 € and a profit that is only the costs.
+  const isLoading = marketsQuery.isLoading || salesQuery.isLoading;
+  const isError = marketsQuery.isError || salesQuery.isError;
   const canCreate = useCanCreate();
   const [search, setSearch] = useState("");
 
@@ -123,6 +130,7 @@ export default function MarketsPage() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
+  if (isError) return <div className="mx-auto max-w-2xl"><ErrorState onRetry={() => { marketsQuery.refetch(); salesQuery.refetch(); }} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

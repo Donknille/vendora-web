@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const statusOptions: { value: string | null; en: string; de: string }[] = [
   { value: null, en: "All", de: "Alle" },
@@ -24,7 +25,7 @@ const statusOptions: { value: string | null; en: string; de: string }[] = [
 
 export default function OrdersPage() {
   const { t, language } = useLanguage();
-  const { data: orders, isLoading } = useOrders();
+  const { data: orders, isLoading, isError, refetch } = useOrders();
   const canCreate = useCanCreate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export default function OrdersPage() {
   }, [orders, search, statusFilter]);
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
+  if (isError) return <div className="mx-auto max-w-2xl"><ErrorState onRetry={() => refetch()} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

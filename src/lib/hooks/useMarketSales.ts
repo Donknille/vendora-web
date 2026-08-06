@@ -1,23 +1,25 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { MarketSale } from "@/lib/types";
 
 export function useMarketSales(marketId: string) {
   const userId = useCurrentUserId();
-  return useQuery<MarketSale[]>({
-    queryKey: [userId, "/api/markets", marketId, "sales"],
+  return useAppQuery<MarketSale[]>([userId, "/api/markets", marketId, "sales"], {
+    enabled: !!marketId,
+    // The key carries two "/api/…" segments, so the default queryFn would pick
+    // the wrong URL.
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/markets/${marketId}/sales`);
       return res.json();
     },
-    enabled: !!marketId && !!userId,
   });
 }
 
 export function useAllMarketSales() {
   const userId = useCurrentUserId();
-  return useQuery<MarketSale[]>({ queryKey: [userId, "/api/market-sales"], enabled: !!userId });
+  return useAppQuery<MarketSale[]>([userId, "/api/market-sales"]);
 }
 
 export function useCreateMarketSale() {

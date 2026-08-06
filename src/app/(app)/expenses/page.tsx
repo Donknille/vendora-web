@@ -12,6 +12,7 @@ import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const categoryColors: Record<EuerCategory, string> = {
   wareneinkauf_material: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -27,7 +28,7 @@ const categoryColors: Record<EuerCategory, string> = {
 
 export default function ExpensesPage() {
   const { t, language } = useLanguage();
-  const { data: expenses, isLoading } = useExpenses();
+  const { data: expenses, isLoading, isError, refetch } = useExpenses();
   const canCreate = useCanCreate();
   const createExpense = useCreateExpense();
   const deleteExpense = useDeleteExpense();
@@ -84,6 +85,7 @@ export default function ExpensesPage() {
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
+  if (isError) return <div className="mx-auto max-w-2xl"><ErrorState onRetry={() => refetch()} /></div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { FileDown } from "lucide-react";
@@ -10,9 +9,11 @@ import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { euerLabel, isEuerCategory } from "@/lib/euer";
 import { escapeHtml } from "@/lib/escapeHtml";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { Card } from "@/components/ui/Card";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 // Charts are client-only (recharts needs the DOM); avoids SSR/hydration churn.
@@ -51,12 +52,12 @@ export default function DashboardPage() {
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   // Single batched API call instead of 4 separate ones
-  const { data, isLoading } = useQuery<{
+  const { data, isLoading, isError, refetch } = useAppQuery<{
     orders: Order[];
     expenses: Expense[];
     markets: MarketEvent[];
     marketSales: MarketSale[];
-  }>({ queryKey: [userId, "/api/dashboard"], enabled: !!userId });
+  }>([userId, "/api/dashboard"]);
 
   const orders = data?.orders;
   const expenses = data?.expenses;
@@ -220,6 +221,8 @@ export default function DashboardPage() {
       <CardSkeleton />
     </div>
   );
+
+  if (isError) return <div className="mx-auto max-w-5xl"><ErrorState onRetry={() => refetch()} /></div>;
 
   // ----- GuV Export -----
   const handleExportGuV = () => {

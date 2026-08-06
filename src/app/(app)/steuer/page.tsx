@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FileDown, FileText } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
@@ -14,6 +14,7 @@ import { isPaidLike } from "@/lib/orderStatus";
 import { Card } from "@/components/ui/Card";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,16 +31,16 @@ export default function SteuerPage() {
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   const canCreate = useCanCreate();
-  const { data: unlocks } = useQuery<{ years: number[] }>({
-    queryKey: [userId, "/api/euer/unlocks"],
-    enabled: !!userId,
-  });
-  const { data, isLoading } = useQuery<{
+  const { data: unlocks } = useAppQuery<{ years: number[] }>([
+    userId,
+    "/api/euer/unlocks",
+  ]);
+  const { data, isLoading, isError, refetch } = useAppQuery<{
     orders: Order[];
     expenses: Expense[];
     markets: MarketEvent[];
     marketSales: MarketSale[];
-  }>({ queryKey: [userId, "/api/dashboard"], enabled: !!userId });
+  }>([userId, "/api/dashboard"]);
 
   const [year, setYear] = useState<number>(() => new Date().getFullYear());
 
@@ -88,6 +89,14 @@ export default function SteuerPage() {
           <CardSkeleton /><CardSkeleton /><CardSkeleton />
         </div>
         <CardSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <ErrorState onRetry={() => refetch()} />
       </div>
     );
   }

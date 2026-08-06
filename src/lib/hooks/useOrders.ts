@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
+import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { Order, Customer } from "@/lib/types";
 
 function useKey() {
@@ -16,7 +17,7 @@ function invalidateOrderScopedQueries(userId: string | null | undefined) {
 
 export function useOrders() {
   const key = useKey();
-  return useQuery<Order[]>({ queryKey: [...key], enabled: !!key[0] });
+  return useAppQuery<Order[]>([...key]);
 }
 
 export function useCreateOrder() {
@@ -87,9 +88,7 @@ export function useDeleteOrder() {
 
 export function useCustomers() {
   const userId = useCurrentUserId();
-  return useQuery<Customer[]>({
-    queryKey: [userId, "/api/customers"],
+  return useAppQuery<Customer[]>([userId, "/api/customers"], {
     staleTime: 10 * 60 * 1000,
-    enabled: !!userId,
   });
 }
