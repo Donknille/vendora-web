@@ -1,8 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-
-type Theme = "light" | "dark" | "system";
+import { DARK_COOKIE, THEME_COOKIE, isTheme, prefCookie, resolveDark, type Theme } from "@/lib/prefs";
 
 interface ThemeContextType {
   theme: Theme;
@@ -12,42 +11,57 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "system";
-    const saved = localStorage.getItem("vendora_theme") as Theme | null;
-    return saved || "system";
-  });
+/**
+ * The initial values come from the server (cookie), so the first client render
+ * is identical to the server render — no reading of localStorage or matchMedia
+ * in a useState initializer, which is what used to differ between the two.
+ */
+export function ThemeProvider({
+  children,
+  initialTheme = "system",
+  initialDark = false,
+}: {
+  children: ReactNode;
+  initialTheme?: Theme;
+  initialDark?: boolean;
+}) {
+  const [theme, setThemeState] = useState<Theme>(initialTheme);
+  const [isDark, setIsDark] = useState(initialDark);
+
+  // One-time bridge for browsers that still carry the old localStorage value:
+  // copy it into the cookie so the *next* request renders it. Deliberately no
+  // setState here — changing the theme mid-render would be a cascading render
+  // for a transitional case that resolves itself on the next page load.
+  useEffect(() => {
+    if (document.cookie.includes(`${THEME_COOKIE}=`)) return;
+    const saved = localStorage.getItem("vendora_theme");
+    if (isTheme(saved)) document.cookie = prefCookie(THEME_COOKIE, saved);
+  }, []);
 
   useEffect(() => {
-    const root = document.documentElement;
-    const applyTheme = (isDark: boolean) => {
-      root.classList.toggle("dark", isDark);
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const apply = (systemDark: boolean) => {
+      const dark = resolveDark(theme, systemDark);
+      setIsDark(dark);
+      document.documentElement.classList.toggle("dark", dark);
+      // Persist what the OS reports so the *next* server render can resolve
+      // "system" itself instead of guessing light.
+      document.cookie = prefCookie(DARK_COOKIE, systemDark ? "1" : "0");
     };
 
-    if (theme === "dark") {
-      applyTheme(true);
-    } else if (theme === "light") {
-      applyTheme(false);
-    } else {
-      // System — apply and listen for changes
-      const mql = window.matchMedia("(prefers-color-scheme: dark)");
-      applyTheme(mql.matches);
+    apply(mql.matches);
+    if (theme !== "system") return;
 
-      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
-      mql.addEventListener("change", handler);
-      return () => mql.removeEventListener("change", handler);
-    }
+    const handler = (e: MediaQueryListEvent) => apply(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
   }, [theme]);
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    localStorage.setItem("vendora_theme", t);
+    document.cookie = prefCookie(THEME_COOKIE, t);
   };
-
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, isDark }}>

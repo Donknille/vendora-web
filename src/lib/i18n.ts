@@ -1,4 +1,7 @@
-export type Language = "de" | "en";
+// The language lives in a cookie so the server can render <html lang> — see
+// lib/prefs.ts. Re-exported here because most call sites reach for it via i18n.
+export type { Language } from "@/lib/prefs";
+import type { Language } from "@/lib/prefs";
 
 const translations = {
   en: {
@@ -28,13 +31,6 @@ const translations = {
 };
 
 export type Translations = typeof translations.en;
-
-export function getDeviceLanguage(): Language {
-  if (typeof navigator !== "undefined") {
-    return navigator.language?.startsWith("de") ? "de" : "en";
-  }
-  return "en";
-}
 
 export function getTranslations(lang: Language): Translations {
   return translations[lang];

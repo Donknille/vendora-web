@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useReducedMotionSafe } from "./useReducedMotionSafe";
 import { ShoppingCart, Store, Receipt, BarChart3, FileText, Shield, type LucideIcon } from "lucide-react";
 
 interface Feature {
@@ -19,7 +20,7 @@ const features: Feature[] = [
 ];
 
 export function FeatureGrid() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionSafe();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

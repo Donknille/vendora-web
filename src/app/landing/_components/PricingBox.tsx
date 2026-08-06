@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import CountUp from "react-countup";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView } from "motion/react";
+import { useReducedMotionSafe } from "./useReducedMotionSafe";
 import { useRef } from "react";
 
 const FEATURES = [
@@ -15,7 +16,7 @@ const FEATURES = [
 ];
 
 export function PricingBox() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionSafe();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 

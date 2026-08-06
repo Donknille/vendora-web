@@ -148,6 +148,6 @@ export const config = {
     // Exclude framework internals, images, and root-level static/PWA assets
     // (sw.js, the web manifest, the offline fallback, the theme init script) so
     // they are neither rate-limited nor auth-redirected for logged-out visitors.
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|offline.html|theme-init.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|offline.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
