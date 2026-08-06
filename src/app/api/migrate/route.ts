@@ -9,7 +9,7 @@ import {
 } from "@/lib/server/schema";
 import { eq, inArray } from "drizzle-orm";
 import { mapLegacyCategory } from "@/lib/euer";
-import { deriveMarketCosts } from "@/lib/marketCosts";
+import { planMarketCostRows } from "@/lib/marketCosts";
 import { z } from "zod";
 
 // v1: money as euro decimals. v2: money as integer cents.
@@ -233,12 +233,11 @@ export async function POST(request: Request) {
             createdAt: now,
           }).returning();
 
-          const derived = deriveMarketCosts({
-            name: marketName,
-            date: marketDate,
-            standFee,
-            travelCost,
-          }).map((r) => ({ ...r, userId, marketId: inserted.id, createdAt: now }));
+          // Status mitgeben, sonst wuerde der Restore am Gate vorbei buchen.
+          const derived = planMarketCostRows(
+            { name: marketName, date: marketDate, standFee, travelCost, status: inserted.status },
+            { userId, marketId: inserted.id }
+          ).map((r) => ({ ...r, createdAt: now }));
           if (derived.length > 0) await tx.insert(expenses).values(derived);
 
           if (market.id) {

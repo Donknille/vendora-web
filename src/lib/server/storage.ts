@@ -1,6 +1,6 @@
 import "server-only";
 import { eq, and, sql, inArray, isNull } from "drizzle-orm";
-import { deriveMarketCosts } from "@/lib/marketCosts";
+import { planMarketCostRows, type MarketCostSource } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
 import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
@@ -437,18 +437,27 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
  * (source `market_fee` / `market_travel`). Delete-and-reinsert inside the caller's
  * transaction so market costs land in the expenses table exactly once — this is
  * what makes them show up correctly in the dashboard/EÜR.
+ *
+ * Runs on every create/update, so the status gate maintains itself: a market
+ * moved to "cancelled" derives no rows and the delete alone releases its costs.
  */
 async function syncMarketExpenses(
   tx: DbTransaction,
   userId: string,
   marketId: string,
-  market: { name: string; date: string; standFee: number; travelCost: number }
+  market: MarketCostSource
 ): Promise<void> {
   await tx
     .delete(expenses)
-    .where(and(eq(expenses.marketId, marketId), inArray(expenses.source, ["market_fee", "market_travel"])));
+    .where(
+      and(
+        eq(expenses.userId, userId),
+        eq(expenses.marketId, marketId),
+        inArray(expenses.source, ["market_fee", "market_travel"])
+      )
+    );
 
-  const rows = deriveMarketCosts(market).map((r) => ({ ...r, userId, marketId }));
+  const rows = planMarketCostRows(market, { userId, marketId });
   if (rows.length > 0) await tx.insert(expenses).values(rows);
 }
 
@@ -478,6 +487,7 @@ export async function createMarket(
       date: m.date,
       standFee: data.standFee,
       travelCost: data.travelCost,
+      status: m.status, // aus der eingefuegten Zeile, damit der DB-Default greift
     });
     return m;
   });
@@ -513,6 +523,7 @@ export async function updateMarket(
       date: updates.date ?? existing.date,
       standFee: updates.standFee ?? existing.standFee,
       travelCost: updates.travelCost ?? existing.travelCost,
+      status: updates.status ?? existing.status,
     });
   });
   return getMarket(userId, id);
