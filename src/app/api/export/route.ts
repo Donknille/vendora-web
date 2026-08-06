@@ -14,7 +14,10 @@ export async function GET() {
         storage.getOrders(userId),
         storage.getMarkets(userId),
         storage.getAllMarketSales(userId),
-        storage.getExpenses(userId),
+        // Bewusst nur die manuellen Ausgaben: der Restore leitet die
+        // Marktkosten aus den Maerkten neu ab (api/migrate/route.ts). Wuerde
+        // das Backup sie mitfuehren, entstuenden beim Import Doppelbuchungen.
+        storage.getExpenses(userId, { source: "manual" }),
         storage.getProfile(userId),
         storage.getInvoiceCounter(userId),
         storage.getInvoices(userId),

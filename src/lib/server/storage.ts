@@ -638,28 +638,40 @@ function toExpenseResponse(e: SelectExpense): ExpenseResponse {
   return { ...e, createdAt: e.createdAt.toISOString() };
 }
 
-// Manual expenses only — market cost rows (source market_fee/market_travel)
-// are managed via the market form and hidden from the expenses list.
-export async function getExpenses(userId: string, opts?: PageOpts): Promise<ExpenseResponse[]> {
+export interface ExpenseQueryOpts extends PageOpts {
+  /**
+   * `"manual"` restricts the result to hand-entered rows — only the backup
+   * export needs that (the restore re-derives market costs from the markets,
+   * so exporting them too would double-book on import).
+   */
+  source?: "manual" | "all";
+}
+
+/**
+ * Expenses of a user, newest receipt first.
+ *
+ * Without `opts` this returns **every** row incl. the derived market cost rows
+ * and is not paginated — that is the reporting path (dashboard, EÜR), where a
+ * cap would silently truncate the totals.
+ *
+ * Ordered by `expense_date`, not `created_at`: a derived row carries the market
+ * day as its receipt date while its `created_at` only says when the market was
+ * last edited, which would scatter those rows randomly through the list.
+ */
+export async function getExpenses(userId: string, opts?: ExpenseQueryOpts): Promise<ExpenseResponse[]> {
+  const where =
+    opts?.source === "manual"
+      ? and(eq(expenses.userId, userId), eq(expenses.source, "manual"))
+      : eq(expenses.userId, userId);
   let q = db
     .select()
     .from(expenses)
-    .where(and(eq(expenses.userId, userId), eq(expenses.source, "manual")))
-    .orderBy(sql`${expenses.createdAt} DESC`)
+    .where(where)
+    .orderBy(sql`${expenses.expenseDate} DESC, ${expenses.createdAt} DESC`)
     .$dynamic();
   if (opts?.limit != null) q = q.limit(opts.limit);
   if (opts?.offset != null) q = q.offset(opts.offset);
   const rows = await q;
-  return rows.map(toExpenseResponse);
-}
-
-// All expense rows incl. derived market costs — for dashboard/EÜR aggregation.
-export async function getReportingExpenses(userId: string): Promise<ExpenseResponse[]> {
-  const rows = await db
-    .select()
-    .from(expenses)
-    .where(eq(expenses.userId, userId))
-    .orderBy(sql`${expenses.expenseDate} DESC`);
   return rows.map(toExpenseResponse);
 }
 
@@ -682,9 +694,27 @@ export async function createExpense(
   return toExpenseResponse(expense);
 }
 
-export async function deleteExpense(userId: string, id: string): Promise<boolean> {
-  const [deleted] = await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId))).returning({ id: expenses.id });
-  return !!deleted;
+export type DeleteExpenseResult = "deleted" | "not_found" | "derived";
+
+/**
+ * Only manual rows can be deleted. Market cost rows are owned by their market —
+ * deleting one here would make it reappear on the next market edit, so the
+ * caller gets `"derived"` and the UI points at the market instead. A UI-only
+ * guard is not enough: the ids are visible in the dashboard payload.
+ */
+export async function deleteExpense(userId: string, id: string): Promise<DeleteExpenseResult> {
+  const [deleted] = await db
+    .delete(expenses)
+    .where(and(eq(expenses.id, id), eq(expenses.userId, userId), eq(expenses.source, "manual")))
+    .returning({ id: expenses.id });
+  if (deleted) return "deleted";
+
+  // Nothing deleted: tell "does not exist" apart from "is derived".
+  const [existing] = await db
+    .select({ id: expenses.id })
+    .from(expenses)
+    .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+  return existing ? "derived" : "not_found";
 }
 
 // ── Profile ────────────────────────────────────────────────
