@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Receipt, Plus, Trash2, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Receipt, Plus, Trash2, X, Store } from "lucide-react";
 import { useExpenses, useCreateExpense, useDeleteExpense } from "@/lib/hooks/useExpenses";
+import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { EUER_CATEGORIES, euerLabel, isEuerCategory, type EuerCategory } from "@/lib/euer";
@@ -26,9 +28,20 @@ const categoryColors: Record<EuerCategory, string> = {
   sonstiges: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
+/** Year of a date-only or full ISO string, without going through Date(). */
+function yearOf(dateStr: string | null | undefined): number | null {
+  if (!dateStr || dateStr.length < 4) return null;
+  const y = Number(dateStr.slice(0, 4));
+  return Number.isInteger(y) ? y : null;
+}
+
 export default function ExpensesPage() {
   const { t, language } = useLanguage();
   const { data: expenses, isLoading, isError, refetch } = useExpenses();
+  // Nur fuer die Marktnamen der abgeleiteten Zeilen. Bewusst nicht in
+  // isLoading/isError: ein Fehler hier darf die Ausgabenliste nicht ersetzen,
+  // der Badge zeigt dann eben keinen Namen.
+  const { data: markets } = useMarkets();
   const canCreate = useCanCreate();
   const createExpense = useCreateExpense();
   const deleteExpense = useDeleteExpense();
@@ -46,7 +59,31 @@ export default function ExpensesPage() {
   // Delete confirm state
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const totalExpenses = (expenses ?? []).reduce(
+  // Jahresfilter wie auf /steuer — ohne ihn zeigt die Summe hier alle Jahre
+  // und laesst sich mit Dashboard und EÜR gar nicht vergleichen.
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>([new Date().getFullYear()]);
+    (expenses ?? []).forEach((e) => {
+      const y = yearOf(e.expenseDate ?? e.createdAt);
+      if (y) years.add(y);
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [expenses]);
+
+  // Der Server sortiert bereits nach Belegdatum absteigend.
+  const visibleExpenses = useMemo(
+    () => (expenses ?? []).filter((e) => yearOf(e.expenseDate ?? e.createdAt) === selectedYear),
+    [expenses, selectedYear],
+  );
+
+  const marketNameById = useMemo(
+    () => new Map((markets ?? []).map((m) => [m.id, m.name])),
+    [markets],
+  );
+
+  const totalExpenses = visibleExpenses.reduce(
     (sum: number, e) => sum + (Number(e.amount) || 0),
     0
   );
@@ -116,11 +153,32 @@ export default function ExpensesPage() {
 
       <SubscriptionBanner />
 
+      {/* Year filter */}
+      {availableYears.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {availableYears.map((year) => (
+            <button
+              key={year}
+              onClick={() => setSelectedYear(year)}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                selectedYear === year
+                  ? "bg-brand-primary text-white"
+                  : "bg-elevated text-faint hover:bg-hover hover:text-secondary"
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Total */}
-      {expenses && expenses.length > 0 && (
+      {visibleExpenses.length > 0 && (
         <Card>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-faint">{t.expenses.total}</p>
+            <p className="text-sm text-faint">
+              {t.expenses.total} {selectedYear}
+            </p>
             <p className="text-2xl font-bold text-brand-primary">
               {formatCurrency(totalExpenses)}
             </p>
@@ -194,6 +252,15 @@ export default function ExpensesPage() {
                   </option>
                 ))}
               </select>
+              {/* Standgebuehr und Fahrtkosten eines Markts stehen schon in der
+                  Liste — ohne diesen Hinweis bucht man sie ein zweites Mal. */}
+              {(category === "standgebuehren_raumkosten" || category === "fahrtkosten") && (
+                <p className="mt-1.5 text-xs text-muted">
+                  {language === "de"
+                    ? "Standgebühren und Fahrtkosten eines Markts werden automatisch erfasst — du findest sie hier mit dem Markt-Hinweis."
+                    : "Stand fees and travel costs of a market are recorded automatically — they appear here with a market badge."}
+                </p>
+              )}
             </div>
 
             <button
@@ -218,7 +285,7 @@ export default function ExpensesPage() {
       )}
 
       {/* Expenses list */}
-      {!expenses || expenses.length === 0 ? (
+      {visibleExpenses.length === 0 ? (
         <EmptyState
           icon={<Receipt className="h-12 w-12" />}
           title={t.expenses.noExpenses}
@@ -226,17 +293,15 @@ export default function ExpensesPage() {
         />
       ) : (
         <div className="space-y-3">
-          {[...expenses]
-            .sort((a, b) => {
-              const dateA = a.expenseDate ?? a.createdAt ?? "";
-              const dateB = b.expenseDate ?? b.createdAt ?? "";
-              return dateB.localeCompare(dateA);
-            })
+          {visibleExpenses
             .map((expense) => {
               const cat: EuerCategory = isEuerCategory(expense.category)
                 ? expense.category
                 : "sonstiges";
               const colors = categoryColors[cat];
+              // Aus einem Markt abgeleitet: nur dort aenderbar, deshalb hier
+              // kein Loeschen (der Server antwortet darauf ohnehin mit 409).
+              const isDerived = expense.source !== "manual";
 
               return (
                 <Card
@@ -253,6 +318,17 @@ export default function ExpensesPage() {
                       >
                         {euerLabel(cat, language)}
                       </span>
+                      {isDerived && (
+                        <Link
+                          href={expense.marketId ? `/markets/${expense.marketId}` : "/markets"}
+                          className="inline-flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:text-secondary hover:bg-elevated transition-colors"
+                        >
+                          <Store className="h-3 w-3" />
+                          {expense.marketId && marketNameById.get(expense.marketId)
+                            ? `${t.expenses.fromMarket}: ${marketNameById.get(expense.marketId)}`
+                            : t.expenses.fromMarket}
+                        </Link>
+                      )}
                     </div>
                     <p className="mt-0.5 text-xs text-muted">
                       {formatDate(
@@ -271,12 +347,15 @@ export default function ExpensesPage() {
                     <p className="text-sm font-semibold text-brand-primary">
                       {formatCurrency(Number(expense.amount) || 0)}
                     </p>
-                    <button
-                      onClick={() => setDeleteId(expense.id)}
-                      className="rounded-lg p-1.5 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {!isDerived && (
+                      <button
+                        onClick={() => setDeleteId(expense.id)}
+                        aria-label={t.expenses.deleteExpense}
+                        className="rounded-lg p-1.5 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </Card>
               );
