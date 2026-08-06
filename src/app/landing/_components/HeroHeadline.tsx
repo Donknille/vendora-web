@@ -1,12 +1,13 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useReducedMotionSafe } from "./useReducedMotionSafe";
 import { useEffect, useState } from "react";
 
 const WORDS = ["verwaltet", "abgerechnet", "geplant", "analysiert"];
 
 export function HeroHeadline() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionSafe();
   const [index, setIndex] = useState(0);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { inflateSync } from "node:zlib";
 import { sanitizeWinAnsi } from "@/lib/server/pdf";
 import { buildInvoicePdf, type InvoicePdfInput } from "@/lib/server/invoicePdf";
 
@@ -49,11 +50,50 @@ const invoice = (o: Partial<InvoicePdfInput> = {}): InvoicePdfInput => ({
   ...o,
 });
 
+/**
+ * The visible text of a generated PDF.
+ *
+ * pdf-lib writes the page content as a Flate-compressed stream and encodes the
+ * drawn strings as hex literals (`<48616C6C6F> Tj`), so getting at the words
+ * takes both an inflate and a hex decode.
+ */
+async function pdfText(input: InvoicePdfInput): Promise<string> {
+  const raw = Buffer.from(await buildInvoicePdf(input));
+  let content = "";
+  let at = 0;
+  for (;;) {
+    const start = raw.indexOf("stream", at);
+    if (start === -1) break;
+    const end = raw.indexOf("endstream", start);
+    if (end === -1) break;
+    // Skip the EOL after the `stream` keyword (\r\n or \n).
+    let from = start + "stream".length;
+    if (raw[from] === 0x0d) from++;
+    if (raw[from] === 0x0a) from++;
+    try {
+      content += inflateSync(raw.subarray(from, end)).toString("latin1");
+    } catch {
+      // Object/xref streams use a different filter setup — not page content.
+    }
+    at = end + 1;
+  }
+  return (content.match(/<([0-9A-Fa-f]+)>\s*Tj/g) ?? [])
+    .map((m) => Buffer.from(m.slice(1, m.indexOf(">")), "hex").toString("latin1"))
+    .join("\n");
+}
+
 describe("buildInvoicePdf", () => {
   it("produces a valid PDF byte stream", async () => {
     const bytes = await buildInvoicePdf(invoice());
     expect(bytes.length).toBeGreaterThan(200);
     expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
+  });
+
+  it("prints the Leistungsdatum only when the order carries one", async () => {
+    // § 14 Abs. 4 Nr. 6 UStG — the field is optional in the form, but once set
+    // it has to reach the document.
+    expect(await pdfText(invoice({ serviceDate: "2026-07-10" }))).toContain("Leistungsdatum");
+    expect(await pdfText(invoice({ serviceDate: null }))).not.toContain("Leistungsdatum");
   });
 
   it("does not throw on non-WinAnsi user input", async () => {

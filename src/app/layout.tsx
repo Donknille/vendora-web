@@ -1,6 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
-import Script from "next/script";
+import { cookies, headers } from "next/headers";
+import {
+  DARK_COOKIE,
+  LANGUAGE_COOKIE,
+  THEME_COOKIE,
+  isLanguage,
+  isTheme,
+  languageFromAcceptHeader,
+  resolveDark,
+} from "@/lib/prefs";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
@@ -38,24 +47,37 @@ export default async function RootLayout({
   // attribute from the DOM, so the client would compare against an empty one).
   await connection();
 
+  // Theme and language come from cookies, so the first paint is already the
+  // final one: no blocking script, no flash, and — most importantly — server
+  // and client render the same markup. The blocking theme script that used to
+  // sit here was the cause of React #418 on every single page load.
+  const cookieStore = await cookies();
+  const theme = cookieStore.get(THEME_COOKIE)?.value;
+  const language = cookieStore.get(LANGUAGE_COOKIE)?.value;
+
+  const initialTheme = isTheme(theme) ? theme : "system";
+  const systemPrefersDark = cookieStore.get(DARK_COOKIE)?.value === "1";
+  const isDark = resolveDark(initialTheme, systemPrefersDark);
+
+  // Before the first visit has set a cookie, Accept-Language is a better guess
+  // than a hardcoded "de" — and it is available on the server, unlike
+  // navigator.language.
+  const initialLanguage = isLanguage(language)
+    ? language
+    : languageFromAcceptHeader((await headers()).get("accept-language"));
+
   return (
-    <html lang="de" suppressHydrationWarning>
-      <head>
-        {/*
-          KNOWN ISSUE (verified 2026-08-06, Next 16.2.3 + Turbopack): this emits
-          only <link rel="preload"> into the server HTML, while the client
-          inserts the real <script> into <head>. That difference makes React
-          bail out of hydration (error #418) on every page load, for every user
-          — independent of locale or theme. Moving it into <body> as the
-          next/script docs prescribe does NOT change what the server emits.
-          Fix is to drop next/script here and decide the theme server-side from
-          a cookie, so no script has to run before paint at all. See plan E1.
-        */}
-        <Script src="/theme-init.js" strategy="beforeInteractive" />
-      </head>
+    // suppressHydrationWarning covers the one case the server cannot know:
+    // a "system" theme whose OS preference changed since the last visit, which
+    // the client corrects on the html element after mount.
+    <html lang={initialLanguage} className={isDark ? "dark" : undefined} suppressHydrationWarning>
       <body className="font-body antialiased">
         <ServiceWorkerRegistrar />
-        <Providers>
+        <Providers
+          initialTheme={initialTheme}
+          initialDark={isDark}
+          initialLanguage={initialLanguage}
+        >
           <ErrorBoundary>{children}</ErrorBoundary>
         </Providers>
       </body>

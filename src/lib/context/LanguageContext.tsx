@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { type Language, getDeviceLanguage, getTranslations, type Translations } from "@/lib/i18n";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { getTranslations, type Translations } from "@/lib/i18n";
+import { LANGUAGE_COOKIE, isLanguage, prefCookie, type Language } from "@/lib/prefs";
 
 interface LanguageContextType {
   language: Language;
@@ -11,16 +12,35 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window === "undefined") return "de";
-    const saved = localStorage.getItem("vendora_language") as Language | null;
-    return saved || getDeviceLanguage();
-  });
+/**
+ * `initialLanguage` is resolved on the server (cookie, else Accept-Language),
+ * so the client starts from the same value instead of reading localStorage in
+ * a useState initializer — the server used to render "de" for everyone while an
+ * English browser rendered "en", a mismatch on every page.
+ */
+export function LanguageProvider({
+  children,
+  initialLanguage = "de",
+}: {
+  children: ReactNode;
+  initialLanguage?: Language;
+}) {
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
+
+  // One-time bridge for browsers that still carry the old localStorage value:
+  // copy it into the cookie so the *next* request renders it. Deliberately no
+  // setState here — see ThemeContext.
+  useEffect(() => {
+    if (document.cookie.includes(`${LANGUAGE_COOKIE}=`)) return;
+    const saved = localStorage.getItem("vendora_language");
+    document.cookie = prefCookie(LANGUAGE_COOKIE, isLanguage(saved) ? saved : initialLanguage);
+  }, [initialLanguage]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("vendora_language", lang);
+    document.cookie = prefCookie(LANGUAGE_COOKIE, lang);
+    // Keeps <html lang> in step — it is rendered by the server layout.
+    document.documentElement.lang = lang;
   };
 
   const t = getTranslations(language);

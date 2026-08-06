@@ -5,6 +5,7 @@ import {
   buildInvoiceTaxNote,
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
+  isInvoiceReadyProfile,
   type InvoiceOrderInput,
   type InvoiceProfileInput,
   type InvoiceLineItem,
@@ -80,6 +81,24 @@ describe("buildInvoiceTaxNote", () => {
 
   it("tolerates a null profile", () => {
     expect(buildInvoiceTaxNote(null)).toBe("");
+  });
+});
+
+describe("isInvoiceReadyProfile", () => {
+  // § 14 Abs. 4 Nr. 1 UStG: name AND address. The snapshot is immutable, so an
+  // invoice issued without them can only be repaired by a cancellation.
+  it("accepts a profile with name and address", () => {
+    expect(isInvoiceReadyProfile({ name: "Muster GmbH", address: "Weg 1\n12345 Ort" })).toBe(true);
+  });
+
+  it("rejects a missing, empty or whitespace-only sender", () => {
+    expect(isInvoiceReadyProfile(null)).toBe(false);
+    expect(isInvoiceReadyProfile(undefined)).toBe(false);
+    expect(isInvoiceReadyProfile({ name: "", address: "" })).toBe(false);
+    expect(isInvoiceReadyProfile({ name: "Muster GmbH", address: "" })).toBe(false);
+    expect(isInvoiceReadyProfile({ name: "", address: "Weg 1" })).toBe(false);
+    expect(isInvoiceReadyProfile({ name: "   ", address: "Weg 1" })).toBe(false);
+    expect(isInvoiceReadyProfile({ name: "Muster GmbH", address: "\n  " })).toBe(false);
   });
 });
 

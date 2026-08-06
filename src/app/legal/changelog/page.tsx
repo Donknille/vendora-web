@@ -6,6 +6,17 @@ import { Card } from "@/components/ui/Card";
 
 const releases = [
   {
+    version: "1.3.0",
+    date: "2026-08-06",
+    title: "Rechnungen & Darstellung",
+    changes: [
+      "Leistungsdatum lässt sich am Auftrag erfassen und erscheint auf der Rechnung (§ 14 Abs. 4 UStG)",
+      "Rechnungen können nicht mehr ohne Firmenname und Anschrift ausgestellt werden — die Auftragsseite führt stattdessen zum Firmenprofil",
+      "Theme und Sprache werden serverseitig gesetzt: kein Aufblitzen beim Laden mehr, die Seitensprache stimmt jetzt mit der gewählten Sprache überein",
+      "Wer „Bewegung reduzieren“ aktiviert hat, bekommt auf der Startseite keine fehlerhafte Darstellung mehr",
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-08-06",
     title: "Datenwahrheit",

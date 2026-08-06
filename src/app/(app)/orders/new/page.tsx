@@ -16,7 +16,7 @@ interface OrderItem {
 }
 
 export default function NewOrderPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const createOrder = useCreateOrder();
   const { data: customers } = useCustomers();
@@ -31,6 +31,7 @@ export default function NewOrderPage() {
   const [orderDate, setOrderDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [serviceDate, setServiceDate] = useState("");
   const [notes, setNotes] = useState("");
   const [shippingCost, setShippingCost] = useState("");
   const [shippingPrefilled, setShippingPrefilled] = useState(false);
@@ -118,6 +119,7 @@ export default function NewOrderPage() {
         customerCity: customerCity.trim(),
         customerCountry: customerCountry.trim(),
         orderDate,
+        serviceDate,
         notes: notes.trim(),
         shippingCost: shippingCents,
         items: orderItems,
@@ -246,6 +248,25 @@ export default function NewOrderPage() {
               onChange={(e) => setOrderDate(e.target.value)}
               className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
             />
+          </div>
+
+          {/* Leistungsdatum: § 14 Abs. 4 Nr. 6 UStG. Leer lassen ist erlaubt —
+              dann gilt das Rechnungsdatum als Leistungsdatum. */}
+          <div>
+            <label className="block text-sm font-medium text-secondary mb-1.5">
+              {t.orders.serviceDateLabel}
+            </label>
+            <input
+              type="date"
+              value={serviceDate}
+              onChange={(e) => setServiceDate(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            />
+            <p className="mt-1 text-xs text-muted">
+              {language === "de"
+                ? "Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum."
+                : "When the goods or service were delivered. Left empty, the invoice date applies."}
+            </p>
           </div>
         </div>
 

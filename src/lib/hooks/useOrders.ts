@@ -33,6 +33,7 @@ export function useCreateOrder() {
       status: string;
       notes: string;
       orderDate: string;
+      serviceDate?: string; // Leistungsdatum, § 14 Abs. 4 Nr. 6 UStG
       paidAt?: string;
       paymentMethod?: string;
       shippingCost?: number; // cents
@@ -60,6 +61,7 @@ export function useUpdateOrder() {
       status: string;
       notes: string;
       orderDate: string;
+      serviceDate: string; // Leistungsdatum, "" leert es wieder
       paidAt: string;
       paymentMethod: string;
       shippingCost: number; // cents
