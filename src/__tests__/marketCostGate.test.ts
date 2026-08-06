@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
-
+const ROOT = path.resolve(__dirname, "..", "..");
 const SRC = path.resolve(__dirname, "..");
 const read = (rel: string) => readFileSync(path.join(SRC, rel), "utf8");
 
@@ -46,5 +45,37 @@ describe("market cost writers pass the status through", () => {
   it("the backup restore goes through the same gate", () => {
     const route = read("app/api/migrate/route.ts");
     expect(callWindow(route, "planMarketCostRows(")).toMatch(/status:/);
+  });
+});
+
+// The migration re-derives the cost rows in plain SQL, so marketCosts.ts and
+// 0015 hold the same rule in two languages. These keep them from drifting.
+describe("migration 0015 mirrors marketCosts.ts", () => {
+  const sql = readFileSync(path.join(ROOT, "drizzle", "0015_market_cost_status_gate.sql"), "utf8");
+
+  it("books the same two statuses", () => {
+    expect(sql).toContain("'confirmed', 'completed'");
+  });
+
+  it("writes the same descriptions, categories and sources", () => {
+    expect(sql).toContain("Standgebühr – "); // U+2013, wie in marketCosts.ts
+    expect(sql).toContain("Fahrtkosten – ");
+    expect(sql).toContain("standgebuehren_raumkosten");
+    expect(sql).toContain("'fahrtkosten'");
+    expect(sql).toContain("market_fee");
+    expect(sql).toContain("market_travel");
+    expect(sql).toContain("200"); // dieselbe Kappung wie .slice(0, 200)
+  });
+
+  it("backfills past markets before re-deriving", () => {
+    expect(sql.indexOf("SET \"status\" = 'completed'")).toBeLessThan(sql.indexOf("INSERT INTO"));
+    expect(sql).toContain("--> statement-breakpoint");
+  });
+
+  it("is registered in the drizzle journal", () => {
+    // Ohne Journal-Eintrag wendet drizzle-kit die Datei nie an — und niemand
+    // merkt es, weil migrate trotzdem gruen durchlaeuft.
+    const journal = readFileSync(path.join(ROOT, "drizzle", "meta", "_journal.json"), "utf8");
+    expect(journal).toContain("0015_market_cost_status_gate");
   });
 });
