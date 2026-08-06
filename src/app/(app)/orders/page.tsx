@@ -121,13 +121,12 @@ export default function OrdersPage() {
               return dateB.localeCompare(dateA);
             })
             .map((order) => {
-              const items = order.items || [];
-              const total = items.reduce(
-                (sum: number, item) =>
-                  sum + Number(item.price || 0) * Number(item.quantity || 1),
-                0
-              );
-              const itemCount = items.length;
+              // `order.total` statt einer eigenen Summe aus den Positionen: der
+              // Server pflegt es ueber computeInvoiceTotals (inkl. Versandkosten)
+              // und die EUeR rechnet mit derselben Zahl. Neu summieren liess die
+              // Versandkosten weg -> Liste != Detailseite != Rechnung != EUeR.
+              const total = Number(order.total) || 0;
+              const itemCount = (order.items || []).length;
 
               return (
                 <Link key={order.id} href={`/orders/${order.id}`}>
