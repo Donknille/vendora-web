@@ -113,6 +113,13 @@
       "when": 1786060800000,
       "tag": "0015_market_cost_status_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786101618492,
+      "tag": "0016_steep_moonstone",
+      "breakpoints": true
     }
   ]
 }

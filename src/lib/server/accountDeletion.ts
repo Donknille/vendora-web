@@ -23,9 +23,15 @@ export type DeleteAccountResult =
  *     transaction. If it fails we abort while the account is still intact.
  *  2. Issued invoices are archived, not deleted (§147 AO / §14b UStG): they are
  *     decoupled from the account and stamped with their retention deadline.
- *  3. Everything else is deleted, the profile row is soft-deleted so the email
- *     cannot be re-registered, and the Better Auth identity is removed (which
- *     cascades to sessions and signs the account out) — all in one transaction.
+ *  3. Everything else is deleted — including the profile row itself — and the
+ *     Better Auth identity is removed (which cascades to sessions and signs the
+ *     account out), all in one transaction.
+ *
+ * The profile row used to be kept as a soft-delete tombstone so the email could
+ * never be registered again. That contradicted both Art. 17 ("all data deleted")
+ * and the privacy policy, and locked returning customers out for good. The email
+ * is free again after deletion; trial abuse via delete-and-recreate is accepted
+ * (see the trial-abuse item in docs/handover.md).
  */
 export async function deleteAccount(userId: string): Promise<DeleteAccountResult> {
   const user = await getUser(userId);
@@ -43,7 +49,7 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
   await db.transaction(async (tx) => {
     await archiveUserInvoices(userId, tx);
     await deleteAllUserData(userId, tx);
-    await tx.update(users).set({ deletedAt: new Date() }).where(eq(users.id, userId));
+    await tx.delete(users).where(eq(users.id, userId));
     await tx.delete(authUser).where(eq(authUser.id, userId));
   });
 

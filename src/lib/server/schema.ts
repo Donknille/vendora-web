@@ -35,7 +35,9 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   // Admin
   isBlocked: boolean("is_blocked").default(false),
-  deletedAt: timestamp("deleted_at"),
+  // Kein deleted_at: die Kontoloeschung entfernt die Zeile (Art. 17). Ein
+  // Tombstone haette die E-Mail dauerhaft gespeichert und Rueckkehrer
+  // ausgesperrt — siehe accountDeletion.ts.
 }, (t) => [
   index("idx_users_stripe_customer_id").on(t.stripeCustomerId),
   check(

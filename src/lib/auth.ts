@@ -2,12 +2,11 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { APIError } from "better-auth/api";
 import { env } from "@/lib/server/env";
 import { db } from "@/lib/server/db";
 import { user, session, account, verification } from "@/lib/server/auth-schema";
 import { sendEmail } from "@/lib/server/email";
-import { ensureUserRecord, isEmailReserved } from "@/lib/server/provisioning";
+import { ensureUserRecord } from "@/lib/server/provisioning";
 
 function buttonEmail(heading: string, intro: string, url: string, cta: string): string {
   return `
@@ -64,14 +63,6 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (userData) => {
-          // DSGVO soft-delete guard: block re-registration of deleted accounts
-          if (await isEmailReserved(userData.email)) {
-            throw new APIError("FORBIDDEN", {
-              message: "Dieses Konto wurde gelöscht und kann nicht erneut registriert werden.",
-            });
-          }
-        },
         after: async (userData) => {
           // Mirror the Better Auth user into our app `users` profile table,
           // using the same id so all domain FKs line up.
