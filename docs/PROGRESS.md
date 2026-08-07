@@ -4,13 +4,15 @@
 > [`docs/REBUILD-PLAN.md`](./REBUILD-PLAN.md). Diese Datei sagt nur: **was ist erledigt, was kommt
 > als Nächstes, und wie man weiterarbeitet.**
 >
-> Stand: 2026-07-19 · Branch: `migrate/neon-betterauth`
+> Stand: 2026-08-07 · Branch: `master` (PR #10 gemergt, `migrate/neon-betterauth` ist Historie)
 
 ---
 
 ## So geht es weiter (Quickstart für die nächste Session)
 
-1. **Branch:** `migrate/neon-betterauth` (Basis der Rebuild-Arbeit, offen als PR #10 → `master`).
+1. **Branch:** `master`. Die Rebuild-Arbeit (PR #10) ist gemergt; seitdem lief ein
+   360-Grad-Review-Track außerhalb der Phasen: **v1.2.0 „Datenwahrheit"** (A1/A2, A3.1–A3.4)
+   und **v1.3.0 „Rechnungen & Darstellung"** (B1, B3, E1) — siehe `src/app/legal/changelog/page.tsx`.
 2. **Nächste offene Phase:** **Phase 5 – Veranstalter-Modul (B2B2C), nur skizziert** – erst bei Kern-Traktion. (Phasen 0–4 sind abgeschlossen.)
 3. **Arbeitsweise (verbindlich, wie bisher):**
    - Phasen **in Reihenfolge**, jede Sub-Aufgabe (z. B. 2.1, 2.2 …) einzeln umsetzen.
@@ -94,13 +96,16 @@ Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". V
 
 ## Offene operative Punkte (kein Phasen-Inhalt, aber wichtig)
 
-Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy — bewusst nicht automatisch ausgeführt:
+Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy. Statusstand **2026-08-07, verifiziert** (nicht behauptet — Prüfweg jeweils dahinter):
 
-1. **DB-Migrationen anwenden (blockierend für Live-Test):** `npm run db:migrate` (0000–0013) gegen eine passende, am besten **frische** Neon-DB. Die Live-DB hat noch das alte `db:push`-Schema. Neu seit Phase 3/4: `market_sales.client_id` (0009), `market_sales.payment_method` (0010), `market_events.application_deadline` + Status (0011), `users.plan` (0012, inkl. Datenmigration aktive Abos → pro), `euer_exports` (0013). **Schritt-für-Schritt-Anleitung: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).**
-2. **Stripe-Pro-Produkt anlegen (blockierend für Billing):** In Stripe ein Produkt mit **monatlichem Preis 19,90 €** anlegen und dessen `price_…`-ID als `STRIPE_PRICE_ID` (Env/Vercel) setzen. Ohne diese Variable liefert der Checkout 500. `src/lib/server/stripe.ts` liest sie jetzt aus der Env (kein Hardcode mehr).
-3. **Webhook `current_period_end`** hat einen +30-Tage-Fallback (Stripe-API-Version-Unsicherheit) → bei Live-Billing gegen Stripe-Testmode verifizieren.
-4. **CI `Security & Quality Check` rot:** `npm audit --audit-level=high` scheitert an einer Next.js-High-Advisory ohne stabilen Fix (+ dev-only vite). Nicht von dieser Arbeit verursacht; separat entscheiden (Allowlist/Gate-Anpassung), nicht durch Downgrade.
-5. **PR #10 → `master` mergen** + Vercel-Env final setzen, sobald die DB-Migration steht.
+1. ✅ **DB-Migrationen angewendet.** `drizzle.__drizzle_migrations` enthält alle 16 Einträge `0000`–`0015`, alle 17 erwarteten Tabellen existieren. *(Direkte Abfrage gegen die `DATABASE_URL` aus `.env.local`.)* Anleitung bleibt als Referenz: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).
+2. ✅ **Vercel Production läuft auf Neon.** Letztes Production-Deployment `READY` auf `45e3f67`; Landing rendert mit 200, `/api/orders`, `/api/profile`, `/api/euer/unlocks` antworten mit **401** statt 500/503 — Env-Validierung (`DATABASE_URL`, `BETTER_AUTH_SECRET`), Arcjet und Session-Pfad greifen also. Die Supabase-DNS- und `ARCJET_KEY`-Fehler in den Vercel-Runtime-Logs stammen alle vom **2026-08-04 aus alten Preview-Deployments**, nicht aus Production.
+3. ✅ **Stripe-Keys in Production gesetzt.** `POST /api/stripe/webhook` mit Dummy-Signatur liefert `Invalid signature` (400), nicht `Webhook not configured` (500) — der Handler kommt am Secret-Check vorbei und `getStripe()` wirft nicht. Also sind `STRIPE_SECRET_KEY` **und** `STRIPE_WEBHOOK_SECRET` vorhanden.
+4. ⬜ **Offen: Stripe-Pro-Produkt + `STRIPE_PRICE_ID`** (blockierend für Billing). In Stripe ein Produkt mit **monatlichem Preis 19,90 €** anlegen und dessen `price_…`-ID als `STRIPE_PRICE_ID` in Vercel setzen. Ohne die Variable liefert `/api/stripe/checkout` 500 ([route.ts:18](../src/app/api/stripe/checkout/route.ts)). **Lokal fehlen alle drei Stripe-Werte** (`STRIPE_SECRET_KEY` und `STRIPE_WEBHOOK_SECRET` sind in `.env.local` leer, `STRIPE_PRICE_ID` fehlt ganz) — Billing ist lokal nicht testbar.
+5. ⬜ **Offen: Webhook `current_period_end`** hat einen +30-Tage-Fallback (Stripe-API-Version-Unsicherheit) → beim ersten echten Kauf gegen Stripe-Testmode verifizieren.
+6. ⬜ **Offen: Supabase-Projekt abschalten** (Teil C in [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md)) — die App braucht es nachweislich nicht mehr, es verursacht aber weiter Kosten.
+7. ⬜ **Offen: CI `Security & Quality Check` rot:** `npm audit --audit-level=high` scheitert an einer Next.js-High-Advisory ohne stabilen Fix (+ dev-only vite). Separat entscheiden (Allowlist/Gate-Anpassung), nicht durch Downgrade.
+8. ✅ **PR #10 → `master` gemergt** (`ad275e8`), Production deployt seitdem von `master`.
 
 ---
 

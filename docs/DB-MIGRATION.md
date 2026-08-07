@@ -10,12 +10,12 @@ Die Umstellung besteht aus vier unabhängigen Teilen. Zwei davon sind erledigt:
 | # | Teil | Status |
 |---|---|---|
 | 1 | **Code** — Supabase-Client raus, Better Auth + Drizzle/Neon rein | ✅ erledigt (Branch `migrate/neon-betterauth`) |
-| 2 | **Lokale DB** — Neon-Schema auf Migrationsstand `0000`–`0013` | ✅ erledigt (2026-08-02) |
-| 3 | **Vercel Production** — Env-Variablen von Supabase auf Neon | ⬜ **offen — Teil A unten** |
+| 2 | **DB** — Neon-Schema auf Migrationsstand `0000`–`0015` | ✅ erledigt (Stand 2026-08-07 verifiziert) |
+| 3 | **Vercel Production** — Env-Variablen von Supabase auf Neon | ✅ erledigt (2026-08-07 verifiziert: Production 200/401 statt 500, keine Supabase-Fehler seit 2026-08-04) |
 | 4 | **Supabase abschalten** — Projekt löschen, Kosten stoppen | ⬜ **offen — Teil C unten** |
 
-Wenn du nur wissen willst, was noch zu tun ist: **Teil A → B → C**. Teil 0 und der
-Anhang sind Referenz, falls du das Ganze nochmal von vorn machen musst.
+Wenn du nur wissen willst, was noch zu tun ist: **nur noch Teil C**. Teil A und B sind
+erledigt; sie bleiben als Referenz stehen, falls das Ganze nochmal von vorn nötig wird.
 
 ---
 
