@@ -19,7 +19,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit
+      # Blocking: anything that ships to production must be clean at high+.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      # Informational: the lint/test toolchain (eslint -> minimatch/brace-expansion,
+      # eslint -> eslintrc/js-yaml) carries DoS advisories with no fix inside the
+      # supported range. That code never runs in the deployed app, so it must not
+      # block the checks below — but it stays visible in the log.
+      - name: Audit all dependencies (informational)
+        continue-on-error: true
         run: npm audit --audit-level=high
 
       - name: Type check
