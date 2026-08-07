@@ -60,12 +60,17 @@ export async function PUT(
     if (!current) {
       return NextResponse.json({ message: "Market not found" }, { status: 404 });
     }
+    // Leerwerte normalisieren: ein Markt ohne Schnellartikel steht in der DB als
+    // NULL, das Formular sendet aber [] -- ohne diese Angleichung zaehlte das
+    // als Aenderung und die Kostenfalle waere zurueck gewesen.
+    const norm = (v: unknown) =>
+      JSON.stringify(Array.isArray(v) && v.length === 0 ? null : (v ?? null));
     const changedFields = (Object.keys(parsed.data) as (keyof typeof parsed.data)[]).filter(
       (key) => {
         const next = parsed.data[key];
         if (next === undefined) return false;
         const before = (current as unknown as Record<string, unknown>)[key];
-        return JSON.stringify(next ?? null) !== JSON.stringify(before ?? null);
+        return norm(next) !== norm(before);
       }
     );
     // Leere Menge = unveraendertes Speichern. Das legt nichts an und wird

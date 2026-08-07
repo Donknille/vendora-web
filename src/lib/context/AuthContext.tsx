@@ -30,8 +30,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // error, bedeutet aber "nicht mehr angemeldet": wuerde man da die geseedete
   // Kennung behalten, bliebe ein Tab nach dem Abmelden auf einem anderen Geraet
   // optisch angemeldet und zeigte weiter alte Daten.
-  const sessionUnavailable =
-    !!error && !session && !(typeof error === "object" && error !== null && "status" in error);
+  const errorStatus =
+    typeof error === "object" && error !== null && "status" in error
+      ? (error as { status?: number }).status
+      : undefined;
+  // Auf den WERT pruefen, nicht auf die Existenz: der Fetch-Client haengt an
+  // jeden nicht-ok-Fehler einen status. Nur 401 heisst "nicht mehr angemeldet";
+  // ein 429 (zwei Geraete hinter derselben IP) oder ein 500 haetten sonst die
+  // geseedete Kennung verworfen -- und damit leere Listen und 0,00 Euro ueber
+  // echten Daten erzeugt.
+  const sessionUnavailable = !!error && !session && errorStatus !== 401;
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {

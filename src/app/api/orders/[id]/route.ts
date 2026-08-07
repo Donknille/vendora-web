@@ -94,7 +94,11 @@ export async function PUT(
         if (next === undefined) return false;
         const before = (current as unknown as Record<string, unknown>)[key];
         if (key === "items") return normalizeItems(next) !== normalizeItems(before);
-        return JSON.stringify(next ?? null) !== JSON.stringify(before ?? null);
+        // Leerwerte angleichen (null vs "" vs []), sonst zaehlt ein
+        // unveraendertes Formularfeld als Aenderung.
+        const norm = (v: unknown) =>
+          JSON.stringify(Array.isArray(v) && v.length === 0 ? null : (v ?? null));
+        return norm(next) !== norm(before);
       }
     );
     // Leere Menge = unveraendertes Speichern; legt nichts an, wird nicht gesperrt.

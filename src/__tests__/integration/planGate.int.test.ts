@@ -90,7 +90,13 @@ describe("Schreibgate für Free-Konten", () => {
     // Genau so, wie das Bearbeitungsformular sendet: ALLE Felder, geändert ist
     // nur der Status. Ein Test mit { status } allein hätte die Ausnahme
     // bestätigt, die über die Oberfläche nie erreichbar gewesen wäre.
-    const res = await call(putMarket, market.id, { ...MARKET, status: "cancelled" });
+    // quickItems: [] gegen einen Markt, der ohne Schnellartikel angelegt wurde
+    // (in der DB NULL) -- genau der Body des Bearbeitungsformulars.
+    const res = await call(putMarket, market.id, {
+      ...MARKET,
+      quickItems: [],
+      status: "cancelled",
+    });
 
     expect(res.status).toBe(200);
     expect(await storage.getExpenses(FREE)).toHaveLength(0);
