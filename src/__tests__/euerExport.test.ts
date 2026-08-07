@@ -67,6 +67,28 @@ describe("buildEuerCsv – Formel-Schutz", () => {
     expect(csv).toContain("'-2+3");
   });
 
+  it("laesst auch vierstellige Betraege Zahlen bleiben", () => {
+    // Die Bruchstelle des ersten Versuchs: das Muster nahm Tausenderpunkte an,
+    // die formatAmountInput nie erzeugt (123456 Cent -> "1234,56"). Alle Tests
+    // lagen unter 1.000 EUR und haben es nicht bemerkt -- bei einem Betrieb mit
+    // vierstelligen Jahresausgaben waere die Summenzeile Text gewesen.
+    const grossReport: EuerReport = {
+      ...report,
+      expenseTotal: 1845000,
+      incomeTotal: 2500000,
+      surplus: -123456,
+      lines: [
+        { date: "2025-02-01", kind: "expense", description: "Wareneinkauf", category: "wareneinkauf_material", amount: 123456 },
+      ],
+    };
+    const csv = buildEuerCsv(grossReport, meta);
+
+    expect(csv).toContain(";-1234,56"); // Belegzeile
+    expect(csv).toContain(";-18450,00"); // Ausgaben gesamt
+    expect(csv).toContain(";-1234,56"); // negativer Ueberschuss
+    expect(csv).not.toContain("'-");
+  });
+
   it("laesst Geldbetraege Zahlen bleiben", () => {
     // Der Ausgabenbetrag beginnt selbst mit einem Minus -- er darf NICHT
     // maskiert werden, sonst zaehlt die Tabellenkalkulation ihn als Text.
