@@ -38,7 +38,14 @@ export async function apiRequest(method: string, url: string, body?: unknown): P
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || `Request failed: ${res.status}`);
+    // Der Fehlercode wird mitgetragen: die Oberflaeche soll bekannte Faelle
+    // uebersetzt anzeigen und darf nicht auf Textvergleiche angewiesen sein.
+    const error: Error & { code?: string; status?: number } = new Error(
+      data.message || `Request failed: ${res.status}`,
+    );
+    error.code = typeof data.code === "string" ? data.code : undefined;
+    error.status = res.status;
+    throw error;
   }
   return res;
 }

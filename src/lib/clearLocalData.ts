@@ -12,23 +12,29 @@ import { OFFLINE_CACHE_KEY } from "@/lib/offlineCache";
  * wiederzusehen — der Server-Gate wird dabei nie erreicht, weil gar kein
  * Request hinausgeht.
  *
- * Wird beim Abmelden und beim Löschen des Kontos aufgerufen.
+ * Wird beim Abmelden und beim Löschen des Kontos aufgerufen. Die
+ * Offline-Verkaufsqueue wird nur im zweiten Fall geleert (`deleteSalesQueue`).
  */
-export async function clearLocalData(): Promise<void> {
+export async function clearLocalData(
+  { deleteSalesQueue = false }: { deleteSalesQueue?: boolean } = {},
+): Promise<void> {
   queryClient.clear();
 
   // Der persistierte Marktmodus-Puffer liegt in localStorage und wuerde einen
   // Kontowechsel sonst ueberleben.
   try {
     window.localStorage.removeItem(OFFLINE_CACHE_KEY);
+    window.localStorage.removeItem("vendora-last-register");
   } catch {
     // localStorage nicht verfuegbar (privater Modus) — nichts zu raeumen.
   }
 
-  // Die Offline-Verkaufsqueue ist nicht kontogebunden: sie laege sonst nach
-  // einem Kontowechsel mit Bezeichnung, Betrag und Uhrzeit fremder Verkaeufe
-  // weiter im Browser -- auf einem geteilten Markt-Tablet unbegrenzt.
-  if (typeof indexedDB !== "undefined") {
+  // Die Verkaufsqueue NUR beim Loeschen des Kontos. Beim normalen Abmelden
+  // waere das Datenverlust: dort liegen noch nicht bestaetigte Verkaeufe --
+  // Bargeld, das am Stand eingenommen wurde. Wer sich in der Markthalle ohne
+  // Empfang abmeldet, haette sie sonst wortlos verloren, obwohl die Kasse
+  // ausdruecklich zusagt, dass nichts verlorengeht.
+  if (deleteSalesQueue && typeof indexedDB !== "undefined") {
     try {
       indexedDB.deleteDatabase("vendora-offline");
     } catch {

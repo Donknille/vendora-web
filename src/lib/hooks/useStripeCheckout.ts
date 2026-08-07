@@ -6,11 +6,11 @@ export function useStripeCheckout() {
   // Ohne diesen Zustand blieb ein fehlgeschlagener Checkout unsichtbar: der
   // Button flackerte und stand wieder da. Das betrifft auch den Fall
   // ALREADY_PRO (409), bei dem die Nutzerin wissen muss, dass ihr Abo laeuft.
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
 
   const redirectToCheckout = async () => {
     setLoading(true);
-    setError("");
+    setError(null);
     try {
       const res = await apiRequest("POST", "/api/stripe/checkout");
       const data = await res.json();
@@ -18,11 +18,12 @@ export function useStripeCheckout() {
         window.location.href = data.url;
         return;
       }
-      setError("");
       setLoading(false);
     } catch (e) {
       console.error("Stripe checkout error:", e);
-      setError(e instanceof Error ? e.message : "");
+      // Der Fehler wandert roh weiter; uebersetzt wird er in der Oberflaeche
+      // ueber seinen Code (apiErrorMessage), nicht ueber seinen Text.
+      setError(e);
       setLoading(false);
     }
   };

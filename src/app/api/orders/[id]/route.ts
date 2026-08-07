@@ -63,8 +63,43 @@ export async function PUT(
     // bestehenden Auftrag dauerhaft weiterarbeiten -- "Nur-Lese" waere nur eine
     // Beschriftung. Der reine Statuswechsel bleibt erlaubt (wie beim Markt): er
     // legt nichts an, sondern haelt einen vorhandenen Vorgang aktuell.
-    const statusOnly =
-      Object.keys(parsed.data).length === 1 && parsed.data.status !== undefined;
+    // Wie beim Markt gegen den Bestand bestimmt: das Bearbeitungsformular
+    // sendet immer alle Felder, eine Zaehlung der Schluessel ginge daran vorbei.
+    const current = await storage.getOrder(userId, id);
+    if (!current) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
+    }
+    // Positionen werden inhaltlich verglichen: die gespeicherten Zeilen tragen
+    // zusaetzliche Felder (id, orderId), ein roher Vergleich haette jede
+    // unveraenderte Liste als Aenderung gewertet.
+    const normalizeItems = (items: unknown) =>
+      Array.isArray(items)
+        ? JSON.stringify(
+            items.map((i) => {
+              const item = i as Record<string, unknown>;
+              return {
+                name: item.name,
+                quantity: Number(item.quantity),
+                price: Number(item.price),
+                processingStatus: item.processingStatus ?? null,
+                comment: item.comment ?? null,
+              };
+            })
+          )
+        : "";
+
+    const changedFields = (Object.keys(parsed.data) as (keyof typeof parsed.data)[]).filter(
+      (key) => {
+        const next = parsed.data[key];
+        if (next === undefined) return false;
+        const before = (current as unknown as Record<string, unknown>)[key];
+        if (key === "items") return normalizeItems(next) !== normalizeItems(before);
+        return JSON.stringify(next ?? null) !== JSON.stringify(before ?? null);
+      }
+    );
+    // Leere Menge = unveraendertes Speichern; legt nichts an, wird nicht gesperrt.
+    const statusOnly = changedFields.every((key) => key === "status");
+
     if (!statusOnly) {
       const gate = await requireWriteAccess(userId);
       if (gate) return gate;

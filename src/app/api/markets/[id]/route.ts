@@ -51,8 +51,28 @@ export async function PUT(
     // Mit Gate haette ein abgelaufenes Konto einen abgesagten Markt dauerhaft
     // als Kosten in der EUeR stehen -- oder muesste den ganzen Markt samt
     // Verkaeufen loeschen.
-    const statusOnly =
-      Object.keys(parsed.data).length === 1 && parsed.data.status !== undefined;
+    // Die Ausnahme wird gegen den BESTAND bestimmt, nicht gegen die Zahl der
+    // gesendeten Felder: das Bearbeitungsformular schickt immer den ganzen
+    // Datensatz. Eine Pruefung auf "nur ein Schluessel" waere ueber die
+    // Oberflaeche nie erreichbar gewesen -- die Ausnahme haette es auf dem
+    // Papier gegeben und in der Anwendung nicht.
+    const current = await storage.getMarket(userId, id);
+    if (!current) {
+      return NextResponse.json({ message: "Market not found" }, { status: 404 });
+    }
+    const changedFields = (Object.keys(parsed.data) as (keyof typeof parsed.data)[]).filter(
+      (key) => {
+        const next = parsed.data[key];
+        if (next === undefined) return false;
+        const before = (current as unknown as Record<string, unknown>)[key];
+        return JSON.stringify(next ?? null) !== JSON.stringify(before ?? null);
+      }
+    );
+    // Leere Menge = unveraendertes Speichern. Das legt nichts an und wird
+    // deshalb nicht gesperrt; sonst liefe ein Klick auf "Speichern" ohne jede
+    // Aenderung in eine Pro-Meldung.
+    const statusOnly = changedFields.every((key) => key === "status");
+
     if (!statusOnly) {
       const gate = await requireWriteAccess(userId);
       if (gate) return gate;

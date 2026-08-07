@@ -87,10 +87,23 @@ describe("Schreibgate für Free-Konten", () => {
     const market = await storage.createMarket(FREE, MARKET);
     expect(await storage.getExpenses(FREE)).toHaveLength(2); // Stand + Fahrt
 
-    const res = await call(putMarket, market.id, { status: "cancelled" });
+    // Genau so, wie das Bearbeitungsformular sendet: ALLE Felder, geändert ist
+    // nur der Status. Ein Test mit { status } allein hätte die Ausnahme
+    // bestätigt, die über die Oberfläche nie erreichbar gewesen wäre.
+    const res = await call(putMarket, market.id, { ...MARKET, status: "cancelled" });
 
     expect(res.status).toBe(200);
     expect(await storage.getExpenses(FREE)).toHaveLength(0);
+  });
+
+  it("lässt ein Speichern ohne jede Änderung durch", async () => {
+    const market = await storage.createMarket(FREE, MARKET);
+
+    // Unveränderter Datensatz: nichts wird angelegt, also kein Grund zu sperren.
+    const res = await call(putMarket, market.id, { ...MARKET });
+
+    expect(res.status).toBe(200);
+    expect(await storage.getExpenses(FREE)).toHaveLength(2);
   });
 
   it("blockiert eine inhaltliche Änderung am Markt", async () => {
@@ -119,6 +132,22 @@ describe("Schreibgate für Free-Konten", () => {
 
     expect((await call(putOrder, order.id, { status: "paid" })).status).toBe(200);
     expect((await storage.getOrder(FREE, order.id))?.status).toBe("paid");
+
+    // Auch mit vollem Formular-Body, bei dem sich nur der Status ändert: die
+    // Positionen sind inhaltlich gleich und dürfen nicht als Änderung zählen.
+    const full = await call(putOrder, order.id, {
+      customerName: "Kundin",
+      customerEmail: "",
+      customerStreet: "Weg 1",
+      customerZip: "12345",
+      customerCity: "Stadt",
+      notes: "",
+      orderDate: "2026-08-01",
+      items: [{ name: "Schale", quantity: 1, price: 2500 }],
+      status: "shipped",
+    });
+    expect(full.status).toBe(200);
+    expect((await storage.getOrder(FREE, order.id))?.status).toBe("shipped");
 
     const res = await call(putOrder, order.id, {
       items: [{ name: "Neu", quantity: 5, price: 9900 }],

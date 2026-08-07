@@ -84,9 +84,15 @@ export async function proxy(request: NextRequest) {
       // ausdruecklich NICHT dazu: ein 503 dort haette das Abmelden still
       // scheitern lassen -- der Client wirft nicht, die Weiterleitung liefe
       // durch, und die Nutzerin waere weiterhin angemeldet, ohne es zu merken.
-      const isCredentialPath = /\/api\/auth\/(sign-in|sign-up|forget-password|reset-password)/.test(
-        pathname
-      );
+      // Pfadnamen aus better-auth 1.6.23 verifiziert (nicht geraten):
+      // /sign-in/*, /sign-up/*, /request-password-reset, /reset-password,
+      // /change-password, /change-email, /delete-user, /verify-password.
+      // "forget-password" existiert dort NICHT -- der Reset-Pfad waere durch
+      // eine falsch geratene Regex ungebremst geblieben.
+      const isCredentialPath =
+        /\/api\/auth\/(sign-in|sign-up|request-password-reset|reset-password|change-password|change-email|delete-user|verify-password)/.test(
+          pathname
+        );
       if (process.env.NODE_ENV === "production" && isCredentialPath) {
         return withCsp(
           NextResponse.json(

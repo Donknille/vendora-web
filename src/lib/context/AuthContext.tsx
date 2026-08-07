@@ -26,7 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // vom Server geseedete Kennung nicht verdraengen -- sonst laufen alle
   // Abfrageschluessel auf [null, ...] und der persistierte Offline-Vorrat, der
   // unter der echten Kennung liegt, waere unerreichbar.
-  const sessionUnavailable = !!error && !session;
+  // Nur ein echter Transportfehler zaehlt. Ein 401 traegt ebenfalls einen
+  // error, bedeutet aber "nicht mehr angemeldet": wuerde man da die geseedete
+  // Kennung behalten, bliebe ein Tab nach dem Abmelden auf einem anderen Geraet
+  // optisch angemeldet und zeigte weiter alte Daten.
+  const sessionUnavailable =
+    !!error && !session && !(typeof error === "object" && error !== null && "status" in error);
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {

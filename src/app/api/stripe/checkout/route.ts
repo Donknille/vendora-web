@@ -66,8 +66,12 @@ export async function POST(request: Request) {
         status: "all",
         limit: 10,
       });
+      // Bewusst NUR active/trialing. past_due und unpaid bedeuten, dass die
+      // Zahlung haengt -- dann steht das Konto ohnehin auf Nur-Lese, und der
+      // Checkout ist der einzige Weg zurueck. Wer die Karte erneuern will,
+      // darf hier nicht mit "hat schon ein Abo" abgewiesen werden.
       const active = existing.data.find((s) =>
-        ["active", "trialing", "past_due", "unpaid"].includes(s.status),
+        ["active", "trialing"].includes(s.status),
       );
       if (active) {
         return NextResponse.json(

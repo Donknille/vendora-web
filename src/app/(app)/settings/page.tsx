@@ -296,9 +296,9 @@ export default function SettingsPage() {
             </button>
           )}
 
-          {subscribeError && (
+          {subscribeError != null && (
             <p className="text-sm text-red-500">
-              {apiErrorMessage(new Error(subscribeError), language, t.common.saveError)}
+              {apiErrorMessage(subscribeError, language, t.common.saveError)}
             </p>
           )}
 
@@ -693,7 +693,7 @@ export default function SettingsPage() {
               setDeleteError(data.message || (language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account."));
               return;
             }
-            await clearLocalData();
+            await clearLocalData({ deleteSalesQueue: true });
             await authClient.signOut();
             router.push("/auth/login");
           } catch {

@@ -94,7 +94,18 @@ export async function POST(request: Request) {
       }
 
       case "invoice.payment_succeeded": {
-        const subscriptionId = obj.subscription as string | undefined;
+        // Ab API-Version "basil"/"dahlia" haengt die Zuordnung nicht mehr direkt
+        // am Invoice-Objekt, sondern unter parent.subscription_details. Das SDK
+        // ist auf 2026-03-25.dahlia gepinnt: obj.subscription war hier immer
+        // undefined, der ganze Zweig lief ins Leere -- Verlaengerungen wurden
+        // nie verbucht und eine zahlende Kundin waere nach einer Periode auf
+        // "free" gefallen. Der alte Pfad bleibt als Rueckfall stehen.
+        const parent = obj.parent as
+          | { subscription_details?: { subscription?: string } }
+          | undefined;
+        const subscriptionId =
+          parent?.subscription_details?.subscription ??
+          (obj.subscription as string | undefined);
 
         if (subscriptionId) {
           const customerId = obj.customer as string;

@@ -41,8 +41,19 @@ export default function MarketPosPage() {
   // laege ihr HTML-Geruest nie im Cache und der Kaltstart ohne Netz -- der
   // eigentliche Zweck des Marktmodus -- endete auf der Offline-Seite.
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.serviceWorker) return;
+    if (typeof window === "undefined") return;
     const url = window.location.pathname;
+
+    // Adresse hinterlegen: der Einstieg der installierten App ist das
+    // Dashboard, das bewusst nicht zwischengespeichert wird. Ohne diesen
+    // Merker gaebe es nach einem Kaltstart ohne Empfang keinen Weg zur Kasse.
+    try {
+      window.localStorage.setItem("vendora-last-register", url);
+    } catch {
+      /* localStorage nicht verfuegbar */
+    }
+
+    if (!navigator.serviceWorker) return;
     navigator.serviceWorker.ready
       .then((registration) => {
         registration.active?.postMessage({ type: "WARM_SHELL", url });
