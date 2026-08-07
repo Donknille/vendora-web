@@ -72,6 +72,24 @@ export async function proxy(request: NextRequest) {
     }
 
     const decision = await arcjetClient.protect(request);
+
+    // Eine ERROR-Entscheidung (ungueltiger oder rotierter Key, Timeout,
+    // Transportfehler) ist NICHT "erlaubt". isDenied() allein liesse sie
+    // durch: ein Tippfehler in der Vercel-Variable haette das Rate-Limiting
+    // unbemerkt abgeschaltet, inklusive des 5/min-Budgets fuer den Login.
+    // Der Existenzcheck oben prueft nur, DASS ein Key gesetzt ist.
+    if (decision.isErrored()) {
+      console.error("Arcjet decision errored:", decision.reason);
+      if (process.env.NODE_ENV === "production" && arcjetClient === ajAuth) {
+        return withCsp(
+          NextResponse.json(
+            { message: "Service temporarily unavailable" },
+            { status: 503 }
+          )
+        );
+      }
+    }
+
     if (decision.isDenied()) {
       const response = NextResponse.json(
         { message: "Too many requests" },
@@ -148,6 +166,11 @@ export const config = {
     // Exclude framework internals, images, and root-level static/PWA assets
     // (sw.js, the web manifest, the offline fallback, the theme init script) so
     // they are neither rate-limited nor auth-redirected for logged-out visitors.
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|offline.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    //
+    // Die Bild-Ausnahme gilt bewusst nur fuer EINE Pfadebene: `.*\.png$` haette
+    // auch `/api/orders/x.png` oder `/x.png` erfasst — fuer solche URLs liefen
+    // weder Arcjet noch der Fail-Closed-Zweig, und der CSP-Header fehlte, weil
+    // er ausschliesslich hier gesetzt wird.
+    "/((?!_next/static|_next/image|favicon\\.ico|sw\\.js|manifest\\.webmanifest|offline\\.html|[^/]+\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -1,24 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 
-// Replicate the Zod schemas from API routes to test validation.
-// Money fields are integer cents (mirrors src/app/api/*/route.ts).
-const createOrderSchema = z.object({
-  customerName: z.string().min(1).max(200),
-  customerEmail: z.string().max(254).default(""),
-  customerStreet: z.string().min(1).max(200),
-  customerZip: z.string().min(1).max(20),
-  customerCity: z.string().min(1).max(100),
-  customerCountry: z.string().max(100).default(""),
-  status: z.string().max(50).default("open"),
-  notes: z.string().max(5000).default(""),
-  orderDate: z.string().min(1).max(50),
-  items: z.array(z.object({
-    name: z.string().min(1).max(200),
-    quantity: z.number().int().min(1).max(9999),
-    price: z.number().int().min(0).max(99999999), // cents
-  })).min(1).max(100),
-});
+// Das Auftragsschema wird aus der Route IMPORTIERT, nicht nachgebaut. Eine
+// Kopie driftet unbemerkt ab: sie bestaetigt dann Regeln, die in Produktion
+// laengst anders sind.
+import { createOrderSchema, MAX_ORDER_TOTAL_CENTS } from "@/app/api/orders/route";
 
 const createExpenseSchema = z.object({
   description: z.string().min(1).max(200),
@@ -143,6 +129,45 @@ describe("Expense validation", () => {
       amount: 100000000,
       category: "Materials",
       expenseDate: "2026-04-10",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Auftragssumme", () => {
+  const base = {
+    customerName: "Kundin",
+    customerStreet: "Weg 1",
+    customerZip: "12345",
+    customerCity: "Stadt",
+    orderDate: "2026-08-01",
+  };
+
+  it("weist eine Summe ab, die orders.total sprengen wuerde", () => {
+    // Frueher schlug erst Postgres zu (integer-Ueberlauf) und die Nutzerin sah
+    // ein generisches 500 statt einer Feldmeldung.
+    const result = createOrderSchema.safeParse({
+      ...base,
+      items: [{ name: "Einzelstueck", quantity: 9999, price: 99999999 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // Der Einzelpreis ist auf 999.999,99 Euro gedeckelt, die Grenze wird also
+  // ueber die Menge erreicht: 20 x 99.999.999 = 1.999.999.980 Cent.
+  const atLimit = [{ name: "Posten", quantity: 20, price: 99999999 }];
+
+  it("laesst eine Summe knapp unter der Grenze durch", () => {
+    expect(20 * 99999999).toBeLessThanOrEqual(MAX_ORDER_TOTAL_CENTS);
+    const result = createOrderSchema.safeParse({ ...base, items: atLimit });
+    expect(result.success).toBe(true);
+  });
+
+  it("rechnet Versandkosten in die Grenze ein", () => {
+    const result = createOrderSchema.safeParse({
+      ...base,
+      shippingCost: 9999999,
+      items: [...atLimit, { name: "Rest", quantity: 1, price: 20000 }],
     });
     expect(result.success).toBe(false);
   });

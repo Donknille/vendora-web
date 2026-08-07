@@ -25,7 +25,7 @@ import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { authClient } from "@/lib/auth-client";
-import { queryClient } from "@/lib/api-client";
+import { clearLocalData } from "@/lib/clearLocalData";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -109,7 +109,7 @@ export default function SettingsPage() {
   }, [profile]);
 
   const handleLogout = async () => {
-    queryClient.clear();
+    await clearLocalData();
     await authClient.signOut();
     router.push("/auth/login");
   };
@@ -642,8 +642,8 @@ export default function SettingsPage() {
         </div>
         <p className="text-sm text-faint mb-4">
           {language === "de"
-            ? "Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-            : "All your data will be permanently deleted. This action cannot be undone."}
+            ? "Alle deine Daten werden unwiderruflich gelöscht. Ausgestellte Rechnungen bleiben gesetzlich vorgeschrieben aufbewahrt (§ 147 AO, § 14b UStG) — ohne Verbindung zu deinem Konto."
+            : "All your data will be permanently deleted. Issued invoices are retained as required by German tax law (§ 147 AO, § 14b UStG) — decoupled from your account."}
         </p>
         <button
           onClick={() => setShowDeleteAccount(true)}
@@ -686,7 +686,7 @@ export default function SettingsPage() {
               setDeleteError(data.message || (language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account."));
               return;
             }
-            queryClient.clear();
+            await clearLocalData();
             await authClient.signOut();
             router.push("/auth/login");
           } catch {
@@ -697,8 +697,8 @@ export default function SettingsPage() {
         message={
           (deleteError ? deleteError + "\n\n" : "") +
           (language === "de"
-            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht."
-            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted.")
+            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht. Bereits ausgestellte Rechnungen werden für die gesetzliche Aufbewahrungsfrist entkoppelt archiviert."
+            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted. Invoices you already issued are archived, decoupled from your account, for the statutory retention period.")
         }
         confirmText={language === "de" ? "Endgültig löschen" : "Delete permanently"}
         cancelText={t.common.cancel}

@@ -41,8 +41,15 @@ export default function DatenschutzPage() {
           <li>Firmenprofil (Name, Adresse, Telefon, Steuerhinweis)</li>
           <li>Geschäftsdaten (Aufträge, Rechnungen, Marktveranstaltungen, Ausgaben)</li>
           <li>Zahlungsdaten (nur bei kostenpflichtigem Abo — Verarbeitung ausschließlich durch Stripe, Kartendaten werden nie auf unseren Servern gespeichert)</li>
-          <li>Nutzungseinstellungen (Theme, Sprache) — ausschließlich lokal im Browser gespeichert</li>
+          <li>Nutzungseinstellungen (Theme, Sprache) — in technisch notwendigen Cookies auf Ihrem Gerät, damit die Seite sofort in der gewählten Darstellung und Sprache ausgeliefert wird (Laufzeit ein Jahr, kein Tracking)</li>
+          <li>Anmeldedaten Ihrer Sitzungen (IP-Adresse und Browserkennung), gespeichert zur Absicherung des Logins für die Dauer der Sitzung</li>
+          <li>Protokoll administrativer Eingriffe (z.&nbsp;B. Sperrung eines Kontos) mit der betroffenen E-Mail-Adresse, zum Nachweis solcher Eingriffe</li>
         </ul>
+        <p className="text-sm text-secondary mt-3">
+          <strong className="text-primary">Cookies:</strong> Vendora setzt ausschließlich technisch notwendige Cookies —
+          das Sitzungscookie der Anmeldung sowie die drei Einstellungscookies für Theme, Dunkelmodus und Sprache.
+          Es gibt keine Analyse-, Werbe- oder Drittanbieter-Cookies und deshalb auch kein Einwilligungsbanner.
+        </p>
       </Card>
 
       <Card>
@@ -148,7 +155,9 @@ export default function DatenschutzPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">7. Speicherdauer</h2>
         <p className="text-sm text-secondary">
           Ihre Daten werden gespeichert, solange Ihr Konto aktiv ist. Nach Löschung des Kontos werden alle personenbezogenen Daten
-          und Geschäftsdaten gelöscht bzw. anonymisiert.
+          und Geschäftsdaten gelöscht; auch Ihr Konto selbst wird entfernt, sodass dieselbe E-Mail-Adresse später wieder
+          verwendet werden kann. Zwei Ausnahmen bleiben bestehen: die steuerrechtliche Aufbewahrung von Rechnungen
+          (siehe unten) und das Protokoll administrativer Eingriffe, sofern es für Ihr Konto einen Eintrag gibt.
         </p>
         <p className="text-sm text-secondary mt-2">
           <strong className="text-primary">Ausnahme — steuerrechtliche Aufbewahrung:</strong> Ausgestellte Rechnungen und die

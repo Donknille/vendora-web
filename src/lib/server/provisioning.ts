@@ -2,6 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users } from "./schema";
+import { user as authUser } from "./auth-schema";
 import { TRIAL_DAYS } from "@/lib/plan";
 
 /**
@@ -40,4 +41,27 @@ export async function ensureUserRecord(id: string, email: string) {
     })
     .returning();
   return created;
+}
+
+/**
+ * Wie `ensureUserRecord`, holt die E-Mail aber selbst aus der Better-Auth-
+ * Tabelle. Für den `session.create.before`-Hook, der nur die userId sicher
+ * kennt: schlägt der Hook nach der Registrierung fehl, ist das hier die zweite
+ * und letzte Gelegenheit, das Profil anzulegen, bevor der Nutzer in einer
+ * Sitzung landet, in der jeder API-Aufruf mit 401 endet.
+ *
+ * Existiert keine Auth-Zeile (gelöschtes Konto), passiert nichts — ein
+ * gelöschtes Profil darf nicht über ein altes Cookie zurückkommen.
+ */
+export async function ensureUserRecordById(id: string) {
+  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.id, id));
+  if (existing) return;
+
+  const [identity] = await db
+    .select({ email: authUser.email })
+    .from(authUser)
+    .where(eq(authUser.id, id));
+  if (!identity?.email) return;
+
+  await ensureUserRecord(id, identity.email);
 }

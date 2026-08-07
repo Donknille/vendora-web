@@ -39,6 +39,36 @@ describe("buildEuerCsv", () => {
   });
 });
 
+describe("buildEuerCsv – Formel-Schutz", () => {
+  // Dieser Export ist dafuer gebaut, an die Steuerkanzlei weitergereicht zu
+  // werden. Excel und LibreOffice werten eine Zelle, die mit = + - oder @
+  // beginnt, beim Oeffnen als Formel aus — und der Belegtext kommt aus freier
+  // Nutzereingabe.
+  const formulaReport: EuerReport = {
+    ...report,
+    lines: [
+      { date: "2025-02-01", kind: "expense", description: '=HYPERLINK("http://boese.example","Klick")', category: "sonstiges", amount: 1000 },
+      { date: "2025-02-02", kind: "expense", description: "@SUM(A1:A9)", category: "sonstiges", amount: 1000 },
+      { date: "2025-02-03", kind: "expense", description: "-2+3", category: "sonstiges", amount: 1000 },
+    ],
+  };
+
+  it("entschaerft fuehrende Formelzeichen in Nutzertexten", () => {
+    const csv = buildEuerCsv(formulaReport, meta);
+
+    expect(csv).not.toMatch(/(^|;|")=HYPERLINK/);
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).toContain("'@SUM(A1:A9)");
+    expect(csv).toContain("'-2+3");
+  });
+
+  it("laesst unverdaechtige Werte unveraendert", () => {
+    const csv = buildEuerCsv(report, meta);
+    expect(csv).toContain("Material XY");
+    expect(csv).not.toContain("'Material XY");
+  });
+});
+
 describe("buildEuerPdf", () => {
   it("produces a valid PDF byte stream", async () => {
     const bytes = await buildEuerPdf(report, meta);

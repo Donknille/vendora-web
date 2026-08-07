@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { requireWriteAccess } from "@/lib/server/limits";
 import { z } from "zod";
 
 const quickItemSchema = z.object({
@@ -29,6 +30,11 @@ export async function PUT(
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
+    // Wie beim Auftrag ist das PUT ein Create-Pfad: updateMarket erzeugt ueber
+    // syncMarketExpenses abgeleitete Ausgabenzeilen und schreibt quickItems.
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const { id } = await params;
     const body = await request.json();

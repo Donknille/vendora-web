@@ -13,7 +13,20 @@ const orderItemSchema = z.object({
   comment: z.string().max(1000).optional(),
 });
 
-const createOrderSchema = z.object({
+// orders.total ist integer (max 2.147.483.647 Cent). Ohne diese Pruefung
+// scheitert eine ueberlaufende Summe erst in Postgres und landet im
+// generischen catch: die Nutzerin sieht ein 500 statt einer Feldmeldung.
+export const MAX_ORDER_TOTAL_CENTS = 2_000_000_000;
+
+export function orderTotalWithinBounds(data: {
+  items?: { quantity: number; price: number }[];
+  shippingCost?: number;
+}): boolean {
+  const items = (data.items ?? []).reduce((sum, i) => sum + i.quantity * i.price, 0);
+  return items + (data.shippingCost ?? 0) <= MAX_ORDER_TOTAL_CENTS;
+}
+
+export const createOrderSchema = z.object({
   customerName: z.string().min(1, "Customer name is required").max(200),
   customerEmail: z.string().max(254).default(""),
   customerStreet: z.string().min(1, "Street is required").max(200),
@@ -30,6 +43,14 @@ const createOrderSchema = z.object({
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required").max(100),
+}).superRefine((data, ctx) => {
+  if (!orderTotalWithinBounds(data)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["items"],
+      message: "Die Auftragssumme ist zu gross.",
+    });
+  }
 });
 
 export async function GET(request: Request) {

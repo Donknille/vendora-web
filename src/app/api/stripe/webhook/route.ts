@@ -122,13 +122,25 @@ export async function POST(request: Request) {
 
       case "customer.subscription.deleted": {
         const customerId = obj.customer as string;
+        const subscriptionId = obj.id as string | undefined;
 
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.stripeCustomerId, customerId));
 
-        if (user) {
+        // Nur herunterstufen, wenn das geloeschte Abo auch das aktuell
+        // hinterlegte ist. Stripe liefert Events bis zu drei Tage nach; ein
+        // nachgereichtes deleted-Event eines ALTEN Abos haette sonst einen
+        // zahlenden Kunden in den Nur-Lese-Modus geworfen, bis die naechste
+        // Zahlung ihn zufaellig wieder hochstuft. Die Idempotenzsperre schuetzt
+        // davor nicht: sie greift erst nach der Verarbeitung.
+        const staleEvent =
+          !!user?.stripeSubscriptionId &&
+          !!subscriptionId &&
+          user.stripeSubscriptionId !== subscriptionId;
+
+        if (user && !staleEvent) {
           await storage.updateSubscription(user.id, {
             plan: "free",
             subscriptionStatus: "cancelled",

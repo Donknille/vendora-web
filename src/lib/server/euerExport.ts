@@ -17,7 +17,13 @@ const KIND_LABEL_DE: Record<string, string> = {
 };
 
 function csvCell(value: string): string {
-  return /[;"\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  // Formel-Schutz: Excel und LibreOffice werten eine Zelle, die mit = + - @
+  // oder einem Steuerzeichen beginnt, beim Oeffnen als Formel aus. Dieser
+  // Export ist genau dafuer gebaut, an die Steuerkanzlei weitergereicht zu
+  // werden, und enthaelt freien Nutzertext (Belegbezeichnung, Firmenname).
+  // Ein vorangestelltes Apostroph macht daraus wieder Text.
+  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[;"\n\r]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
 }
 
 // One row per receipt plus a summary block. UTF-8 with BOM so Excel reads umlauts.

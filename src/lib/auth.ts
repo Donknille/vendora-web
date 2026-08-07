@@ -6,7 +6,7 @@ import { env } from "@/lib/server/env";
 import { db } from "@/lib/server/db";
 import { user, session, account, verification } from "@/lib/server/auth-schema";
 import { sendEmail } from "@/lib/server/email";
-import { ensureUserRecord } from "@/lib/server/provisioning";
+import { ensureUserRecord, ensureUserRecordById } from "@/lib/server/provisioning";
 
 function buttonEmail(heading: string, intro: string, url: string, cta: string): string {
   return `
@@ -67,6 +67,30 @@ export const auth = betterAuth({
           // Mirror the Better Auth user into our app `users` profile table,
           // using the same id so all domain FKs line up.
           await ensureUserRecord(userData.id, userData.email);
+        },
+      },
+    },
+    session: {
+      create: {
+        before: async (sessionData) => {
+          // Zweiter Anlauf fuer das Profil. Better Auth fuehrt den
+          // user.create.after-Hook ERST NACH dem Commit der Registrierung aus:
+          // scheitert er dort (Verbindungsabbruch im falschen Moment), existiert
+          // die Auth-Identitaet ohne Profilzeile. Der Login gelingt dann, aber
+          // getAuthUserId liefert null -- jeder API-Aufruf endet in 401, auch
+          // Datenexport und Kontoloeschung, ohne Weg zurueck.
+          //
+          // Hier statt in getAuthUserId, weil ein geloeschtes Konto keine neue
+          // Session mehr bekommt (die Better-Auth-Zeile ist weg): ein Nachlegen
+          // beim Session-Check haette geloeschte Konten ueber ein altes Cookie
+          // wiederbelebt.
+          if (sessionData.userId) {
+            try {
+              await ensureUserRecordById(sessionData.userId);
+            } catch (error) {
+              console.error("ensureUserRecordById on session create failed:", error);
+            }
+          }
         },
       },
     },

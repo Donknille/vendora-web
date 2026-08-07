@@ -61,6 +61,20 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Seiten des eingeloggten Bereichs werden nicht zwischengespeichert: ihre
+// gerenderte Antwort gehoert zu genau einem Konto. Der Offline-Fall des
+// Marktmodus laeuft ueber die IndexedDB-Queue, nicht ueber HTML im Cache.
+const PRIVATE_PATHS = [
+  "/dashboard", "/orders", "/markets", "/expenses", "/steuer", "/settings", "/admin",
+];
+
+function isCacheable(request) {
+  const url = new URL(request.url);
+  return !PRIVATE_PATHS.some(
+    (p) => url.pathname === p || url.pathname.startsWith(p + "/")
+  );
+}
+
 function isStaticAsset(url) {
   return (
     url.pathname.startsWith("/_next/static/") ||
@@ -106,8 +120,10 @@ async function cacheFirst(request) {
     const response = await fetch(request);
     if (response && response.ok && response.type === "basic") {
       const cache = await caches.open(RUNTIME);
-      await cache.put(request, response.clone());
-      await trimCache(cache, RUNTIME_MAX_ENTRIES);
+      cache
+        .put(request, response.clone())
+        .then(() => trimCache(cache, RUNTIME_MAX_ENTRIES))
+        .catch(() => {});
     }
     return response;
   } catch {
@@ -119,9 +135,15 @@ async function networkFirst(request) {
   const cache = await caches.open(RUNTIME);
   try {
     const response = await fetch(request);
-    if (response && response.ok && response.type === "basic") {
-      await cache.put(request, response.clone());
-      await trimCache(cache, RUNTIME_MAX_ENTRIES);
+    // Das Schreiben in den Cache steht bewusst NEBEN dem fetch, nicht im
+    // selben try: bei vollem Geraetespeicher wirft cache.put, und der catch
+    // haette dann die frische Antwort verworfen und stattdessen altes HTML
+    // ausgeliefert -- bei einwandfreier Verbindung, dauerhaft.
+    if (response && response.ok && response.type === "basic" && isCacheable(request)) {
+      cache
+        .put(request, response.clone())
+        .then(() => trimCache(cache, RUNTIME_MAX_ENTRIES))
+        .catch(() => {});
     }
     return response;
   } catch {
@@ -135,4 +157,13 @@ async function networkFirst(request) {
 // Allow the page to trigger an immediate SW activation after an update.
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+  // Beim Abmelden und beim Loeschen des Kontos raeumt die App den Cache. Sonst
+  // ueberlebt die gerenderte Seite des Vorgaengers auf einem geteilten
+  // Markt-Tablet jeden Logout: im Flugmodus liefert der Service Worker sie
+  // aus, ohne dass je ein Request den Server-Gate erreicht.
+  if (event.data === "CLEAR_CACHE") {
+    event.waitUntil(
+      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    );
+  }
 });

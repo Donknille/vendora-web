@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { requireWriteAccess } from "@/lib/server/limits";
+import { orderTotalWithinBounds } from "../route";
 import { z } from "zod";
 
 const updateOrderItemSchema = z.object({
@@ -29,6 +31,10 @@ const updateOrderSchema = z.object({
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
   items: z.array(updateOrderItemSchema).max(100).optional(),
+}).superRefine((data, ctx) => {
+  if (!orderTotalWithinBounds(data)) {
+    ctx.addIssue({ code: "custom", path: ["items"], message: "Die Auftragssumme ist zu gross." });
+  }
 });
 
 export async function PUT(
@@ -40,6 +46,14 @@ export async function PUT(
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
+    // Ein PUT ist hier faktisch ein Create-Pfad: updateOrder legt ueber
+    // upsertCustomerFromOrder neue Kundenzeilen an, ersetzt saemtliche
+    // Positionen und setzt beim Statuswechsel paidAt. Ohne dieses Gate koennte
+    // ein Free-Konto ueber einen einzigen bestehenden Auftrag dauerhaft
+    // weiterarbeiten -- "Nur-Lese" waere nur eine Beschriftung.
+    const gate = await requireWriteAccess(userId);
+    if (gate) return gate;
 
     const { id } = await params;
     const body = await request.json();

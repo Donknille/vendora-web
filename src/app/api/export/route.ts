@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const [orders, markets, marketSales, expenses, profile, invoiceCounter, invoices] =
+    const [orders, markets, marketSales, expenses, profile, invoiceCounter, invoices, customers, user] =
       await Promise.all([
         storage.getOrders(userId),
         storage.getMarkets(userId),
@@ -21,12 +21,29 @@ export async function GET() {
         storage.getProfile(userId),
         storage.getInvoiceCounter(userId),
         storage.getInvoices(userId),
+        // Kundenstamm und Kontodaten gehoeren zur Auskunft nach Art. 20 DSGVO.
+        // Der Restore baut die Kunden zwar aus den Auftraegen neu auf und
+        // ignoriert diese Felder — fuer den Datenexport zaehlt aber, was ueber
+        // die Person gespeichert ist, nicht was der Import braucht.
+        storage.getCustomers(userId),
+        storage.getUser(userId),
       ]);
 
     return NextResponse.json({
       schemaVersion: 2, // money as integer cents
       exportedAt: new Date().toISOString(),
+      account: user
+        ? {
+            email: user.email,
+            createdAt: user.createdAt,
+            plan: user.plan,
+            subscriptionStatus: user.subscriptionStatus,
+            trialEndsAt: user.trialEndsAt,
+            subscriptionExpiresAt: user.subscriptionExpiresAt,
+          }
+        : null,
       orders,
+      customers,
       markets,
       marketSales,
       expenses,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import { getStripe, STRIPE_PRICE_ID } from "@/lib/server/stripe";
 import * as storage from "@/lib/server/storage";
+import { getEffectivePlan } from "@/lib/plan";
 
 export async function POST(request: Request) {
   try {
@@ -18,6 +19,17 @@ export async function POST(request: Request) {
     if (!STRIPE_PRICE_ID) {
       console.error("STRIPE_PRICE_ID is not configured");
       return NextResponse.json({ message: "Billing is not configured" }, { status: 500 });
+    }
+
+    // Kein zweites Abo auf denselben Customer. Nach der Rueckkehr aus Stripe
+    // ist der Webhook oft noch nicht verarbeitet, die Oberflaeche zeigt also
+    // weiter "Pro holen" -- ein zweiter Klick hat bisher ein zweites Abo
+    // angelegt und doppelt abgerechnet.
+    if (getEffectivePlan(user) === "pro") {
+      return NextResponse.json(
+        { message: "Dieses Konto hat bereits ein aktives Abo.", code: "ALREADY_PRO" },
+        { status: 409 },
+      );
     }
 
     const { origin } = new URL(request.url);
