@@ -308,6 +308,44 @@ describe("Storage gegen echtes Postgres", () => {
     });
   });
 
+  // ── Aufbewahrungsfrist ───────────────────────────────────
+
+  describe("Aufbewahrungsfrist", () => {
+    it("löscht archivierte Rechnungen erst nach Fristablauf", async () => {
+      await storage.upsertProfile(ANNA, PROFILE_INPUT);
+      const order = await storage.createOrder(ANNA, ORDER_INPUT);
+      const issued = await storage.issueInvoice(ANNA, order.id);
+      expect(issued.ok).toBe(true);
+      await storage.archiveUserInvoices(ANNA);
+
+      const { sql } = await import("drizzle-orm");
+      const [{ retention_until: frist }] = (
+        await db.execute<{ retention_until: string }>(sql`select retention_until from invoices`)
+      ).rows;
+      // 31.12. des Ausstellungsjahres + 10 (§ 147 Abs. 3 AO)
+      expect(frist).toContain("-12-31");
+
+      // Einen Tag vor Fristende bleibt der Beleg liegen …
+      expect(await storage.purgeExpiredArchivedInvoices(frist)).toBe(0);
+      expect((await db.execute(sql`select id from invoices`)).rows).toHaveLength(1);
+
+      // … danach wird er gelöscht.
+      const danach = `${Number(frist.slice(0, 4)) + 1}-01-01`;
+      expect(await storage.purgeExpiredArchivedInvoices(danach)).toBe(1);
+      expect((await db.execute(sql`select id from invoices`)).rows).toHaveLength(0);
+    });
+
+    it("fasst Rechnungen bestehender Konten nicht an", async () => {
+      await storage.upsertProfile(ANNA, PROFILE_INPUT);
+      const order = await storage.createOrder(ANNA, ORDER_INPUT);
+      expect((await storage.issueInvoice(ANNA, order.id)).ok).toBe(true);
+
+      // Nicht archiviert: gehört einem lebenden Konto, unabhängig vom Alter.
+      expect(await storage.purgeExpiredArchivedInvoices("2099-01-01")).toBe(0);
+      expect(await storage.getInvoices(ANNA)).toHaveLength(1);
+    });
+  });
+
   // ── Kontolöschung ────────────────────────────────────────
 
   describe("Kontolöschung", () => {

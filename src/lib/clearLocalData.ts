@@ -1,6 +1,7 @@
 "use client";
 
 import { queryClient } from "@/lib/api-client";
+import { OFFLINE_CACHE_KEY } from "@/lib/offlineCache";
 
 /**
  * Räumt alles ab, was auf diesem Gerät zum abgemeldeten Konto gehört.
@@ -15,6 +16,14 @@ import { queryClient } from "@/lib/api-client";
  */
 export async function clearLocalData(): Promise<void> {
   queryClient.clear();
+
+  // Der persistierte Marktmodus-Puffer liegt in localStorage und wuerde einen
+  // Kontowechsel sonst ueberleben.
+  try {
+    window.localStorage.removeItem(OFFLINE_CACHE_KEY);
+  } catch {
+    // localStorage nicht verfuegbar (privater Modus) — nichts zu raeumen.
+  }
 
   if (typeof navigator !== "undefined" && navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage("CLEAR_CACHE");

@@ -68,8 +68,17 @@ const PRIVATE_PATHS = [
   "/dashboard", "/orders", "/markets", "/expenses", "/steuer", "/settings", "/admin",
 ];
 
+// Ausnahme von der Ausnahme: die Kassenseite. Sie ist die einzige Seite, die
+// laut offline.html ohne Netz starten koennen muss. Ihre Daten kommen aus dem
+// persistierten Abfrage-Cache (lib/offlineCache.ts), das HTML-Geruest von hier.
+// Beim Abmelden und beim Loeschen des Kontos wird der Cache geraeumt.
+function isRegisterPage(pathname) {
+  return /^\/markets\/[^/]+\/kasse\/?$/.test(pathname);
+}
+
 function isCacheable(request) {
   const url = new URL(request.url);
+  if (isRegisterPage(url.pathname)) return true;
   return !PRIVATE_PATHS.some(
     (p) => url.pathname === p || url.pathname.startsWith(p + "/")
   );
