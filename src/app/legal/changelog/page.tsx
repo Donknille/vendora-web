@@ -11,10 +11,16 @@ const releases = [
     title: "Verlässlichkeit",
     changes: [
       "Marktmodus: ein Verkauf, den der Server ablehnt, bleibt jetzt gespeichert und wird erneut gesendet — vorher konnte er verschwinden, während die Kasse „synchronisiert“ anzeigte",
+      "Die Kasse lässt sich jetzt auch ohne Empfang öffnen: Marktdaten und Schnellwahl-Artikel liegen für eine Woche auf dem Gerät",
       "Anmeldung, Registrierung und Passwort-Zurücksetzen gibt es jetzt auch auf Englisch",
+      "Ein wiederhergestelltes Backup setzt die Rechnungsnummern nicht mehr zurück — vorher konnte danach keine Rechnung mehr ausgestellt werden",
       "Fehlermeldungen beim Wiederherstellen eines Backups nennen den Grund, statt nur fehlzuschlagen; dass der Import Pro voraussetzt, steht vor der Dateiauswahl",
       "Kontolöschung entfernt das Konto vollständig — die E-Mail-Adresse kann danach wieder verwendet werden",
-      "Sicherheitsaktualisierung des Frameworks (Next.js 16.3)",
+      "Beim Abmelden werden zwischengespeicherte Seiten vom Gerät entfernt; auf einem geteilten Tablet ist nach dem Logout nichts mehr zu sehen",
+      "Der Datenexport enthält jetzt auch Kundenstamm und Kontodaten (Art. 20 DSGVO)",
+      "Archivierte Rechnungen werden nach Ablauf der zehnjährigen Aufbewahrungsfrist automatisch gelöscht",
+      "Datenschutzerklärung und Löschdialog benennen jetzt genau, was gespeichert bleibt (Cookies, Sitzungsdaten, Rechnungsarchiv)",
+      "Sicherheitsaktualisierung des Frameworks (Next.js 16.3) und mehrere Härtungen an Rate-Limiting, Abo-Verarbeitung und Exporten",
     ],
   },
   {
