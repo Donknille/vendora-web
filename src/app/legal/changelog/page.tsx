@@ -6,6 +6,18 @@ import { Card } from "@/components/ui/Card";
 
 const releases = [
   {
+    version: "1.4.0",
+    date: "2026-08-07",
+    title: "Verlässlichkeit",
+    changes: [
+      "Marktmodus: ein Verkauf, den der Server ablehnt, bleibt jetzt gespeichert und wird erneut gesendet — vorher konnte er verschwinden, während die Kasse „synchronisiert“ anzeigte",
+      "Anmeldung, Registrierung und Passwort-Zurücksetzen gibt es jetzt auch auf Englisch",
+      "Fehlermeldungen beim Wiederherstellen eines Backups nennen den Grund, statt nur fehlzuschlagen; dass der Import Pro voraussetzt, steht vor der Dateiauswahl",
+      "Kontolöschung entfernt das Konto vollständig — die E-Mail-Adresse kann danach wieder verwendet werden",
+      "Sicherheitsaktualisierung des Frameworks (Next.js 16.3)",
+    ],
+  },
+  {
     version: "1.3.0",
     date: "2026-08-06",
     title: "Rechnungen & Darstellung",
