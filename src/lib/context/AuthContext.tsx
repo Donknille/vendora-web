@@ -8,16 +8,25 @@ interface AuthState {
   userId: string | null;
   /** True while the client-side session lookup is still in flight. */
   isSessionPending: boolean;
+  /** True when the session lookup failed (offline) rather than returned "no session". */
+  sessionUnavailable?: boolean;
 }
 
 const AuthContext = createContext<AuthState>({
   userId: null,
   isSessionPending: true,
+  sessionUnavailable: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, error } = authClient.useSession();
   const userId = session?.user?.id ?? null;
+  // Ohne Netz schlaegt der Session-Abruf fehl und liefert data: null bei
+  // isPending: false. Das ist etwas anderes als "nicht angemeldet" und darf die
+  // vom Server geseedete Kennung nicht verdraengen -- sonst laufen alle
+  // Abfrageschluessel auf [null, ...] und der persistierte Offline-Vorrat, der
+  // unter der echten Kennung liegt, waere unerreichbar.
+  const sessionUnavailable = !!error && !session;
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -29,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [userId]);
 
   const value = useMemo(
-    () => ({ userId, isSessionPending: isPending }),
-    [userId, isPending]
+    () => ({ userId, isSessionPending: isPending, sessionUnavailable }),
+    [userId, isPending, sessionUnavailable]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -59,10 +68,11 @@ export function AuthUserSeed({
 
   const value = useMemo(
     () => ({
-      userId: outer.isSessionPending ? userId : outer.userId,
+      userId:
+        outer.isSessionPending || outer.sessionUnavailable ? userId : outer.userId,
       isSessionPending: false,
     }),
-    [outer.isSessionPending, outer.userId, userId]
+    [outer.isSessionPending, outer.sessionUnavailable, outer.userId, userId]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

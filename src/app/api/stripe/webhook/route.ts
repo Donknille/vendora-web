@@ -113,6 +113,14 @@ export async function POST(request: Request) {
                 plan: "pro",
                 subscriptionStatus: "active",
                 subscriptionExpiresAt: expiresAt,
+                // Die Subscription-ID MUSS hier mitwandern. Sie ist der
+                // Vergleichswert, an dem customer.subscription.deleted
+                // erkennt, ob das geloeschte Abo das aktuelle ist. Wurde sie
+                // nur beim Checkout geschrieben, blieb nach einem Abo-Wechsel
+                // eine veraltete ID stehen -- die Kuendigung des NEUEN Abos
+                // haette dann als "altes Event" gegolten und das Konto haette
+                // Pro behalten, bis der Ablauf von selbst greift.
+                stripeSubscriptionId: subscriptionId,
               });
             }
           }

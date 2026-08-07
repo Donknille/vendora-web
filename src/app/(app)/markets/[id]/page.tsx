@@ -29,6 +29,7 @@ import { computeDayClosing } from "@/lib/marketDay";
 import { computeYearComparison } from "@/lib/marketCalendar";
 import type { MarketSale } from "@/lib/types";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -153,8 +154,8 @@ export default function MarketDetailPage() {
     }
     try {
       await recordSale({ description: item.name, amount: item.price, quantity: 1 });
-    } catch {
-      setError(t.markets.saleSaveError);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.markets.saleSaveError));
     }
   };
 

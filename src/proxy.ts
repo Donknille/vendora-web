@@ -80,7 +80,14 @@ export async function proxy(request: NextRequest) {
     // Der Existenzcheck oben prueft nur, DASS ein Key gesetzt ist.
     if (decision.isErrored()) {
       console.error("Arcjet decision errored:", decision.reason);
-      if (process.env.NODE_ENV === "production" && arcjetClient === ajAuth) {
+      // Nur die Pfade, die Brute-Force-Schutz brauchen. sign-out gehoert
+      // ausdruecklich NICHT dazu: ein 503 dort haette das Abmelden still
+      // scheitern lassen -- der Client wirft nicht, die Weiterleitung liefe
+      // durch, und die Nutzerin waere weiterhin angemeldet, ohne es zu merken.
+      const isCredentialPath = /\/api\/auth\/(sign-in|sign-up|forget-password|reset-password)/.test(
+        pathname
+      );
+      if (process.env.NODE_ENV === "production" && isCredentialPath) {
         return withCsp(
           NextResponse.json(
             { message: "Service temporarily unavailable" },

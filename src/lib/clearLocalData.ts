@@ -25,6 +25,17 @@ export async function clearLocalData(): Promise<void> {
     // localStorage nicht verfuegbar (privater Modus) — nichts zu raeumen.
   }
 
+  // Die Offline-Verkaufsqueue ist nicht kontogebunden: sie laege sonst nach
+  // einem Kontowechsel mit Bezeichnung, Betrag und Uhrzeit fremder Verkaeufe
+  // weiter im Browser -- auf einem geteilten Markt-Tablet unbegrenzt.
+  if (typeof indexedDB !== "undefined") {
+    try {
+      indexedDB.deleteDatabase("vendora-offline");
+    } catch {
+      // IndexedDB nicht verfuegbar — nichts zu raeumen.
+    }
+  }
+
   if (typeof navigator !== "undefined" && navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage("CLEAR_CACHE");
   }
@@ -34,7 +45,11 @@ export async function clearLocalData(): Promise<void> {
   if (typeof caches !== "undefined") {
     try {
       const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
+      // Precache (Offline-Seite, Icons) bleibt: er wird nur beim install-Event
+      // des Service Workers befuellt und waere sonst dauerhaft weg.
+      await Promise.all(
+        keys.filter((key) => !key.startsWith("vendora-precache")).map((key) => caches.delete(key)),
+      );
     } catch {
       // Cache-API nicht verfügbar (privater Modus) — nichts zu räumen.
     }

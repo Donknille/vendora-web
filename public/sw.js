@@ -17,7 +17,11 @@
  *    show stale sales / financial figures.
  */
 
-const VERSION = "v1";
+// v2: Seiten des eingeloggten Bereichs werden nicht mehr gecacht. Die Version
+// MUSS mitwandern, sonst bleibt der alte Cache auf Bestandsgeraeten liegen --
+// samt der gerenderten Seiten frueherer Nutzer, und genau dagegen ist die
+// Aenderung gebaut. activate raeumt jeden Cache, der nicht v2 ist.
+const VERSION = "v2";
 const PRECACHE = `vendora-precache-${VERSION}`;
 const RUNTIME = `vendora-runtime-${VERSION}`;
 
@@ -166,13 +170,41 @@ async function networkFirst(request) {
 // Allow the page to trigger an immediate SW activation after an update.
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+
+  // Die Kasse wird per Soft-Navigation geoeffnet (next/link). Dabei entsteht
+  // kein navigate-Request, der Service Worker sieht die Seite also nie und
+  // koennte sie nicht ablegen. Die Seite meldet sich deshalb selbst, wenn sie
+  // offen ist, und wir holen ihr HTML-Geruest einmal aktiv nach.
+  if (event.data && event.data.type === "WARM_SHELL" && typeof event.data.url === "string") {
+    event.waitUntil(
+      (async () => {
+        try {
+          const cache = await caches.open(RUNTIME);
+          const response = await fetch(event.data.url, { credentials: "same-origin" });
+          if (response.ok && response.type === "basic") {
+            await cache.put(event.data.url, response);
+            await trimCache(cache, RUNTIME_MAX_ENTRIES);
+          }
+        } catch {
+          // Kein Netz — beim naechsten Oeffnen erneut versuchen.
+        }
+      })()
+    );
+  }
   // Beim Abmelden und beim Loeschen des Kontos raeumt die App den Cache. Sonst
   // ueberlebt die gerenderte Seite des Vorgaengers auf einem geteilten
   // Markt-Tablet jeden Logout: im Flugmodus liefert der Service Worker sie
   // aus, ohne dass je ein Request den Server-Gate erreicht.
   if (event.data === "CLEAR_CACHE") {
     event.waitUntil(
-      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+      caches.keys().then((keys) =>
+        Promise.all(
+          // Der Precache bleibt: er enthaelt die Offline-Seite und die Icons und
+          // wird nur beim install-Event befuellt. Loescht man ihn beim Abmelden,
+          // ist die Offline-Seite bis zum naechsten Deploy dauerhaft weg.
+          keys.filter((key) => key !== PRECACHE).map((key) => caches.delete(key))
+        )
+      )
     );
   }
 });

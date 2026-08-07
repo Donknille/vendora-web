@@ -72,18 +72,23 @@ export const auth = betterAuth({
     },
     session: {
       create: {
-        before: async (sessionData) => {
-          // Zweiter Anlauf fuer das Profil. Better Auth fuehrt den
-          // user.create.after-Hook ERST NACH dem Commit der Registrierung aus:
-          // scheitert er dort (Verbindungsabbruch im falschen Moment), existiert
-          // die Auth-Identitaet ohne Profilzeile. Der Login gelingt dann, aber
-          // getAuthUserId liefert null -- jeder API-Aufruf endet in 401, auch
-          // Datenexport und Kontoloeschung, ohne Weg zurueck.
+        // Bewusst "after": Better Auth fuehrt die Registrierung in einer
+        // Transaktion aus, und die Session wird noch INNERHALB dieser
+        // Transaktion angelegt. Ein before-Hook liest ueber den App-Pool, also
+        // eine andere Verbindung, und saehe die noch nicht committete
+        // Auth-Zeile gar nicht -- er waere bei der Registrierung wirkungslos.
+        after: async (sessionData) => {
+          // Zweiter Anlauf fuer das Profil. Scheitert der
+          // user.create.after-Hook (Verbindungsabbruch im falschen Moment),
+          // existiert die Auth-Identitaet ohne Profilzeile: der Login gelingt,
+          // aber jeder API-Aufruf endet in 401 -- auch Datenexport und
+          // Kontoloeschung, ohne Weg zurueck. Spaetestens beim naechsten Login
+          // ist der Zustand hier repariert.
           //
-          // Hier statt in getAuthUserId, weil ein geloeschtes Konto keine neue
-          // Session mehr bekommt (die Better-Auth-Zeile ist weg): ein Nachlegen
-          // beim Session-Check haette geloeschte Konten ueber ein altes Cookie
-          // wiederbelebt.
+          // Am Session-Hook statt in getAuthUserId, weil ein geloeschtes Konto
+          // keine neue Session mehr bekommt (die Better-Auth-Zeile ist weg):
+          // ein Nachlegen beim Session-Check haette geloeschte Konten ueber ein
+          // altes Cookie wiederbelebt.
           if (sessionData.userId) {
             try {
               await ensureUserRecordById(sessionData.userId);

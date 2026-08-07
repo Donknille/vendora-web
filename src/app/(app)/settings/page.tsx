@@ -20,6 +20,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
 import { useSubscription } from "@/lib/hooks/useSubscription";
@@ -38,7 +39,7 @@ export default function SettingsPage() {
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: sub } = useSubscription();
-  const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
+  const { redirectToCheckout: handleSubscribe, loading: subscribeLoading, error: subscribeError } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
 
   const handleManageSubscription = async () => {
@@ -293,6 +294,12 @@ export default function SettingsPage() {
             >
               {subscribeLoading ? t.common.loading : t.subscription.upgradeButton}
             </button>
+          )}
+
+          {subscribeError && (
+            <p className="text-sm text-red-500">
+              {apiErrorMessage(new Error(subscribeError), language, t.common.saveError)}
+            </p>
           )}
 
           {sub && sub.plan === "pro" && (

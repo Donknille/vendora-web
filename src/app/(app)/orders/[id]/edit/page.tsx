@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useOrders, useUpdateOrder, useCustomers } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payments";
 
@@ -160,8 +161,8 @@ export default function EditOrderPage() {
         status,
       });
       router.push(`/orders/${id}`);
-    } catch {
-      setError(t.orders.missingInfo);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.missingInfo));
     }
   };
 

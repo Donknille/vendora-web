@@ -31,11 +31,6 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Wie beim Auftrag ist das PUT ein Create-Pfad: updateMarket erzeugt ueber
-    // syncMarketExpenses abgeleitete Ausgabenzeilen und schreibt quickItems.
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
-
     const { id } = await params;
     const body = await request.json();
     const parsed = updateMarketSchema.safeParse(body);
@@ -44,6 +39,23 @@ export async function PUT(
         { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+
+    // Das PUT ist sonst ein Create-Pfad: updateMarket erzeugt ueber
+    // syncMarketExpenses abgeleitete Ausgabenzeilen und schreibt quickItems.
+    //
+    // Der reine Statuswechsel ist ausgenommen, und zwar zwingend: Standgebuehr
+    // und Fahrtkosten werden nur bei "confirmed"/"completed" gebucht, der
+    // Wechsel auf "cancelled" ist der EINZIGE Weg, sie wieder loszuwerden
+    // (direkt loeschen verweigert /api/expenses mit 409 DERIVED_EXPENSE).
+    // Mit Gate haette ein abgelaufenes Konto einen abgesagten Markt dauerhaft
+    // als Kosten in der EUeR stehen -- oder muesste den ganzen Markt samt
+    // Verkaeufen loeschen.
+    const statusOnly =
+      Object.keys(parsed.data).length === 1 && parsed.data.status !== undefined;
+    if (!statusOnly) {
+      const gate = await requireWriteAccess(userId);
+      if (gate) return gate;
     }
 
     const market = await storage.updateMarket(userId, id, parsed.data);

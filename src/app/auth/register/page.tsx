@@ -39,7 +39,14 @@ export default function RegisterPage() {
     });
 
     if (authError) {
-      setError(authError.message || t.auth.registerError);
+      // Better Auth antwortet englisch ("User already exists..."). Der haeufigste
+      // Fall bekommt deshalb den uebersetzten Text; alles andere wird
+      // durchgereicht, damit keine Ursache verlorengeht.
+      setError(
+        authError.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+          ? t.auth.registerError
+          : authError.message || t.auth.registerError
+      );
       setLoading(false);
       return;
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -35,6 +35,20 @@ export default function MarketPosPage() {
   const deleteSale = useDeleteMarketSale();
   const canCreate = useCanCreate();
   const { pending, rejected, syncing, recordSale, dequeue } = useOfflineSales(marketId);
+
+  // Die Kasse wird per Soft-Navigation geoeffnet; dabei entsteht kein
+  // navigate-Request, den der Service Worker sehen koennte. Ohne diesen Anstoss
+  // laege ihr HTML-Geruest nie im Cache und der Kaltstart ohne Netz -- der
+  // eigentliche Zweck des Marktmodus -- endete auf der Offline-Seite.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) return;
+    const url = window.location.pathname;
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        registration.active?.postMessage({ type: "WARM_SHELL", url });
+      })
+      .catch(() => {});
+  }, [marketId]);
 
   const [payment, setPayment] = useState<SalePaymentMethod>("cash");
   const [qty, setQty] = useState(1);

@@ -47,14 +47,6 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Ein PUT ist hier faktisch ein Create-Pfad: updateOrder legt ueber
-    // upsertCustomerFromOrder neue Kundenzeilen an, ersetzt saemtliche
-    // Positionen und setzt beim Statuswechsel paidAt. Ohne dieses Gate koennte
-    // ein Free-Konto ueber einen einzigen bestehenden Auftrag dauerhaft
-    // weiterarbeiten -- "Nur-Lese" waere nur eine Beschriftung.
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
-
     const { id } = await params;
     const body = await request.json();
     const parsed = updateOrderSchema.safeParse(body);
@@ -63,6 +55,19 @@ export async function PUT(
         { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+
+    // Ein PUT ist sonst faktisch ein Create-Pfad: updateOrder legt ueber
+    // upsertCustomerFromOrder neue Kundenzeilen an und ersetzt saemtliche
+    // Positionen. Ohne Gate koennte ein Free-Konto ueber einen einzigen
+    // bestehenden Auftrag dauerhaft weiterarbeiten -- "Nur-Lese" waere nur eine
+    // Beschriftung. Der reine Statuswechsel bleibt erlaubt (wie beim Markt): er
+    // legt nichts an, sondern haelt einen vorhandenen Vorgang aktuell.
+    const statusOnly =
+      Object.keys(parsed.data).length === 1 && parsed.data.status !== undefined;
+    if (!statusOnly) {
+      const gate = await requireWriteAccess(userId);
+      if (gate) return gate;
     }
 
     const order = await storage.updateOrder(userId, id, parsed.data);

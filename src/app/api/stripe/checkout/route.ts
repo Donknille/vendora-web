@@ -25,6 +25,10 @@ export async function POST(request: Request) {
     // ist der Webhook oft noch nicht verarbeitet, die Oberflaeche zeigt also
     // weiter "Pro holen" -- ein zweiter Klick hat bisher ein zweites Abo
     // angelegt und doppelt abgerechnet.
+    //
+    // Das eigene plan-Feld allein genuegt dafuer NICHT: genau im beschriebenen
+    // Rennen steht dort noch "free". Massgeblich ist Stripe selbst, deshalb
+    // wird unten zusaetzlich am Customer nachgesehen.
     if (getEffectivePlan(user) === "pro") {
       return NextResponse.json(
         { message: "Dieses Konto hat bereits ein aktives Abo.", code: "ALREADY_PRO" },
@@ -52,6 +56,25 @@ export async function POST(request: Request) {
       await storage.updateSubscription(userId, {
         stripeCustomerId: customerId,
       });
+    } else {
+      // Bestandskunde: bei Stripe nachsehen, nicht im eigenen Plan-Feld. Genau
+      // waehrend der Webhook noch laeuft, steht dort naemlich weiterhin "free"
+      // -- ein zweiter Klick haette dann ein zweites Abo auf denselben Customer
+      // gelegt und doppelt abgerechnet.
+      const existing = await getStripe().subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 10,
+      });
+      const active = existing.data.find((s) =>
+        ["active", "trialing", "past_due", "unpaid"].includes(s.status),
+      );
+      if (active) {
+        return NextResponse.json(
+          { message: "Dieses Konto hat bereits ein aktives Abo.", code: "ALREADY_PRO" },
+          { status: 409 },
+        );
+      }
     }
 
     // Create Stripe Checkout Session
