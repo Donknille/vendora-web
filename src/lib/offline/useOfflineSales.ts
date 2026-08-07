@@ -16,7 +16,7 @@ const CHUNK = 100; // must match MAX_BATCH on the server
 
 type BatchResult =
   | { clientId: string; status: "ok" }
-  | { clientId: string; status: "error" };
+  | { clientId: string; status: "error"; permanent?: boolean };
 
 export interface RecordSaleInput {
   description: string;
@@ -39,6 +39,10 @@ export function useOfflineSales(marketId: string) {
   // sale is money that was taken at the stall, so it must never disappear
   // silently. The UI shows them instead of the "everything synced" state.
   const [rejected, setRejected] = useState<string[]>([]);
+  // Dauerhaft ungueltig (Schema verletzt): bleibt gespeichert und sichtbar,
+  // wird aber nicht erneut gesendet und zaehlt nicht im Tagesabschluss mit.
+  const [invalid, setInvalid] = useState<string[]>([]);
+  const invalidRef = useRef<string[]>([]);
   const syncingRef = useRef(false);
 
   const refreshPending = useCallback(async () => {
@@ -55,7 +59,11 @@ export function useOfflineSales(marketId: string) {
     syncingRef.current = true;
     setSyncing(true);
     try {
-      const queued = await getPendingSales(marketId).catch(() => []);
+      const all = await getPendingSales(marketId).catch(() => []);
+      // Was der Server bereits als ungueltig zurueckgewiesen hat, wird nicht
+      // erneut gesendet -- sonst liefe bei jedem Mount und jedem online-Event
+      // derselbe aussichtslose Versuch.
+      const queued = all.filter((s) => !invalidRef.current.includes(s.clientId));
       for (let i = 0; i < queued.length; i += CHUNK) {
         const chunk = queued.slice(i, i + CHUNK);
         let results: BatchResult[];
@@ -83,7 +91,7 @@ export function useOfflineSales(marketId: string) {
         // retried on the next sync and remain visible as unsynced until the
         // user resolves them (fix or undo). Dropping them here would delete a
         // real sale and then show the queue as empty.
-        const { confirmed, rejected: failed } = partitionSyncResults(results);
+        const { confirmed, rejected: failed, invalid: permanent } = partitionSyncResults(results);
         await removePendingSales(confirmed);
         setRejected((prev) => {
           const next = new Set(prev);
@@ -91,6 +99,13 @@ export function useOfflineSales(marketId: string) {
           failed.forEach((id) => next.add(id));
           return [...next];
         });
+        if (permanent.length > 0) {
+          setInvalid((prev) => {
+            const next = [...new Set([...prev, ...permanent])];
+            invalidRef.current = next;
+            return next;
+          });
+        }
       }
       if (userId) {
         queryClient.invalidateQueries({ queryKey: [userId, "/api/markets"] });
@@ -128,6 +143,11 @@ export function useOfflineSales(marketId: string) {
     async (clientId: string) => {
       await removePendingSales([clientId]);
       setRejected((prev) => prev.filter((id) => id !== clientId));
+      setInvalid((prev) => {
+        const next = prev.filter((id) => id !== clientId);
+        invalidRef.current = next;
+        return next;
+      });
       await refreshPending();
     },
     [refreshPending]
@@ -147,6 +167,8 @@ export function useOfflineSales(marketId: string) {
     // clientIds the server rejected — still queued, never silently dropped.
     rejected,
     rejectedCount: rejected.length,
+    // Davon die dauerhaft ungueltigen: nicht erneut senden, nicht mitzaehlen.
+    invalid,
     syncing,
     recordSale,
     dequeue,

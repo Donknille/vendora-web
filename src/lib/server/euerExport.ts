@@ -16,13 +16,25 @@ const KIND_LABEL_DE: Record<string, string> = {
   expense: "Ausgabe",
 };
 
+// Ein vom Server erzeugter Geldbetrag: optionales Minus, Tausenderpunkte,
+// zwei Nachkommastellen. Diese Zellen sind KEINE Nutzereingabe und muessen
+// Zahlen bleiben.
+const AMOUNT_CELL = /^-?\d{1,3}(\.\d{3})*,\d{2}$/;
+
 function csvCell(value: string): string {
   // Formel-Schutz: Excel und LibreOffice werten eine Zelle, die mit = + - @
   // oder einem Steuerzeichen beginnt, beim Oeffnen als Formel aus. Dieser
   // Export ist genau dafuer gebaut, an die Steuerkanzlei weitergereicht zu
   // werden, und enthaelt freien Nutzertext (Belegbezeichnung, Firmenname).
   // Ein vorangestelltes Apostroph macht daraus wieder Text.
-  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  //
+  // Ausgabenbetraege beginnen aber selbst mit einem Minus. Ohne die Ausnahme
+  // wuerde aus "-30,00" ein "'-30,00": in Excel eine TEXT-Zelle, die SUMME()
+  // stillschweigend als 0 zaehlt. Die Betragsspalte waere gemischt -- Einnahmen
+  // numerisch, Ausgaben Text -- und eine Summe darueber ergaebe einen zu hohen
+  // Gewinn. In einem Steuerdokument ist das der schlimmere Fehler.
+  const needsGuard = /^[=+\-@\t\r]/.test(value) && !AMOUNT_CELL.test(value);
+  const guarded = needsGuard ? `'${value}` : value;
   return /[;"\n\r]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
 }
 

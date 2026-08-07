@@ -34,7 +34,7 @@ export default function MarketPosPage() {
   const { data: sales } = useMarketSales(marketId);
   const deleteSale = useDeleteMarketSale();
   const canCreate = useCanCreate();
-  const { pending, rejected, syncing, recordSale, dequeue } = useOfflineSales(marketId);
+  const { pending, rejected, invalid, syncing, recordSale, dequeue } = useOfflineSales(marketId);
 
   // Die Kasse wird per Soft-Navigation geoeffnet; dabei entsteht kein
   // navigate-Request, den der Service Worker sehen koennte. Ohne diesen Anstoss
@@ -96,10 +96,15 @@ export default function MarketPosPage() {
   const serverClientIds = new Set(
     (sales ?? []).map((s) => s.clientId).filter(Boolean) as string[]
   );
-  const unsynced = pending.filter((p) => !serverClientIds.has(p.clientId));
+  const queued = pending.filter((p) => !serverClientIds.has(p.clientId));
   // Vom Server abgelehnt und weiterhin in der Queue: braucht eine eigene
   // Anzeige, sonst sieht "noch nicht synchronisiert" aus wie "gleich fertig".
-  const rejectedSales = unsynced.filter((p) => rejected.includes(p.clientId));
+  const rejectedSales = queued.filter((p) => rejected.includes(p.clientId));
+  // Dauerhaft ungueltig: bleibt sichtbar, zaehlt aber NICHT im Tagesabschluss.
+  // Sonst zeigte die Kasse dauerhaft Geld an, das der Server nie gespeichert
+  // hat -- und der Abschluss am Abend stimmte mit der Kasse nicht ueberein.
+  const invalidSales = queued.filter((p) => invalid.includes(p.clientId));
+  const unsynced = queued.filter((p) => !invalid.includes(p.clientId));
 
   const closing = computeDayClosing(
     [
@@ -128,8 +133,26 @@ export default function MarketPosPage() {
     return s + p;
   };
 
+  // Dieselben Grenzen wie batchSaleEntrySchema. Eine Eingabe, die der Server
+  // sicher ablehnt, gehoert nicht in die Queue: sie waere dort haengengeblieben
+  // und haette den Tagesabschluss verfaelscht.
+  const MAX_AMOUNT = 99999999; // 999.999,99 EUR
+  const MAX_QTY = 9999;
+
   const record = async (description: string, amount: number) => {
     setError("");
+    if (!Number.isInteger(amount) || amount < 0 || amount > MAX_AMOUNT) {
+      setError(
+        de
+          ? "Betrag muss zwischen 0,00 € und 999.999,99 € liegen."
+          : "Amount must be between €0.00 and €999,999.99."
+      );
+      return;
+    }
+    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) {
+      setError(de ? "Menge muss zwischen 1 und 9999 liegen." : "Quantity must be between 1 and 9999.");
+      return;
+    }
     if (!canCreate) {
       setError(
         de
@@ -265,11 +288,36 @@ export default function MarketPosPage() {
         </div>
       )}
 
-      {rejectedSales.length > 0 && (
+      {rejectedSales.length > invalidSales.length && (
         <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-500">
           {de
-            ? `${rejectedSales.length} ${rejectedSales.length === 1 ? "Verkauf wurde" : "Verkäufe wurden"} vom Server abgelehnt. ${rejectedSales.length === 1 ? "Er bleibt" : "Sie bleiben"} gespeichert und ${rejectedSales.length === 1 ? "wird" : "werden"} erneut versucht — nichts geht verloren.`
-            : `${rejectedSales.length} ${rejectedSales.length === 1 ? "sale was" : "sales were"} rejected by the server. ${rejectedSales.length === 1 ? "It stays" : "They stay"} stored here and will be retried — nothing is lost.`}
+            ? `${rejectedSales.length - invalidSales.length} Verkauf/Verkäufe konnten nicht gespeichert werden. Sie bleiben hier und werden erneut versucht — nichts geht verloren.`
+            : `${rejectedSales.length - invalidSales.length} sale(s) could not be saved. They stay here and will be retried — nothing is lost.`}
+        </div>
+      )}
+
+      {invalidSales.length > 0 && (
+        <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-500">
+          <p>
+            {de
+              ? "Diese Eingaben kann der Server nicht annehmen. Sie zählen nicht im Tagesabschluss mit — bitte prüfen und entfernen, dann neu erfassen:"
+              : "The server cannot accept these entries. They are excluded from the day closing — please review, remove and re-enter:"}
+          </p>
+          <ul className="mt-1 space-y-1">
+            {invalidSales.map((sale) => (
+              <li key={sale.clientId} className="flex items-center justify-between gap-2">
+                <span className="truncate">
+                  {sale.quantity}× {sale.description} · {formatCurrency(sale.amount)}
+                </span>
+                <button
+                  onClick={() => dequeue(sale.clientId)}
+                  className="shrink-0 rounded-md border border-red-500/40 px-2 py-0.5 text-xs font-medium hover:bg-red-500/10"
+                >
+                  {de ? "Entfernen" : "Remove"}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

@@ -33,7 +33,12 @@ describe("buildEuerCsv", () => {
   });
 
   it("writes expenses as negative and income as positive", () => {
-    expect(csv).toContain("-30,00"); // 3000 cents expense
+    // Zellengenau statt Teilstring: ein vorangestelltes Apostroph ("'-30,00")
+    // wuerde toContain("-30,00") nicht auffallen -- die Zelle waere in Excel
+    // aber Text und in einer Summe stillschweigend 0.
+    expect(csv).toContain(";-30,00"); // 3000 cents expense, ungeschuetzt
+    expect(csv).not.toContain("'-30,00");
+    expect(csv).not.toContain("'-45,00"); // Ausgaben gesamt
     expect(csv).toContain("50,00"); // 5000 cents income
     expect(csv).toContain("170,00"); // surplus
   });
@@ -59,6 +64,17 @@ describe("buildEuerCsv – Formel-Schutz", () => {
     expect(csv).not.toMatch(/(^|;|")=HYPERLINK/);
     expect(csv).toContain("'=HYPERLINK");
     expect(csv).toContain("'@SUM(A1:A9)");
+    expect(csv).toContain("'-2+3");
+  });
+
+  it("laesst Geldbetraege Zahlen bleiben", () => {
+    // Der Ausgabenbetrag beginnt selbst mit einem Minus -- er darf NICHT
+    // maskiert werden, sonst zaehlt die Tabellenkalkulation ihn als Text.
+    const csv = buildEuerCsv(formulaReport, meta);
+    expect(csv).toContain(";-10,00");
+    expect(csv).not.toContain("'-10,00");
+    // Der Belegtext "-2+3" beginnt ebenfalls mit einem Minus und MUSS
+    // maskiert bleiben — die Ausnahme gilt nur fuer Betragszellen.
     expect(csv).toContain("'-2+3");
   });
 

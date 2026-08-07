@@ -98,6 +98,8 @@ export async function countPendingSales(marketId?: string): Promise<number> {
 export interface SyncResult {
   clientId: string;
   status: "ok" | "error";
+  /** true = der Server wird diesen Eintrag NIE annehmen (Schema verletzt). */
+  permanent?: boolean;
 }
 
 /**
@@ -112,11 +114,21 @@ export interface SyncResult {
 export function partitionSyncResults(results: SyncResult[]): {
   confirmed: string[];
   rejected: string[];
+  invalid: string[];
 } {
   const confirmed: string[] = [];
   const rejected: string[] = [];
+  const invalid: string[] = [];
   for (const r of results) {
-    (r.status === "ok" ? confirmed : rejected).push(r.clientId);
+    if (r.status === "ok") {
+      confirmed.push(r.clientId);
+      continue;
+    }
+    rejected.push(r.clientId);
+    // Dauerhaft ungueltig: bleibt gespeichert und sichtbar, wird aber nicht
+    // endlos erneut gesendet und zaehlt nicht im Tagesabschluss mit -- sonst
+    // zeigte die Kasse Geld, das der Server nie gespeichert hat.
+    if (r.permanent) invalid.push(r.clientId);
   }
-  return { confirmed, rejected };
+  return { confirmed, rejected, invalid };
 }
