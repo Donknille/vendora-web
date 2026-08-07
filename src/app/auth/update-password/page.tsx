@@ -4,8 +4,10 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 function UpdatePasswordForm() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const tokenInvalid = !token || !!searchParams.get("error");
@@ -23,12 +25,12 @@ function UpdatePasswordForm() {
     if (!token) return;
 
     if (password.length < 8) {
-      setError("Passwort muss mindestens 8 Zeichen lang sein");
+      setError(t.auth.passwordTooShort);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwörter stimmen nicht überein");
+      setError(t.auth.passwordMismatch);
       return;
     }
 
@@ -40,7 +42,7 @@ function UpdatePasswordForm() {
     });
 
     if (updateError) {
-      setError("Passwort konnte nicht geändert werden. Der Link ist möglicherweise abgelaufen.");
+      setError(t.auth.updateError);
       setLoading(false);
       return;
     }
@@ -54,13 +56,11 @@ function UpdatePasswordForm() {
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8">
-            <h2 className="text-xl font-bold text-primary mb-2">Ungültiger Link</h2>
-            <p className="text-faint">
-              Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen. Bitte fordere einen neuen an.
-            </p>
+            <h2 className="text-xl font-bold text-primary mb-2">{t.auth.invalidLinkTitle}</h2>
+            <p className="text-faint">{t.auth.updateError}</p>
           </div>
           <Link href="/auth/reset-password" className="text-brand-primary hover:text-brand-primary/80 text-sm mt-4 inline-block">
-            Neuen Link anfordern
+            {t.auth.resetTitle}
           </Link>
         </div>
       </div>
@@ -71,8 +71,8 @@ function UpdatePasswordForm() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary font-display">Neues Passwort</h1>
-          <p className="text-faint mt-2">Wähle ein neues Passwort für dein Konto.</p>
+          <h1 className="text-3xl font-bold text-primary font-display">{t.auth.newPasswordTitle}</h1>
+          <p className="text-faint mt-2">{t.auth.newPasswordSubtitle}</p>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-4">
@@ -83,25 +83,25 @@ function UpdatePasswordForm() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">Neues Passwort</label>
+            <label className="block text-sm text-faint mb-1">{t.auth.newPassword}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
-              placeholder="Mindestens 8 Zeichen"
+              placeholder={t.auth.passwordMinPlaceholder}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">Passwort bestätigen</label>
+            <label className="block text-sm text-faint mb-1">{t.auth.confirmPassword}</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
-              placeholder="Passwort wiederholen"
+              placeholder={t.auth.confirmPasswordPlaceholder}
               required
             />
           </div>
@@ -111,7 +111,7 @@ function UpdatePasswordForm() {
             disabled={loading}
             className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
-            {loading ? "Wird gespeichert..." : "Passwort ändern"}
+            {loading ? t.common.loading : t.auth.changePassword}
           </button>
         </form>
       </div>

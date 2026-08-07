@@ -154,7 +154,7 @@ export default function MarketDetailPage() {
     try {
       await recordSale({ description: item.name, amount: item.price, quantity: 1 });
     } catch {
-      setError("Verkauf konnte nicht gespeichert werden.");
+      setError(t.markets.saleSaveError);
     }
   };
 
@@ -178,7 +178,7 @@ export default function MarketDetailPage() {
       setSaleQuantity("1");
       setShowAddSale(false);
     } catch {
-      setError("Verkauf konnte nicht gespeichert werden.");
+      setError(t.markets.saleSaveError);
     }
   };
 
@@ -187,7 +187,7 @@ export default function MarketDetailPage() {
       await deleteMarket.mutateAsync(marketId);
       router.push("/markets");
     } catch {
-      setError("Markt konnte nicht gelöscht werden.");
+      setError(t.markets.deleteMarketError);
     }
     setConfirmDeleteMarket(false);
   };
@@ -196,7 +196,7 @@ export default function MarketDetailPage() {
     try {
       await deleteSale.mutateAsync(saleId);
     } catch {
-      setError("Verkauf konnte nicht gelöscht werden.");
+      setError(t.markets.deleteSaleError);
     }
   };
 
@@ -206,7 +206,7 @@ export default function MarketDetailPage() {
       const copied = await copyMarket.mutateAsync(marketId);
       router.push(`/markets/${copied.id}/edit`);
     } catch {
-      setError("Markt konnte nicht kopiert werden.");
+      setError(t.markets.copyError);
     }
   };
 

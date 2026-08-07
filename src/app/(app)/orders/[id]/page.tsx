@@ -96,7 +96,7 @@ export default function OrderDetailPage() {
     try {
       await updateOrder.mutateAsync({ id: order.id, status: newStatus });
     } catch {
-      setError("Status konnte nicht geändert werden.");
+      setError(t.orders.statusChangeError);
     }
   };
 
@@ -105,7 +105,7 @@ export default function OrderDetailPage() {
       await deleteOrder.mutateAsync(order.id);
       router.push("/orders");
     } catch {
-      setError("Auftrag konnte nicht gelöscht werden.");
+      setError(t.orders.deleteError);
     }
   };
 

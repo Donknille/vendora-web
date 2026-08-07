@@ -116,7 +116,7 @@ export default function EditMarketPage() {
       });
       router.push(`/markets/${marketId}`);
     } catch {
-      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+      setError(t.common.saveError);
     }
   };
 
