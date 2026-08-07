@@ -21,6 +21,13 @@ const VERSION = "v1";
 const PRECACHE = `vendora-precache-${VERSION}`;
 const RUNTIME = `vendora-runtime-${VERSION}`;
 
+// Upper bound for the runtime cache. Every deploy ships new content-hashed
+// chunks under a new URL, so without a limit the cache would grow with every
+// release and never shrink — on a phone that is used a whole market season
+// that adds up. Entries are evicted oldest-first (Cache API keys() preserves
+// insertion order); everything evicted is re-fetchable while online.
+const RUNTIME_MAX_ENTRIES = 150;
+
 const PRECACHE_URLS = [
   "/offline.html",
   "/favicon.png",
@@ -85,6 +92,13 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
+async function trimCache(cache, maxEntries) {
+  const keys = await cache.keys();
+  const excess = keys.length - maxEntries;
+  if (excess <= 0) return;
+  await Promise.all(keys.slice(0, excess).map((key) => cache.delete(key)));
+}
+
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
@@ -92,7 +106,8 @@ async function cacheFirst(request) {
     const response = await fetch(request);
     if (response && response.ok && response.type === "basic") {
       const cache = await caches.open(RUNTIME);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
+      await trimCache(cache, RUNTIME_MAX_ENTRIES);
     }
     return response;
   } catch {
@@ -105,7 +120,8 @@ async function networkFirst(request) {
   try {
     const response = await fetch(request);
     if (response && response.ok && response.type === "basic") {
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
+      await trimCache(cache, RUNTIME_MAX_ENTRIES);
     }
     return response;
   } catch {
