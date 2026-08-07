@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +25,7 @@ export default function LoginPage() {
     });
 
     if (authError) {
-      setError("Ungültige E-Mail oder Passwort");
+      setError(t.auth.loginError);
       setLoading(false);
       return;
     }
@@ -40,7 +42,7 @@ export default function LoginPage() {
             <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-12 w-auto block dark:hidden" />
             <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-12 w-auto hidden dark:block" />
           </div>
-          <p className="text-faint mt-2">Melde dich bei deinem Konto an</p>
+          <p className="text-faint mt-2">{t.auth.loginSubtitle}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -51,7 +53,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">E-Mail</label>
+            <label className="block text-sm text-faint mb-1">{t.auth.email}</label>
             <input
               type="email"
               value={email}
@@ -63,7 +65,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">Passwort</label>
+            <label className="block text-sm text-faint mb-1">{t.auth.password}</label>
             <input
               type="password"
               value={password}
@@ -79,18 +81,18 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
-            {loading ? "Anmelden..." : "Anmelden"}
+            {loading ? t.common.loading : t.auth.login}
           </button>
         </form>
 
         <div className="mt-6 text-center space-y-2">
           <Link href="/auth/reset-password" className="text-sm text-brand-primary hover:text-brand-primary/80">
-            Passwort vergessen?
+            {t.auth.forgotPassword}
           </Link>
           <p className="text-muted text-sm">
-            Noch kein Konto?{" "}
+            {t.auth.noAccount}{" "}
             <Link href="/auth/register" className="text-brand-primary hover:text-brand-primary/80">
-              Registrieren
+              {t.auth.register}
             </Link>
           </p>
         </div>

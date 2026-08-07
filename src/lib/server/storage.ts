@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, and, sql, inArray, isNull } from "drizzle-orm";
+import { eq, and, sql, inArray, isNull, isNotNull, lt } from "drizzle-orm";
 import { planMarketCostRows, type MarketCostSource } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
 import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
@@ -1031,6 +1031,33 @@ export async function archiveUserInvoices(
       .set({ archivedAt, retentionUntil: computeRetentionUntil(row.issueDate), userId: null })
       .where(eq(invoices.id, row.id));
   }
+}
+
+/**
+ * Löscht archivierte Rechnungen, deren Aufbewahrungsfrist abgelaufen ist.
+ *
+ * `archiveUserInvoices` stempelt die Frist beim Löschen des Kontos (31.12. des
+ * Ausstellungsjahres + 10, § 147 Abs. 3 AO). Ausgewertet wurde sie bisher
+ * nirgends — die Datenschutzerklärung sagt aber „und anschließend gelöscht" zu.
+ * Diese Funktion macht die Zusage wahr; aufgerufen wird sie vom Cron-Endpunkt.
+ *
+ * Nur archivierte Belege sind betroffen: solange ein Konto existiert, gehören
+ * seine Rechnungen ihm, unabhängig vom Alter.
+ */
+export async function purgeExpiredArchivedInvoices(
+  today: string = new Date().toISOString().slice(0, 10)
+): Promise<number> {
+  const deleted = await db
+    .delete(invoices)
+    .where(
+      and(
+        isNotNull(invoices.archivedAt),
+        isNotNull(invoices.retentionUntil),
+        lt(invoices.retentionUntil, today)
+      )
+    )
+    .returning({ id: invoices.id });
+  return deleted.length;
 }
 
 // ── Delete All User Data (for backup restore or account deletion) ────────────

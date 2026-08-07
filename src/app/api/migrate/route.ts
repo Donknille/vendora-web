@@ -5,9 +5,9 @@ import { getEffectivePlan } from "@/lib/plan";
 import { db } from "@/lib/server/db";
 import {
   orders, orderItems, customers, marketEvents, marketSales,
-  expenses, companyProfiles, invoiceCounters,
+  expenses, companyProfiles, invoiceCounters, invoices,
 } from "@/lib/server/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { mapLegacyCategory } from "@/lib/euer";
 import { planMarketCostRows } from "@/lib/marketCosts";
 import { z } from "zod";
@@ -159,7 +159,6 @@ export async function POST(request: Request) {
       await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
       await tx.delete(expenses).where(eq(expenses.userId, userId));
       await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-      await tx.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
 
       // Step 2: Import orders (with original invoice numbers preserved)
       const now = new Date();
@@ -295,12 +294,38 @@ export async function POST(request: Request) {
         });
       }
 
-      // Step 7: Import invoice counter
-      if (data.invoiceCounter != null && data.invoiceCounter > 0) {
-        await tx.insert(invoiceCounters).values({
-          userId,
-          counter: data.invoiceCounter,
-        });
+      // Step 7: Rechnungszaehler NUR anheben, nie zuruecksetzen.
+      //
+      // Rechnungen bleiben beim Restore bewusst stehen (siehe Schritt 1). Ein
+      // aelteres Backup traegt aber einen kleineren Zaehlerstand. Wuerde man den
+      // blind setzen, vergaebe die naechste Rechnung eine bereits benutzte
+      // Nummer, verletzte uq_invoices_user_number, und weil issueInvoice in
+      // einer Transaktion laeuft, rollte die Zaehlererhoehung gleich mit zurueck:
+      // die Rechnungsstellung waere dauerhaft mit 500 blockiert, ohne Ausweg in
+      // der Oberflaeche. Deshalb ist der Zielwert das Maximum aus Backup-Wert
+      // und dem hoechsten bereits vergebenen Stand des laufenden Jahres.
+      const yearPrefix = `${new Date().getFullYear().toString().slice(-2)}-`;
+      const issued = await tx
+        .select({ invoiceNumber: invoices.invoiceNumber })
+        .from(invoices)
+        .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)));
+
+      const highestUsed = issued.reduce((max, row) => {
+        const n = row.invoiceNumber?.startsWith(yearPrefix)
+          ? Number.parseInt(row.invoiceNumber.slice(yearPrefix.length), 10)
+          : NaN;
+        return Number.isFinite(n) && n > max ? n : max;
+      }, 0);
+
+      const target = Math.max(data.invoiceCounter ?? 0, highestUsed);
+      if (target > 0) {
+        await tx
+          .insert(invoiceCounters)
+          .values({ userId, counter: target })
+          .onConflictDoUpdate({
+            target: invoiceCounters.userId,
+            set: { counter: sql`greatest(${invoiceCounters.counter}, ${target})` },
+          });
       }
     });
 

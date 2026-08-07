@@ -48,6 +48,26 @@
       auch ohne Netz – erfasste Verkäufe werden gespeichert und synchronisieren
       sich automatisch, sobald du wieder online bist.
     </p>
+    <p id="register-hint" hidden>
+      <a id="register-link" href="#">Zur zuletzt geöffneten Kasse</a>
+    </p>
     <button onclick="location.reload()">Erneut versuchen</button>
+    <script>
+      // Der Einstieg der installierten App ist das Dashboard, und das wird
+      // bewusst nicht zwischengespeichert (es gehoert zu genau einem Konto).
+      // Ohne diesen Link endet ein Kaltstart am Markttag ohne Empfang hier --
+      // im Standalone-Modus gibt es nicht einmal eine Adressleiste. Die Kasse
+      // hinterlegt ihre Adresse, sobald sie einmal offen war.
+      try {
+        var last = localStorage.getItem("vendora-last-register");
+        if (last) {
+          var link = document.getElementById("register-link");
+          link.setAttribute("href", last);
+          document.getElementById("register-hint").hidden = false;
+        }
+      } catch (e) {
+        /* localStorage nicht verfuegbar */
+      }
+    </script>
   </body>
 </html>

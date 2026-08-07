@@ -94,3 +94,41 @@ export async function removePendingSales(clientIds: string[]): Promise<void> {
 export async function countPendingSales(marketId?: string): Promise<number> {
   return (await getPendingSales(marketId)).length;
 }
+
+export interface SyncResult {
+  clientId: string;
+  status: "ok" | "error";
+  /** true = der Server wird diesen Eintrag NIE annehmen (Schema verletzt). */
+  permanent?: boolean;
+}
+
+/**
+ * Splits a batch response into sales that may leave the queue and sales that
+ * must stay.
+ *
+ * ONLY `status: "ok"` is a confirmation that the sale is on the server. Every
+ * other status means it is not — deleting it locally would destroy a real sale
+ * (money taken at the stall) and leave the queue looking empty. Rejected sales
+ * therefore stay queued, get retried, and are surfaced in the UI.
+ */
+export function partitionSyncResults(results: SyncResult[]): {
+  confirmed: string[];
+  rejected: string[];
+  invalid: string[];
+} {
+  const confirmed: string[] = [];
+  const rejected: string[] = [];
+  const invalid: string[] = [];
+  for (const r of results) {
+    if (r.status === "ok") {
+      confirmed.push(r.clientId);
+      continue;
+    }
+    rejected.push(r.clientId);
+    // Dauerhaft ungueltig: bleibt gespeichert und sichtbar, wird aber nicht
+    // endlos erneut gesendet und zaehlt nicht im Tagesabschluss mit -- sonst
+    // zeigte die Kasse Geld, das der Server nie gespeichert hat.
+    if (r.permanent) invalid.push(r.clientId);
+  }
+  return { confirmed, rejected, invalid };
+}

@@ -58,9 +58,16 @@ describe("1.1 — Query cache clearing on logout", () => {
 // ── 1.2 Account Deletion — complete and irreversible ──
 
 describe("1.2 — Account deletion completeness", () => {
-  it("schema has deletedAt field on users table", async () => {
+  it("deletion removes the profile row instead of keeping a tombstone", async () => {
+    // Art. 17 heisst loeschen, nicht markieren. Es gibt keine deletedAt-Spalte
+    // mehr — sonst bliebe die E-Mail als Sperrmerkmal dauerhaft gespeichert,
+    // obwohl die Datenschutzerklaerung vollstaendige Loeschung zusagt.
     const { users } = await import("@/lib/server/schema");
-    expect(users.deletedAt).toBeDefined();
+    expect("deletedAt" in users).toBe(false);
+
+    const fs = await import("fs");
+    const source = fs.readFileSync("src/lib/server/accountDeletion.ts", "utf-8");
+    expect(source).toContain("tx.delete(users)");
   });
 
   it("deleteAllUserData is exported and accepts a transaction parameter", async () => {
@@ -82,8 +89,8 @@ describe("1.2 — Account deletion completeness", () => {
     // Better Auth identity deletion happens inside the transaction (atomic with data wipe)
     expect(source).toContain("tx.delete(authUser)");
     expect(source.indexOf("db.transaction")).toBeLessThan(source.indexOf("tx.delete(authUser)"));
-    // Soft-delete guard retained to block re-registration
-    expect(source).toContain("deletedAt");
+    // Invoices are archived (retention), not deleted with the rest
+    expect(source).toContain("archiveUserInvoices");
   });
 });
 

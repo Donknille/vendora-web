@@ -21,6 +21,9 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
   ADMIN_EMAILS: z.string().optional(),
+  // Gemeinsames Geheimnis fuer den Cron-Endpunkt (Aufbewahrungsfristen).
+  // Fehlt es, verweigert die Route den Dienst statt ungeschuetzt zu loeschen.
+  CRON_SECRET: z.string().optional(),
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });

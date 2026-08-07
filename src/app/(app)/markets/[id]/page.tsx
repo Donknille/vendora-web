@@ -29,6 +29,7 @@ import { computeDayClosing } from "@/lib/marketDay";
 import { computeYearComparison } from "@/lib/marketCalendar";
 import type { MarketSale } from "@/lib/types";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -153,8 +154,8 @@ export default function MarketDetailPage() {
     }
     try {
       await recordSale({ description: item.name, amount: item.price, quantity: 1 });
-    } catch {
-      setError("Verkauf konnte nicht gespeichert werden.");
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.markets.saleSaveError));
     }
   };
 
@@ -178,7 +179,7 @@ export default function MarketDetailPage() {
       setSaleQuantity("1");
       setShowAddSale(false);
     } catch {
-      setError("Verkauf konnte nicht gespeichert werden.");
+      setError(t.markets.saleSaveError);
     }
   };
 
@@ -187,7 +188,7 @@ export default function MarketDetailPage() {
       await deleteMarket.mutateAsync(marketId);
       router.push("/markets");
     } catch {
-      setError("Markt konnte nicht gelöscht werden.");
+      setError(t.markets.deleteMarketError);
     }
     setConfirmDeleteMarket(false);
   };
@@ -196,7 +197,7 @@ export default function MarketDetailPage() {
     try {
       await deleteSale.mutateAsync(saleId);
     } catch {
-      setError("Verkauf konnte nicht gelöscht werden.");
+      setError(t.markets.deleteSaleError);
     }
   };
 
@@ -206,7 +207,7 @@ export default function MarketDetailPage() {
       const copied = await copyMarket.mutateAsync(marketId);
       router.push(`/markets/${copied.id}/edit`);
     } catch {
-      setError("Markt konnte nicht kopiert werden.");
+      setError(t.markets.copyError);
     }
   };
 
@@ -383,7 +384,7 @@ export default function MarketDetailPage() {
             <input type="text" value={saleDescription} onChange={(e) => setSaleDescription(e.target.value)} className={inputClass} placeholder={t.markets.itemDescription} required />
             <div className="grid grid-cols-2 gap-3">
               <input type="text" inputMode="decimal" value={saleAmount} onChange={(e) => setSaleAmount(e.target.value)} className={inputClass} placeholder={t.expenses.amount} required />
-              <input type="number" min="1" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
+              <input type="number" min="1" max="9999" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
               <button type="submit" className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">

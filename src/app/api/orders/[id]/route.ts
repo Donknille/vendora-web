@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { requireWriteAccess } from "@/lib/server/limits";
+import { orderTotalWithinBounds } from "../route";
 import { z } from "zod";
 
 const updateOrderItemSchema = z.object({
@@ -29,6 +31,10 @@ const updateOrderSchema = z.object({
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
   items: z.array(updateOrderItemSchema).max(100).optional(),
+}).superRefine((data, ctx) => {
+  if (!orderTotalWithinBounds(data)) {
+    ctx.addIssue({ code: "custom", path: ["items"], message: "Die Auftragssumme ist zu gross." });
+  }
 });
 
 export async function PUT(
@@ -49,6 +55,58 @@ export async function PUT(
         { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+
+    // Ein PUT ist sonst faktisch ein Create-Pfad: updateOrder legt ueber
+    // upsertCustomerFromOrder neue Kundenzeilen an und ersetzt saemtliche
+    // Positionen. Ohne Gate koennte ein Free-Konto ueber einen einzigen
+    // bestehenden Auftrag dauerhaft weiterarbeiten -- "Nur-Lese" waere nur eine
+    // Beschriftung. Der reine Statuswechsel bleibt erlaubt (wie beim Markt): er
+    // legt nichts an, sondern haelt einen vorhandenen Vorgang aktuell.
+    // Wie beim Markt gegen den Bestand bestimmt: das Bearbeitungsformular
+    // sendet immer alle Felder, eine Zaehlung der Schluessel ginge daran vorbei.
+    const current = await storage.getOrder(userId, id);
+    if (!current) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
+    }
+    // Positionen werden inhaltlich verglichen: die gespeicherten Zeilen tragen
+    // zusaetzliche Felder (id, orderId), ein roher Vergleich haette jede
+    // unveraenderte Liste als Aenderung gewertet.
+    const normalizeItems = (items: unknown) =>
+      Array.isArray(items)
+        ? JSON.stringify(
+            items.map((i) => {
+              const item = i as Record<string, unknown>;
+              return {
+                name: item.name,
+                quantity: Number(item.quantity),
+                price: Number(item.price),
+                processingStatus: item.processingStatus ?? null,
+                comment: item.comment ?? null,
+              };
+            })
+          )
+        : "";
+
+    const changedFields = (Object.keys(parsed.data) as (keyof typeof parsed.data)[]).filter(
+      (key) => {
+        const next = parsed.data[key];
+        if (next === undefined) return false;
+        const before = (current as unknown as Record<string, unknown>)[key];
+        if (key === "items") return normalizeItems(next) !== normalizeItems(before);
+        // Leerwerte angleichen (null vs "" vs []), sonst zaehlt ein
+        // unveraendertes Formularfeld als Aenderung.
+        const norm = (v: unknown) =>
+          JSON.stringify(Array.isArray(v) && v.length === 0 ? null : (v ?? null));
+        return norm(next) !== norm(before);
+      }
+    );
+    // Leere Menge = unveraendertes Speichern; legt nichts an, wird nicht gesperrt.
+    const statusOnly = changedFields.every((key) => key === "status");
+
+    if (!statusOnly) {
+      const gate = await requireWriteAccess(userId);
+      if (gate) return gate;
     }
 
     const order = await storage.updateOrder(userId, id, parsed.data);

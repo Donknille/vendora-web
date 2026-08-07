@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useMarkets, useUpdateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
 
@@ -115,8 +116,8 @@ export default function EditMarketPage() {
         quickItems: validItems,
       });
       router.push(`/markets/${marketId}`);
-    } catch {
-      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.common.saveError));
     }
   };
 

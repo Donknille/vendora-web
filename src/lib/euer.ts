@@ -111,6 +111,14 @@ const LEGACY_CATEGORY_MAP: Record<string, EuerCategory> = {
 
 export function mapLegacyCategory(value: string | null | undefined): EuerCategory {
   if (isEuerCategory(value)) return value;
-  if (value && LEGACY_CATEGORY_MAP[value]) return LEGACY_CATEGORY_MAP[value];
+  // Object.hasOwn statt eines Truthy-Checks: bei value = "constructor" oder
+  // "toString" liefert der Index-Zugriff die geerbte Funktion vom Prototyp,
+  // die truthy ist und als Kategorie durchgereicht wuerde. Im Restore genuegte
+  // ein solcher Wert in einer Backup-Datei, um am CHECK-Constraint die gesamte
+  // Import-Transaktion scheitern zu lassen.
+  if (value && Object.hasOwn(LEGACY_CATEGORY_MAP, value)) {
+    const mapped = LEGACY_CATEGORY_MAP[value];
+    if (isEuerCategory(mapped)) return mapped;
+  }
   return DEFAULT_EUER_CATEGORY;
 }

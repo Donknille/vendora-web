@@ -7,8 +7,8 @@ import { users } from "./schema";
 
 /**
  * Gets the authenticated user ID from the Better Auth session.
- * Also checks if the user is blocked / soft-deleted in the DB.
- * Returns null if unauthenticated, blocked, or deleted.
+ * Also checks whether the user is blocked in the DB.
+ * Returns null if unauthenticated, blocked, or without a profile row.
  */
 export async function getAuthUserId(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -16,14 +16,15 @@ export async function getAuthUserId(): Promise<string | null> {
   if (!userId) return null;
 
   const [dbUser] = await db
-    .select({ isBlocked: users.isBlocked, deletedAt: users.deletedAt })
+    .select({ isBlocked: users.isBlocked })
     .from(users)
     .where(eq(users.id, userId));
 
-  // Fail closed: a session without a matching app-profile row (e.g. if the
-  // provisioning hook failed) must not be treated as authenticated.
+  // Fail closed: a session without a matching app-profile row must not count as
+  // authenticated — that covers both a failed provisioning hook and a deleted
+  // account whose row is gone while a stale session cookie is still around.
   if (!dbUser) return null;
-  if (dbUser.isBlocked || dbUser.deletedAt) return null;
+  if (dbUser.isBlocked) return null;
 
   return userId;
 }

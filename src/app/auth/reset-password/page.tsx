@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 export default function ResetPasswordPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function ResetPasswordPage() {
     });
 
     if (resetError) {
-      setError("Reset-Link konnte nicht gesendet werden. Bitte versuche es erneut.");
+      setError(t.auth.resetError);
       setLoading(false);
       return;
     }
@@ -35,13 +37,11 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-brand-primary/10 border border-brand-primary/20 rounded-xl p-8">
-            <h2 className="text-xl font-bold text-primary mb-2">E-Mail gesendet</h2>
-            <p className="text-faint">
-              Prüfe dein E-Mail-Postfach für einen Link zum Zurücksetzen deines Passworts.
-            </p>
+            <h2 className="text-xl font-bold text-primary mb-2">{t.auth.emailSentTitle}</h2>
+            <p className="text-faint">{t.auth.resetSuccessMessage}</p>
           </div>
           <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80 text-sm mt-4 inline-block">
-            Zurück zum Login
+            {t.auth.backToLogin}
           </Link>
         </div>
       </div>
@@ -52,10 +52,8 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary font-display">Passwort zurücksetzen</h1>
-          <p className="text-faint mt-2">
-            Gib deine E-Mail-Adresse ein und wir senden dir einen Reset-Link.
-          </p>
+          <h1 className="text-3xl font-bold text-primary font-display">{t.auth.resetTitle}</h1>
+          <p className="text-faint mt-2">{t.auth.resetEmailSubtitle}</p>
         </div>
 
         <form onSubmit={handleReset} className="space-y-4">
@@ -66,13 +64,13 @@ export default function ResetPasswordPage() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">E-Mail</label>
+            <label className="block text-sm text-faint mb-1">{t.auth.email}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
-              placeholder="deine@email.de"
+              placeholder={t.auth.emailPlaceholder}
               required
             />
           </div>
@@ -82,13 +80,13 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
-            {loading ? "Wird gesendet..." : "Reset-Link senden"}
+            {loading ? t.common.loading : t.auth.sendResetLink}
           </button>
         </form>
 
         <p className="mt-6 text-center text-muted text-sm">
           <Link href="/auth/login" className="text-brand-primary hover:text-brand-primary/80">
-            Zurück zum Login
+            {t.auth.backToLogin}
           </Link>
         </p>
       </div>

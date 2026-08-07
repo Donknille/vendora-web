@@ -20,12 +20,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { authClient } from "@/lib/auth-client";
-import { queryClient } from "@/lib/api-client";
+import { clearLocalData } from "@/lib/clearLocalData";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -38,7 +39,7 @@ export default function SettingsPage() {
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: sub } = useSubscription();
-  const { redirectToCheckout: handleSubscribe, loading: subscribeLoading } = useStripeCheckout();
+  const { redirectToCheckout: handleSubscribe, loading: subscribeLoading, error: subscribeError } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
 
   const handleManageSubscription = async () => {
@@ -72,6 +73,7 @@ export default function SettingsPage() {
   // Export/Import state
   const [exportStatus, setExportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showImportConfirm, setShowImportConfirm] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
@@ -108,7 +110,7 @@ export default function SettingsPage() {
   }, [profile]);
 
   const handleLogout = async () => {
-    queryClient.clear();
+    await clearLocalData();
     await authClient.signOut();
     router.push("/auth/login");
   };
@@ -175,6 +177,7 @@ export default function SettingsPage() {
   const handleImportConfirm = async () => {
     if (!pendingImportFile) return;
     setImportStatus("loading");
+    setImportError("");
     try {
       const text = await pendingImportFile.text();
       const data = JSON.parse(text);
@@ -183,12 +186,33 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Import failed");
+      if (!res.ok) {
+        // Der Server weiss, warum es nicht ging (Pro noetig, Datei zu gross,
+        // falsches Format). Diese Begruendung gehoert vor die Nutzer:innen.
+        // Bekannte Codes werden uebersetzt, alles andere durchgereicht.
+        const body = await res.json().catch(() => ({}));
+        if (body.code === "PRO_REQUIRED") {
+          throw new Error(
+            language === "de"
+              ? "Der Import eines Backups ist Vendora Pro vorbehalten."
+              : "Restoring a backup requires Vendora Pro.",
+          );
+        }
+        throw new Error(
+          typeof body.message === "string" && body.message ? body.message : "",
+        );
+      }
       setImportStatus("success");
       setTimeout(() => setImportStatus("idle"), 3000);
-    } catch {
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "";
+      setImportError(
+        message ||
+          (language === "de"
+            ? "Die Datei konnte nicht gelesen werden. Ist es ein Vendora-Backup?"
+            : "The file could not be read. Is it a Vendora backup?"),
+      );
       setImportStatus("error");
-      setTimeout(() => setImportStatus("idle"), 3000);
     }
     setPendingImportFile(null);
     setShowImportConfirm(false);
@@ -212,6 +236,11 @@ export default function SettingsPage() {
 
   const subscriptionColor =
     sub?.plan === "pro" || sub?.plan === "trial" ? "text-brand-primary" : "text-secondary";
+
+  // Der Restore ist bewusst Pro-only (nicht Trial) — dieselbe Regel wie in
+  // POST /api/migrate. Solange der Plan noch laedt, bleibt der Button aktiv;
+  // der Server entscheidet ohnehin.
+  const importAllowed = sub == null || sub.plan === "pro";
 
   const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
@@ -265,6 +294,12 @@ export default function SettingsPage() {
             >
               {subscribeLoading ? t.common.loading : t.subscription.upgradeButton}
             </button>
+          )}
+
+          {subscribeError != null && (
+            <p className="text-sm text-red-500">
+              {apiErrorMessage(subscribeError, language, t.common.saveError)}
+            </p>
           )}
 
           {sub && sub.plan === "pro" && (
@@ -520,7 +555,14 @@ export default function SettingsPage() {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={importStatus === "loading"}
+            disabled={importStatus === "loading" || !importAllowed}
+            title={
+              importAllowed
+                ? undefined
+                : language === "de"
+                  ? "Der Import ist Pro vorbehalten."
+                  : "Import is a Pro feature."
+            }
             className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
           >
             <Upload className="h-4 w-4" />
@@ -528,9 +570,7 @@ export default function SettingsPage() {
               ? t.common.loading
               : importStatus === "success"
                 ? t.settings.importSuccess
-                : importStatus === "error"
-                  ? t.settings.importError
-                  : t.settings.restoreBackup}
+                : t.settings.restoreBackup}
           </button>
 
           <input
@@ -541,6 +581,21 @@ export default function SettingsPage() {
             className="hidden"
           />
         </div>
+
+        {/* Das Gate steht VOR dem Dateidialog: sonst waehlt man erst eine Datei
+            aus und erfaehrt danach, dass der Import nicht freigeschaltet ist. */}
+        {!importAllowed && (
+          <p className="mt-3 text-sm text-muted">
+            {language === "de"
+              ? "Der Import eines Backups ist Vendora Pro vorbehalten. Der Export bleibt jederzeit möglich."
+              : "Restoring a backup requires Vendora Pro. Exporting stays available at all times."}
+          </p>
+        )}
+
+        {/* Fehlerfall mit Begruendung statt eines wortlosen roten X. */}
+        {importStatus === "error" && (
+          <p className="mt-3 text-sm text-red-500">{importError || t.settings.importError}</p>
+        )}
       </Card>
 
       {/* ───────── Privacy & Legal ───────── */}
@@ -594,8 +649,8 @@ export default function SettingsPage() {
         </div>
         <p className="text-sm text-faint mb-4">
           {language === "de"
-            ? "Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-            : "All your data will be permanently deleted. This action cannot be undone."}
+            ? "Alle deine Daten werden unwiderruflich gelöscht. Ausgestellte Rechnungen bleiben gesetzlich vorgeschrieben aufbewahrt (§ 147 AO, § 14b UStG) — ohne Verbindung zu deinem Konto."
+            : "All your data will be permanently deleted. Issued invoices are retained as required by German tax law (§ 147 AO, § 14b UStG) — decoupled from your account."}
         </p>
         <button
           onClick={() => setShowDeleteAccount(true)}
@@ -638,7 +693,7 @@ export default function SettingsPage() {
               setDeleteError(data.message || (language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account."));
               return;
             }
-            queryClient.clear();
+            await clearLocalData({ deleteSalesQueue: true });
             await authClient.signOut();
             router.push("/auth/login");
           } catch {
@@ -649,8 +704,8 @@ export default function SettingsPage() {
         message={
           (deleteError ? deleteError + "\n\n" : "") +
           (language === "de"
-            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht."
-            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted.")
+            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht. Bereits ausgestellte Rechnungen werden für die gesetzliche Aufbewahrungsfrist entkoppelt archiviert."
+            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted. Invoices you already issued are archived, decoupled from your account, for the statutory retention period.")
         }
         confirmText={language === "de" ? "Endgültig löschen" : "Delete permanently"}
         cancelText={t.common.cancel}

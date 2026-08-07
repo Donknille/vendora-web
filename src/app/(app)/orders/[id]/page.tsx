@@ -19,6 +19,7 @@ import { useOrders, useUpdateOrder, useDeleteOrder } from "@/lib/hooks/useOrders
 import { useInvoices, useIssueInvoice, useCancelInvoice } from "@/lib/hooks/useInvoices";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, formatDate } from "@/lib/formatCurrency";
 import { isInvoiceReadyProfile } from "@/lib/invoice";
 import { Card } from "@/components/ui/Card";
@@ -95,8 +96,8 @@ export default function OrderDetailPage() {
     setError("");
     try {
       await updateOrder.mutateAsync({ id: order.id, status: newStatus });
-    } catch {
-      setError("Status konnte nicht geändert werden.");
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.statusChangeError));
     }
   };
 
@@ -104,8 +105,8 @@ export default function OrderDetailPage() {
     try {
       await deleteOrder.mutateAsync(order.id);
       router.push("/orders");
-    } catch {
-      setError("Auftrag konnte nicht gelöscht werden.");
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.deleteError));
     }
   };
 

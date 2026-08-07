@@ -21,7 +21,9 @@ export const batchSalesSchema = z.array(z.unknown()).min(1).max(MAX_BATCH);
 
 export type BatchResult =
   | { clientId: string; status: "ok"; row: storage.MarketSaleResponse }
-  | { clientId: string; status: "error"; message: string };
+  // `permanent` unterscheidet "kann nie gespeichert werden" (Schema verletzt)
+  // von "diesmal nicht". Der Client darf Ersteres nicht endlos erneut senden.
+  | { clientId: string; status: "error"; message: string; permanent: boolean };
 
 function clientIdOf(entry: unknown): string {
   if (entry && typeof entry === "object" && "clientId" in entry) {
@@ -70,6 +72,7 @@ export async function POST(
           clientId: clientIdOf(raw),
           status: "error",
           message: "Validation error",
+          permanent: true,
         };
       }
       valid.push(parsed.data);
@@ -85,7 +88,7 @@ export async function POST(
       const clientId = clientIdOf(raw);
       const row = rowByClientId.get(clientId);
       if (!row) {
-        return { clientId, status: "error", message: "Not stored" };
+        return { clientId, status: "error", message: "Not stored", permanent: false };
       }
       return { clientId, status: "ok", row };
     });

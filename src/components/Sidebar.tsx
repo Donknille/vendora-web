@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { authClient } from "@/lib/auth-client";
-import { queryClient } from "@/lib/api-client";
+import { clearLocalData } from "@/lib/clearLocalData";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -41,7 +41,7 @@ export function Sidebar() {
   const isAdmin = adminData?.isAdmin === true;
 
   const handleLogout = async () => {
-    queryClient.clear();
+    await clearLocalData();
     await authClient.signOut();
     router.push("/auth/login");
   };

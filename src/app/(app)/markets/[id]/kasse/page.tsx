@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,6 +12,7 @@ import {
   CreditCard,
   RefreshCw,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useMarketSales, useDeleteMarketSale } from "@/lib/hooks/useMarketSales";
@@ -33,7 +34,32 @@ export default function MarketPosPage() {
   const { data: sales } = useMarketSales(marketId);
   const deleteSale = useDeleteMarketSale();
   const canCreate = useCanCreate();
-  const { pending, syncing, recordSale, dequeue } = useOfflineSales(marketId);
+  const { pending, rejected, invalid, syncing, recordSale, dequeue } = useOfflineSales(marketId);
+
+  // Die Kasse wird per Soft-Navigation geoeffnet; dabei entsteht kein
+  // navigate-Request, den der Service Worker sehen koennte. Ohne diesen Anstoss
+  // laege ihr HTML-Geruest nie im Cache und der Kaltstart ohne Netz -- der
+  // eigentliche Zweck des Marktmodus -- endete auf der Offline-Seite.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = window.location.pathname;
+
+    // Adresse hinterlegen: der Einstieg der installierten App ist das
+    // Dashboard, das bewusst nicht zwischengespeichert wird. Ohne diesen
+    // Merker gaebe es nach einem Kaltstart ohne Empfang keinen Weg zur Kasse.
+    try {
+      window.localStorage.setItem("vendora-last-register", url);
+    } catch {
+      /* localStorage nicht verfuegbar */
+    }
+
+    if (!navigator.serviceWorker) return;
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        registration.active?.postMessage({ type: "WARM_SHELL", url });
+      })
+      .catch(() => {});
+  }, [marketId]);
 
   const [payment, setPayment] = useState<SalePaymentMethod>("cash");
   const [qty, setQty] = useState(1);
@@ -70,7 +96,15 @@ export default function MarketPosPage() {
   const serverClientIds = new Set(
     (sales ?? []).map((s) => s.clientId).filter(Boolean) as string[]
   );
-  const unsynced = pending.filter((p) => !serverClientIds.has(p.clientId));
+  const queued = pending.filter((p) => !serverClientIds.has(p.clientId));
+  // Vom Server abgelehnt und weiterhin in der Queue: braucht eine eigene
+  // Anzeige, sonst sieht "noch nicht synchronisiert" aus wie "gleich fertig".
+  const rejectedSales = queued.filter((p) => rejected.includes(p.clientId));
+  // Dauerhaft ungueltig: bleibt sichtbar, zaehlt aber NICHT im Tagesabschluss.
+  // Sonst zeigte die Kasse dauerhaft Geld an, das der Server nie gespeichert
+  // hat -- und der Abschluss am Abend stimmte mit der Kasse nicht ueberein.
+  const invalidSales = queued.filter((p) => invalid.includes(p.clientId));
+  const unsynced = queued.filter((p) => !invalid.includes(p.clientId));
 
   const closing = computeDayClosing(
     [
@@ -99,8 +133,26 @@ export default function MarketPosPage() {
     return s + p;
   };
 
+  // Dieselben Grenzen wie batchSaleEntrySchema. Eine Eingabe, die der Server
+  // sicher ablehnt, gehoert nicht in die Queue: sie waere dort haengengeblieben
+  // und haette den Tagesabschluss verfaelscht.
+  const MAX_AMOUNT = 99999999; // 999.999,99 EUR
+  const MAX_QTY = 9999;
+
   const record = async (description: string, amount: number) => {
     setError("");
+    if (!Number.isInteger(amount) || amount < 0 || amount > MAX_AMOUNT) {
+      setError(
+        de
+          ? "Betrag muss zwischen 0,00 € und 999.999,99 € liegen."
+          : "Amount must be between €0.00 and €999,999.99."
+      );
+      return;
+    }
+    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) {
+      setError(de ? "Menge muss zwischen 1 und 9999 liegen." : "Quantity must be between 1 and 9999.");
+      return;
+    }
     if (!canCreate) {
       setError(
         de
@@ -178,6 +230,14 @@ export default function MarketPosPage() {
             <span className="inline-flex items-center gap-1 text-xs text-muted">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
             </span>
+          ) : rejectedSales.length > 0 ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-600"
+              title={de ? "Vom Server abgelehnt" : "Rejected by the server"}
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {rejectedSales.length}
+            </span>
           ) : unsynced.length > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
               <RefreshCw className="h-3 w-3" />
@@ -225,6 +285,39 @@ export default function MarketPosPage() {
       {error && (
         <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {error}
+        </div>
+      )}
+
+      {rejectedSales.length > invalidSales.length && (
+        <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-500">
+          {de
+            ? `${rejectedSales.length - invalidSales.length} Verkauf/Verkäufe konnten nicht gespeichert werden. Sie bleiben hier und werden erneut versucht — nichts geht verloren.`
+            : `${rejectedSales.length - invalidSales.length} sale(s) could not be saved. They stay here and will be retried — nothing is lost.`}
+        </div>
+      )}
+
+      {invalidSales.length > 0 && (
+        <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-500">
+          <p>
+            {de
+              ? "Diese Eingaben kann der Server nicht annehmen. Sie zählen nicht im Tagesabschluss mit — bitte prüfen und entfernen, dann neu erfassen:"
+              : "The server cannot accept these entries. They are excluded from the day closing — please review, remove and re-enter:"}
+          </p>
+          <ul className="mt-1 space-y-1">
+            {invalidSales.map((sale) => (
+              <li key={sale.clientId} className="flex items-center justify-between gap-2">
+                <span className="truncate">
+                  {sale.quantity}× {sale.description} · {formatCurrency(sale.amount)}
+                </span>
+                <button
+                  onClick={() => dequeue(sale.clientId)}
+                  className="shrink-0 rounded-md border border-red-500/40 px-2 py-0.5 text-xs font-medium hover:bg-red-500/10"
+                >
+                  {de ? "Entfernen" : "Remove"}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

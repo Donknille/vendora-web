@@ -41,19 +41,17 @@ export type PlatformOverview = {
   expiredUsers: number;
   cancelledUsers: number;
   blockedUsers: number;
-  deletedUsers: number;
 };
 
 export async function getPlatformOverview(): Promise<PlatformOverview> {
   const [row] = await db
     .select({
-      total: sql<number>`count(*) filter (where ${users.deletedAt} is null)`,
-      active: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'active' and ${users.deletedAt} is null)`,
-      trial: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'trial' and ${users.deletedAt} is null)`,
-      expired: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'expired' and ${users.deletedAt} is null)`,
-      cancelled: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'cancelled' and ${users.deletedAt} is null)`,
-      blocked: sql<number>`count(*) filter (where ${users.isBlocked} = true and ${users.deletedAt} is null)`,
-      deleted: sql<number>`count(*) filter (where ${users.deletedAt} is not null)`,
+      total: sql<number>`count(*)`,
+      active: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'active')`,
+      trial: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'trial')`,
+      expired: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'expired')`,
+      cancelled: sql<number>`count(*) filter (where ${users.subscriptionStatus} = 'cancelled')`,
+      blocked: sql<number>`count(*) filter (where ${users.isBlocked} = true)`,
     })
     .from(users);
 
@@ -64,7 +62,6 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     expiredUsers: Number(row.expired),
     cancelledUsers: Number(row.cancelled),
     blockedUsers: Number(row.blocked),
-    deletedUsers: Number(row.deleted),
   };
 }
 
@@ -121,14 +118,12 @@ export async function getConversion(): Promise<Conversion> {
     .select({
       running: sql<number>`count(*) filter (
         where ${users.trialEndsAt} > now()
-          and ${users.subscriptionStatus} <> 'active'
-          and ${users.deletedAt} is null)`,
+          and ${users.subscriptionStatus} <> 'active')`,
       converted: sql<number>`count(*) filter (
-        where ${users.subscriptionStatus} = 'active' and ${users.deletedAt} is null)`,
+        where ${users.subscriptionStatus} = 'active')`,
       lapsed: sql<number>`count(*) filter (
         where ${users.trialEndsAt} <= now()
-          and ${users.subscriptionStatus} <> 'active'
-          and ${users.deletedAt} is null)`,
+          and ${users.subscriptionStatus} <> 'active')`,
     })
     .from(users);
 
@@ -171,8 +166,7 @@ export async function getActivity(): Promise<Activity> {
 
   const [{ total }] = await db
     .select({ total: sql<number>`count(*)` })
-    .from(users)
-    .where(isNull(users.deletedAt));
+    .from(users);
 
   return {
     activeLast7Days: Number(row.d7),
@@ -211,7 +205,7 @@ export async function getFeatureAdoption(): Promise<FeatureAdoption> {
     [{ n: euer }],
     [{ n: inv }],
   ] = await Promise.all([
-    db.select({ total: sql<number>`count(*)` }).from(users).where(isNull(users.deletedAt)),
+    db.select({ total: sql<number>`count(*)` }).from(users),
     distinctUsers(orders),
     distinctUsers(marketEvents),
     distinctUsers(marketSales),
@@ -231,7 +225,6 @@ export async function getFeatureAdoption(): Promise<FeatureAdoption> {
     .from(users)
     .where(
       and(
-        isNull(users.deletedAt),
         sql`not exists (select 1 from orders o where o.user_id = ${users.id})`,
         sql`not exists (select 1 from market_events m where m.user_id = ${users.id})`,
         sql`not exists (select 1 from expenses e where e.user_id = ${users.id})`
@@ -262,7 +255,7 @@ export async function getPlatformRevenue(): Promise<PlatformRevenue> {
   const [{ paying }] = await db
     .select({ paying: sql<number>`count(*)` })
     .from(users)
-    .where(and(eq(users.subscriptionStatus, "active"), isNull(users.deletedAt)));
+    .where(eq(users.subscriptionStatus, "active"));
 
   const payingAccounts = Number(paying);
   return {
@@ -307,7 +300,7 @@ export async function listUsers(opts: ListUsersOptions = {}): Promise<ListUsersR
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, opts.pageSize ?? 25));
 
-  const filters: SQL[] = [isNull(users.deletedAt)];
+  const filters: SQL[] = [];
   if (opts.search) filters.push(sql`${users.email} ilike ${"%" + opts.search + "%"}`);
   if (opts.status) filters.push(eq(users.subscriptionStatus, opts.status));
   if (opts.blocked !== undefined) filters.push(eq(users.isBlocked, opts.blocked));
@@ -477,7 +470,7 @@ export async function applyAdminAction(
   const [target] = await db
     .select({ id: users.id, email: users.email, expiresAt: users.subscriptionExpiresAt, trialEndsAt: users.trialEndsAt })
     .from(users)
-    .where(and(eq(users.id, targetUserId), isNull(users.deletedAt)));
+    .where(eq(users.id, targetUserId));
 
   if (!target) return { ok: false, reason: "not_found" };
 

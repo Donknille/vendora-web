@@ -94,7 +94,18 @@ export async function POST(request: Request) {
       }
 
       case "invoice.payment_succeeded": {
-        const subscriptionId = obj.subscription as string | undefined;
+        // Ab API-Version "basil"/"dahlia" haengt die Zuordnung nicht mehr direkt
+        // am Invoice-Objekt, sondern unter parent.subscription_details. Das SDK
+        // ist auf 2026-03-25.dahlia gepinnt: obj.subscription war hier immer
+        // undefined, der ganze Zweig lief ins Leere -- Verlaengerungen wurden
+        // nie verbucht und eine zahlende Kundin waere nach einer Periode auf
+        // "free" gefallen. Der alte Pfad bleibt als Rueckfall stehen.
+        const parent = obj.parent as
+          | { subscription_details?: { subscription?: string } }
+          | undefined;
+        const subscriptionId =
+          parent?.subscription_details?.subscription ??
+          (obj.subscription as string | undefined);
 
         if (subscriptionId) {
           const customerId = obj.customer as string;
@@ -113,6 +124,14 @@ export async function POST(request: Request) {
                 plan: "pro",
                 subscriptionStatus: "active",
                 subscriptionExpiresAt: expiresAt,
+                // Die Subscription-ID MUSS hier mitwandern. Sie ist der
+                // Vergleichswert, an dem customer.subscription.deleted
+                // erkennt, ob das geloeschte Abo das aktuelle ist. Wurde sie
+                // nur beim Checkout geschrieben, blieb nach einem Abo-Wechsel
+                // eine veraltete ID stehen -- die Kuendigung des NEUEN Abos
+                // haette dann als "altes Event" gegolten und das Konto haette
+                // Pro behalten, bis der Ablauf von selbst greift.
+                stripeSubscriptionId: subscriptionId,
               });
             }
           }
@@ -122,13 +141,25 @@ export async function POST(request: Request) {
 
       case "customer.subscription.deleted": {
         const customerId = obj.customer as string;
+        const subscriptionId = obj.id as string | undefined;
 
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.stripeCustomerId, customerId));
 
-        if (user) {
+        // Nur herunterstufen, wenn das geloeschte Abo auch das aktuell
+        // hinterlegte ist. Stripe liefert Events bis zu drei Tage nach; ein
+        // nachgereichtes deleted-Event eines ALTEN Abos haette sonst einen
+        // zahlenden Kunden in den Nur-Lese-Modus geworfen, bis die naechste
+        // Zahlung ihn zufaellig wieder hochstuft. Die Idempotenzsperre schuetzt
+        // davor nicht: sie greift erst nach der Verarbeitung.
+        const staleEvent =
+          !!user?.stripeSubscriptionId &&
+          !!subscriptionId &&
+          user.stripeSubscriptionId !== subscriptionId;
+
+        if (user && !staleEvent) {
           await storage.updateSubscription(user.id, {
             plan: "free",
             subscriptionStatus: "cancelled",

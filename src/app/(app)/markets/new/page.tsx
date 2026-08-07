@@ -69,7 +69,7 @@ export default function NewMarketPage() {
 
     router.push("/markets");
     } catch {
-      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+      setError(t.common.saveError);
     }
   };
 
