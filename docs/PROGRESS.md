@@ -4,7 +4,8 @@
 > [`docs/REBUILD-PLAN.md`](./REBUILD-PLAN.md). Diese Datei sagt nur: **was ist erledigt, was kommt
 > als Nächstes, und wie man weiterarbeitet.**
 >
-> Stand: 2026-08-07 · Branch: `master` (PR #10 gemergt, `migrate/neon-betterauth` ist Historie)
+> Stand: 2026-08-07 · Branch: `master` · **v1.4.0 ist live** (Deployment `READY`,
+> Migration 0016 angewendet, Smoke-Test grün)
 
 ---
 
@@ -100,7 +101,7 @@ Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". V
 
 Diese sind **nicht im Code zu lösen**, sondern beim Betrieb/Deploy. Statusstand **2026-08-07, verifiziert** (nicht behauptet — Prüfweg jeweils dahinter):
 
-1. ✅ **DB-Migrationen angewendet.** Stand `0000`–`0015` verifiziert; **`0016` (deleted_at raus) muss beim Ausrollen dieses Stands noch laufen.** Die Migrationskette wird seit v1.4.0 bei jedem Testlauf gegen echtes Postgres durchgespielt (PGlite), eine kaputte Migration fällt also vorher auf. *(Direkte Abfrage gegen die `DATABASE_URL` aus `.env.local`.)* Anleitung bleibt als Referenz: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).
+1. ✅ **DB-Migrationen angewendet, Stand `0000`–`0016`** (2026-08-07 nach dem v1.4.0-Deploy ausgeführt und gegengeprüft: 17 Einträge, `deleted_at` entfernt, 2 Konten und 3 Rechnungen unberührt). Die Migrationskette wird seit v1.4.0 bei jedem Testlauf gegen echtes Postgres durchgespielt (PGlite), eine kaputte Migration fällt also vorher auf. *(Direkte Abfrage gegen die `DATABASE_URL` aus `.env.local`.)* Anleitung bleibt als Referenz: [`docs/DB-MIGRATION.md`](./DB-MIGRATION.md).
 2. ✅ **Vercel Production läuft auf Neon.** Letztes Production-Deployment `READY` auf `45e3f67`; Landing rendert mit 200, `/api/orders`, `/api/profile`, `/api/euer/unlocks` antworten mit **401** statt 500/503 — Env-Validierung (`DATABASE_URL`, `BETTER_AUTH_SECRET`), Arcjet und Session-Pfad greifen also. Die Supabase-DNS- und `ARCJET_KEY`-Fehler in den Vercel-Runtime-Logs stammen alle vom **2026-08-04 aus alten Preview-Deployments**, nicht aus Production.
 3. ✅ **Stripe-Keys in Production gesetzt.** `POST /api/stripe/webhook` mit Dummy-Signatur liefert `Invalid signature` (400), nicht `Webhook not configured` (500) — der Handler kommt am Secret-Check vorbei und `getStripe()` wirft nicht. Also sind `STRIPE_SECRET_KEY` **und** `STRIPE_WEBHOOK_SECRET` vorhanden.
 4. ⬜ **Offen: `CRON_SECRET` setzen** (nicht blockierend). Der neue Endpunkt `GET /api/cron/retention` löscht archivierte Rechnungen nach Ablauf der zehnjährigen Frist und läuft täglich um 03:00 (`vercel.json`). Ohne gesetztes Secret antwortet er 503 und löscht nichts — die Zusage in der Datenschutzerklärung ist dann durch Code gedeckt, aber nicht aktiv.
