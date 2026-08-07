@@ -12,6 +12,7 @@ import {
   CreditCard,
   RefreshCw,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useMarketSales, useDeleteMarketSale } from "@/lib/hooks/useMarketSales";
@@ -33,7 +34,7 @@ export default function MarketPosPage() {
   const { data: sales } = useMarketSales(marketId);
   const deleteSale = useDeleteMarketSale();
   const canCreate = useCanCreate();
-  const { pending, syncing, recordSale, dequeue } = useOfflineSales(marketId);
+  const { pending, rejected, syncing, recordSale, dequeue } = useOfflineSales(marketId);
 
   const [payment, setPayment] = useState<SalePaymentMethod>("cash");
   const [qty, setQty] = useState(1);
@@ -71,6 +72,9 @@ export default function MarketPosPage() {
     (sales ?? []).map((s) => s.clientId).filter(Boolean) as string[]
   );
   const unsynced = pending.filter((p) => !serverClientIds.has(p.clientId));
+  // Vom Server abgelehnt und weiterhin in der Queue: braucht eine eigene
+  // Anzeige, sonst sieht "noch nicht synchronisiert" aus wie "gleich fertig".
+  const rejectedSales = unsynced.filter((p) => rejected.includes(p.clientId));
 
   const closing = computeDayClosing(
     [
@@ -178,6 +182,14 @@ export default function MarketPosPage() {
             <span className="inline-flex items-center gap-1 text-xs text-muted">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
             </span>
+          ) : rejectedSales.length > 0 ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-600"
+              title={de ? "Vom Server abgelehnt" : "Rejected by the server"}
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {rejectedSales.length}
+            </span>
           ) : unsynced.length > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
               <RefreshCw className="h-3 w-3" />
@@ -225,6 +237,14 @@ export default function MarketPosPage() {
       {error && (
         <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {error}
+        </div>
+      )}
+
+      {rejectedSales.length > 0 && (
+        <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-500">
+          {de
+            ? `${rejectedSales.length} ${rejectedSales.length === 1 ? "Verkauf wurde" : "Verkäufe wurden"} vom Server abgelehnt. ${rejectedSales.length === 1 ? "Er bleibt" : "Sie bleiben"} gespeichert und ${rejectedSales.length === 1 ? "wird" : "werden"} erneut versucht — nichts geht verloren.`
+            : `${rejectedSales.length} ${rejectedSales.length === 1 ? "sale was" : "sales were"} rejected by the server. ${rejectedSales.length === 1 ? "It stays" : "They stay"} stored here and will be retried — nothing is lost.`}
         </div>
       )}
 

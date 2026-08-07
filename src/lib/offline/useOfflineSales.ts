@@ -6,6 +6,7 @@ import { useCurrentUserId } from "@/lib/context/AuthContext";
 import {
   enqueueSale,
   getPendingSales,
+  partitionSyncResults,
   removePendingSales,
   type PendingSale,
   type SalePaymentMethod,
@@ -34,6 +35,10 @@ export function useOfflineSales(marketId: string) {
   const userId = useCurrentUserId();
   const [pending, setPending] = useState<PendingSale[]>([]);
   const [syncing, setSyncing] = useState(false);
+  // Sales the server explicitly rejected. They STAY in the queue — a rejected
+  // sale is money that was taken at the stall, so it must never disappear
+  // silently. The UI shows them instead of the "everything synced" state.
+  const [rejected, setRejected] = useState<string[]>([]);
   const syncingRef = useRef(false);
 
   const refreshPending = useCallback(async () => {
@@ -67,15 +72,25 @@ export function useOfflineSales(marketId: string) {
               createdAt: s.createdAt,
             }))
           );
-          results = (await res.json()) as BatchResult[];
+          const parsed = await res.json();
+          if (!Array.isArray(parsed)) break; // unexpected shape — keep the queue
+          results = parsed as BatchResult[];
         } catch {
           // Offline or a transient/auth error — keep the queue and retry later.
           break;
         }
-        // Drop confirmed sales AND permanently-invalid ones (a validation error
-        // would otherwise wedge the queue forever).
-        const settled = results.map((r) => r.clientId);
-        await removePendingSales(settled);
+        // Only CONFIRMED sales leave the queue. Rejected ones stay: they are
+        // retried on the next sync and remain visible as unsynced until the
+        // user resolves them (fix or undo). Dropping them here would delete a
+        // real sale and then show the queue as empty.
+        const { confirmed, rejected: failed } = partitionSyncResults(results);
+        await removePendingSales(confirmed);
+        setRejected((prev) => {
+          const next = new Set(prev);
+          confirmed.forEach((id) => next.delete(id));
+          failed.forEach((id) => next.add(id));
+          return [...next];
+        });
       }
       if (userId) {
         queryClient.invalidateQueries({ queryKey: [userId, "/api/markets"] });
@@ -112,6 +127,7 @@ export function useOfflineSales(marketId: string) {
   const dequeue = useCallback(
     async (clientId: string) => {
       await removePendingSales([clientId]);
+      setRejected((prev) => prev.filter((id) => id !== clientId));
       await refreshPending();
     },
     [refreshPending]
@@ -128,6 +144,9 @@ export function useOfflineSales(marketId: string) {
   return {
     pending,
     pendingCount: pending.length,
+    // clientIds the server rejected — still queued, never silently dropped.
+    rejected,
+    rejectedCount: rejected.length,
     syncing,
     recordSale,
     dequeue,
