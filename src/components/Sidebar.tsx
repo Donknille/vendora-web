@@ -17,6 +17,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  HelpCircle,
 } from "lucide-react";
 
 const navItems = [
@@ -96,8 +97,22 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Logout */}
+        {/* Hilfe + Logout. Die Hilfe steht bewusst nicht in navItems: die
+            Leiste am unteren Rand auf dem Handy rendert dieselbe Liste und ist
+            mit sechs Einträgen bereits voll. Dort führt der ?-Knopf im
+            Dashboard-Kopf hin. */}
         <div className="px-3 pb-4">
+          <Link
+            href="/hilfe"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              isActive("/hilfe")
+                ? "bg-brand-primary/10 text-brand-primary"
+                : "text-faint hover:text-primary hover:bg-elevated"
+            }`}
+          >
+            <HelpCircle className="h-5 w-5 shrink-0" />
+            <span>{t.help.nav}</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-faint hover:text-red-400 hover:bg-elevated transition-colors"

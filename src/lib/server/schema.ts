@@ -35,6 +35,12 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   // Admin
   isBlocked: boolean("is_blocked").default(false),
+  // Wann die Willkommens-Erklaerung abgeschlossen wurde. Nullable und ohne
+  // Default: Bestandskonten gelten damit als "noch nicht gesehen" und bekommen
+  // sie einmal. Sie haengt am Konto und nicht an localStorage, weil sie sonst
+  // bei jedem Geraetewechsel, geleerten Speicher und jeder Neuinstallation der
+  // PWA erneut erschiene — siehe src/lib/onboarding.ts.
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   // Kein deleted_at: die Kontoloeschung entfernt die Zeile (Art. 17). Ein
   // Tombstone haette die E-Mail dauerhaft gespeichert und Rueckkehrer
   // ausgesperrt — siehe accountDeletion.ts.

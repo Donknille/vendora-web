@@ -3,7 +3,7 @@
 import Link from "next/link";
 import CountUp from "react-countup";
 import { motion, useInView } from "motion/react";
-import { useReducedMotionSafe } from "./useReducedMotionSafe";
+import { useReducedMotionSafe } from "@/lib/hooks/useReducedMotionSafe";
 import { useRef } from "react";
 
 const FEATURES = [

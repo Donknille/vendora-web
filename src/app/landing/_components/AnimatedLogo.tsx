@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useReducedMotionSafe } from "./useReducedMotionSafe";
+import { useReducedMotionSafe } from "@/lib/hooks/useReducedMotionSafe";
 
 export function AnimatedLogo() {
   const reduceMotion = useReducedMotionSafe();

@@ -78,6 +78,29 @@ export async function getUser(id: string): Promise<User | undefined> {
   return user;
 }
 
+/** Ob die Willkommens-Erklaerung fuer dieses Konto schon abgeschlossen wurde. */
+export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ onboardedAt: users.onboardedAt })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.onboardedAt != null;
+}
+
+/**
+ * Haelt fest, dass die Erklaerung durch ist.
+ *
+ * Das `isNull` macht den Aufruf idempotent: ein zweiter Versuch — etwa weil der
+ * erste ohne Netz verlorenging — laesst den urspruenglichen Zeitpunkt stehen,
+ * statt ihn nach vorn zu schieben.
+ */
+export async function markOnboardingComplete(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({ onboardedAt: new Date() })
+    .where(and(eq(users.id, userId), isNull(users.onboardedAt)));
+}
+
 // ── Orders ─────────────────────────────────────────────────
 
 function buildOrderWithItems(order: SelectOrder, items: SelectOrderItem[]): OrderWithItems {

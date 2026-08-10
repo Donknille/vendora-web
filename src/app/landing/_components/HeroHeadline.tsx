@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useReducedMotionSafe } from "./useReducedMotionSafe";
+import { useReducedMotionSafe } from "@/lib/hooks/useReducedMotionSafe";
 import { useEffect, useState } from "react";
 
 const WORDS = ["verwaltet", "abgerechnet", "geplant", "analysiert"];

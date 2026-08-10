@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { FileText, HelpCircle } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { formatCurrency } from "@/lib/formatCurrency";
@@ -19,6 +19,8 @@ import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import { Card } from "@/components/ui/Card";
 import { Skeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { WelcomeTour } from "@/components/onboarding/WelcomeTour";
+import { InstallHint } from "@/components/pwa/InstallHint";
 import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 
 // Charts are client-only (recharts needs the DOM); avoids SSR/hydration churn.
@@ -134,16 +136,36 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">{t.dashboard.overview}</h1>
-        {/* Der GuV-Export lebt auf /steuer: dort wird er serverseitig aus dem
-            EUeR-Report erzeugt (CSV/PDF) statt im Client nachgebaut. */}
-        <Link
-          href="/steuer"
-          className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
-        >
-          <FileText className="h-4 w-4" />
-          {language === "de" ? "GuV / EÜR" : "P&L / Tax"}
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Der GuV-Export lebt auf /steuer: dort wird er serverseitig aus dem
+              EUeR-Report erzeugt (CSV/PDF) statt im Client nachgebaut. */}
+          <Link
+            href="/steuer"
+            className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            {language === "de" ? "GuV / EÜR" : "P&L / Tax"}
+          </Link>
+          {/* Der Zugang zur Hilfe auf dem Handy — in der unteren Leiste ist
+              kein Platz mehr. */}
+          <Link
+            href="/hilfe"
+            aria-label={t.help.title}
+            title={t.help.title}
+            className="inline-flex items-center justify-center rounded-lg border border-line bg-surface p-2 text-secondary hover:bg-elevated transition-colors"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
+
+      {/* Die Willkommens-Erklärung entscheidet selbst, ob sie erscheint — genau
+          einmal je Konto, siehe lib/onboarding.ts. */}
+      <WelcomeTour />
+
+      {/* Der Installationshinweis erscheint erst, wenn tatsächlich etwas
+          angelegt wurde; davor steht hier die Willkommenskarte. */}
+      <InstallHint hasData={!!orders?.length || !!markets?.length} />
 
       {/* Onboarding — only if no data at all */}
       {!orders?.length && !markets?.length && !expenses?.length && (

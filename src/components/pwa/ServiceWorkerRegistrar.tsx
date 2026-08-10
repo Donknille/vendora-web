@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+// Seiteneffekt-Import: das Modul registriert beim Laden den Listener für
+// `beforeinstallprompt`. Chromium feuert es einmalig kurz nach dem Laden, also
+// bevor der Dashboard-Chunk mit dem Installationshinweis dran ist — dieser
+// Registrar hängt dagegen im Root-Layout und ist rechtzeitig da.
+import "@/lib/hooks/useInstallPrompt";
 
 // Registers the service worker (public/sw.js) that powers offline app-shell
 // caching for the market mode. Production only: in dev the SW competes with

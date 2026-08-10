@@ -18,6 +18,7 @@ import {
   Moon,
   Monitor,
   Trash2,
+  HelpCircle,
 } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
@@ -31,6 +32,7 @@ import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ReferralCard } from "@/components/ReferralCard";
+import { InstallAppCard } from "@/components/pwa/InstallAppCard";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -527,6 +529,29 @@ export default function SettingsPage() {
           ))}
         </div>
       </Card>
+
+      {/* ───────── Hilfe & Tutorial ───────── */}
+      <Card>
+        <div className="flex items-center gap-3 mb-4">
+          <HelpCircle className="h-5 w-5 text-brand-primary" />
+          <h2 className="text-base font-semibold text-primary">{t.help.title}</h2>
+        </div>
+
+        <p className="text-sm text-faint leading-relaxed mb-4">
+          {t.help.gettingStartedBody}
+        </p>
+
+        <Link
+          href="/hilfe"
+          className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+        >
+          <HelpCircle className="h-4 w-4" />
+          {t.help.title}
+        </Link>
+      </Card>
+
+      {/* ───────── Als App installieren ───────── */}
+      <InstallAppCard />
 
       {/* ───────── Data & Backup ───────── */}
       <Card>

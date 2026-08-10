@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useReducedMotionSafe } from "./useReducedMotionSafe";
+import { useReducedMotionSafe } from "@/lib/hooks/useReducedMotionSafe";
 import { ShoppingCart, Store, Receipt, BarChart3, FileText, Shield, type LucideIcon } from "lucide-react";
 
 interface Feature {
