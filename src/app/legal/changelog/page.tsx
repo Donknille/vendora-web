@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 const releases = [
   {
     version: "1.5.0",
-    date: "2026-08-08",
+    date: "2026-08-10",
     title: "Bestätigte Anmeldung",
     changes: [
       "Neue Konten müssen die E-Mail-Adresse bestätigen, bevor die Anmeldung möglich ist — der Link in der Bestätigungsmail ist eine Stunde gültig",
