@@ -1,0 +1,49 @@
+### Testknopf fuer die Alarmkette.
+###
+### Faehrt KEIN Backup — nur notify-failure.ts mit BACKUP_ALARM_TEST=1: derselbe
+### Code, dieselben Secrets, derselbe SMTP-Weg, nur "TEST" im Betreff.
+###
+### Warum das von Anfang an existiert: eine Alarmierung, die ausschliesslich
+### unter `if: failure()` haengt, wird erst im Ernstfall zum ersten Mal
+### ausgefuehrt — also genau dann, wenn ein fehlendes ALERT_EMAIL_TO niemand
+### mehr nachtragen kann. Bei Meisterplaner kam dieser Workflow fuenf Tage zu
+### spaet, und die SMTP-Secrets waren monatelang gar nicht gesetzt.
+###
+### Bestanden ist der Test NICHT, wenn der Lauf gruen ist, sondern erst, wenn die
+### Mail im Postfach liegt. Gruen ohne Mail heisst: das Problem sitzt in der
+### Mailbox (Spam, Filter), nicht in den Secrets.
+###
+### Ergebnis ins Protokoll in docs/backup-runbook.md eintragen.
+name: Alarm-Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  alarm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Testalarm versenden
+        env:
+          BACKUP_ALARM_TEST: "1"
+          BACKUP_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+        run: npx tsx script/backup/notify-failure.ts

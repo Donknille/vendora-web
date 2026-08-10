@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/server/env";
 import * as storage from "@/lib/server/storage";
+import { checkBackupFreshness } from "@/lib/server/backupWatchdog";
 
 /**
  * Löscht archivierte Rechnungen nach Ablauf der gesetzlichen Aufbewahrungsfrist.
@@ -27,7 +28,18 @@ export async function GET(request: Request) {
     }
 
     const deleted = await storage.purgeExpiredArchivedInvoices();
-    return NextResponse.json({ deleted });
+
+    // Der Backup-Waechter haengt hier mit drin, weil Vercel Hobby nur zwei
+    // Cronjobs erlaubt. Bewusst in eigenem try/catch und NACH der Loeschung:
+    // ein stummer SMTP-Server darf die Aufbewahrungsfrist nicht aushebeln.
+    let backup: Awaited<ReturnType<typeof checkBackupFreshness>> | null = null;
+    try {
+      backup = await checkBackupFreshness();
+    } catch (error) {
+      console.error("GET /api/cron/retention — Backup-Waechter fehlgeschlagen:", error);
+    }
+
+    return NextResponse.json({ deleted, backup: backup?.status ?? "unknown" });
   } catch (error) {
     console.error("GET /api/cron/retention error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

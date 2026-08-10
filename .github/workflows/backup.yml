@@ -1,0 +1,306 @@
+### Naechtliche Betriebssicherung der Produktionsdatenbank.
+###
+### NICHT zu verwechseln mit dem In-App-"Backup & Restore" (/api/export) — das
+### ist der Datenexport fuer Nutzer. Vollstaendige Beschreibung, Wiederherstellung
+### und Protokolle: docs/backup-runbook.md
+###
+### Vier Schichten: Dump + JSON-Export / verschluesseltes Artifact /
+### Offsite nach Google Drive / Restore-Drill bei JEDEM Lauf.
+###
+### Warum GitHub Actions und nicht Vercel-Cron: die Lambda hat kein pg_dump und
+### 60 s Limit. Warum nicht in Neon selbst: identischer Blast-Radius — ein
+### geloeschtes Neon-Projekt naehme das Backup mit.
+###
+### ACHTUNG, oeffentliches Repository: Logs sind fuer jeden lesbar und Artifacts
+### fuer jeden GitHub-Nutzer herunterladbar. Deshalb (a) kein `set -x` in
+### Schritten, die BACKUP_DATABASE_URL sehen, (b) nur die age-verschluesselte
+### Datei darf ins Artifact, abgesichert durch den Guard in "Verschluesseln".
+name: Backup
+
+on:
+  schedule:
+    # 01:15 UTC — VOR dem mutierenden Vercel-Cron um 03:00 (vercel.json).
+    # Dann ist ein fehlerhafter Cron-Lauf aus dem Backup desselben Morgens
+    # rekonstruierbar.
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Grund fuer den manuellen Lauf"
+        required: false
+        default: manual
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      # Wegwerf-Ziel des Restore-Drills. GLEICHE Hauptversion wie Produktion
+      # (Neon laeuft auf PostgreSQL 18) — ein 18er-Dump in eine 17er-Datenbank
+      # ist nicht unterstuetzt und kann TEILWEISE durchlaufen.
+      restore:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vendora_restore
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # pg_dump/pg_restore laufen im Container, weil der Runner einen aelteren
+      # Client mitbringt. So sind Client und Server garantiert dieselbe Version.
+      PG_IMAGE: postgres:18-alpine
+      PG_MAJOR: "18"
+      BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      RESTORE_DATABASE_URL: postgres://postgres:postgres@localhost:5432/vendora_restore
+      BACKUP_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      BACKUP_REASON: ${{ inputs.reason || 'schedule' }}
+      BACKUP_WORK_DIR: work
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # IMMER zuerst: prueft die Form des Secrets, bevor irgendetwas Teures
+      # laeuft. Bei Meisterplaner zeigte das Secret auf den Pooler und das
+      # Fehlerbild deutete auf eine kaputte lokale Datenbank.
+      - name: Verbindungszeichenfolge pruefen
+        run: npx tsx script/backup/assert-backup-url.ts
+
+      - name: Monitoring — Lauf begonnen
+        continue-on-error: true
+        env:
+          HC: ${{ secrets.HEALTHCHECK_URL }}
+        run: |
+          if [ -n "$HC" ]; then curl -fsS -m 10 --retry 3 "$HC/start" >/dev/null || true; fi
+
+      - name: Werkzeuge installieren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone
+          age --version && rclone version | head -1
+
+      - name: Inventur (Version, Schemata, Extensions, Objektspeicher)
+        id: inventory
+        run: npx tsx script/backup/inventory.ts
+
+      - name: Canary + Zeilenzahlen + JSON-Export (pre)
+        run: npx tsx script/backup/prepare-snapshot.ts --phase pre
+
+      - name: Dump ziehen (pg_dump, Custom-Format)
+        run: |
+          docker run --rm --network host \
+            -e PGURL="$BACKUP_DATABASE_URL" \
+            -v "$PWD/work:/work" \
+            "$PG_IMAGE" \
+            sh -c 'pg_dump "$PGURL" \
+              --format=custom --compress=1 \
+              --no-owner --no-privileges \
+              --schema=public --schema=drizzle \
+              --exclude-table-data=public.session \
+              --exclude-table-data=public.verification \
+              --lock-wait-timeout=60000 \
+              -f /work/vendora.dump'
+          ls -l work/vendora.dump
+
+      - name: Zeilenzahlen (post)
+        run: npx tsx script/backup/prepare-snapshot.ts --phase post
+
+      # pg_dump --schema=... exportiert KEINE Extensions (die haengen an der
+      # Datenbank, nicht am Schema). Die Liste stammt aus pg_extension der
+      # Produktionsdatenbank, damit sie nicht veralten kann.
+      - name: Extensions im Wegwerf-Ziel anlegen
+        env:
+          EXTENSIONS_SQL: ${{ steps.inventory.outputs.extensions_sql }}
+        run: |
+          printf '%s\n' "$EXTENSIONS_SQL" > work/extensions.sql
+          if [ -s work/extensions.sql ] && grep -q 'CREATE EXTENSION' work/extensions.sql; then
+            docker run --rm --network host -e PGURL="$RESTORE_DATABASE_URL" \
+              -v "$PWD/work:/work" "$PG_IMAGE" \
+              sh -c 'psql "$PGURL" -v ON_ERROR_STOP=1 -f /work/extensions.sql'
+          else
+            echo "Keine Extensions ausser plpgsql — nichts anzulegen."
+          fi
+
+      - name: Zurueckspielen (pg_restore, --exit-on-error)
+        run: |
+          # Genau den Eintrag "CREATE SCHEMA public" aus dem Inhaltsverzeichnis
+          # entfernen — jede frische Datenbank bringt public schon mit. NICHT das
+          # Schema droppen: darin lebten die Extensions. "SCHEMA - drizzle" muss
+          # bleiben, sonst fehlt das Migrationsjournal.
+          docker run --rm --network host -v "$PWD/work:/work" "$PG_IMAGE" \
+            sh -c 'pg_restore -l /work/vendora.dump > /work/toc.full'
+          # Das Muster endet bewusst auf "Whitespace ODER Zeilenende": mit
+          # --no-owner kann die Eigentuemerspalte fehlen, dann steht dort nur
+          # "SCHEMA - public". Ein Muster mit festem Leerzeichen ginge daran
+          # vorbei und der Restore braeche an CREATE SCHEMA public ab.
+          grep -vE "SCHEMA - public([[:space:]]|$)" work/toc.full > work/toc.restore
+          echo "Inhaltsverzeichnis: $(wc -l < work/toc.full) Eintraege, davon uebernommen: $(wc -l < work/toc.restore)"
+          test -s work/toc.restore
+
+          docker run --rm --network host -e PGURL="$RESTORE_DATABASE_URL" \
+            -v "$PWD/work:/work" "$PG_IMAGE" \
+            sh -c 'pg_restore --no-owner --no-privileges --exit-on-error \
+              --use-list=/work/toc.restore --dbname="$PGURL" /work/vendora.dump'
+
+      # Das Herzstueck. Sechs Pruefungen; schreibt bei Erfolg backup_verified in
+      # die Produktionsdatenbank. Ein Backup, das nie wiederhergestellt wurde,
+      # ist kein Backup, sondern eine Annahme.
+      - name: Restore-Drill verifizieren
+        id: verify
+        run: npx tsx script/backup/verify-restore.ts
+
+      - name: Verschluesseln, pruefen, Klartext entfernen
+        id: package
+        env:
+          RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          # Fehlender Empfaenger ist ein FEHLER, kein Skip — sonst entstuende
+          # ein unverschluesseltes Backup mit allen Passwort-Hashes.
+          if [ -z "$RECIPIENT" ]; then
+            echo "::error::BACKUP_AGE_RECIPIENT ist nicht gesetzt. Ohne Empfaenger kein Archiv."
+            exit 1
+          fi
+
+          STAMP="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+          mkdir -p out
+
+          tar -czf "out/vendora-$STAMP.tar.gz" -C work .
+          age -r "$RECIPIENT" -o "out/vendora-$STAMP.tar.gz.age" "out/vendora-$STAMP.tar.gz"
+          test -s "out/vendora-$STAMP.tar.gz.age"
+
+          # ERST nach dem Nachweis, dass das Chiffrat existiert.
+          rm -f "out/vendora-$STAMP.tar.gz"
+          ( cd out && sha256sum "vendora-$STAMP.tar.gz.age" > "vendora-$STAMP.tar.gz.age.sha256" )
+
+          # Guard fuer das oeffentliche Repository: alles, was kein Chiffrat und
+          # keine Pruefsumme ist, waere ein Datenleck im Artifact.
+          if find out -type f ! -name '*.age' ! -name '*.sha256' | grep -q .; then
+            echo "::error::Unverschluesselte Dateien in out/ — Upload abgebrochen."
+            find out -type f ! -name '*.age' ! -name '*.sha256'
+            exit 1
+          fi
+
+          SIZE="$(du -h "out/vendora-$STAMP.tar.gz.age" | cut -f1)"
+          SHA="$(cut -d' ' -f1 < "out/vendora-$STAMP.tar.gz.age.sha256")"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Artifact ablegen (Schicht 2)
+        uses: actions/upload-artifact@v4
+        with:
+          name: vendora-backup-${{ env.STAMP }}
+          path: out/
+          retention-days: 14
+          if-no-files-found: error
+
+      # `copy`, NIEMALS `sync` oder `purge`: eine lokale Fehl-Loeschung darf sich
+      # nicht in die Cloud fortpflanzen.
+      - name: Offsite nach Google Drive (Schicht 3)
+        id: offsite
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive.file
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.RCLONE_GDRIVE_TOKEN }}
+          RCLONE_CONFIG_GDRIVE_CLIENT_ID: ${{ secrets.RCLONE_GDRIVE_CLIENT_ID }}
+          RCLONE_CONFIG_GDRIVE_CLIENT_SECRET: ${{ secrets.RCLONE_GDRIVE_CLIENT_SECRET }}
+        run: |
+          if [ -z "$RCLONE_CONFIG_GDRIVE_TOKEN" ]; then
+            # Bewusst nur eine Warnung: Schicht 1 und 2 sind zu diesem Zeitpunkt
+            # fertig. Eine jede Nacht rote Mail trainiert einem an, das Ergebnis
+            # zu ignorieren. Ist der Token gesetzt und der Upload scheitert,
+            # bleibt es ein echter Fehlschlag.
+            echo "::warning::RCLONE_GDRIVE_TOKEN fehlt — Offsite uebersprungen."
+            echo "done=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          rclone copy out "gdrive:vendora-backups/daily/$STAMP" \
+            --include "*.age" --include "*.sha256" --min-age 10s --transfers 2
+
+          # Am Monatsersten zusaetzlich in monthly/ — das fasst die Retention nie an.
+          if [ "$(date -u +%d)" = "01" ]; then
+            rclone copy out "gdrive:vendora-backups/monthly/$STAMP" \
+              --include "*.age" --include "*.sha256" --min-age 10s --transfers 2
+          fi
+
+          # Nachzaehlen, nicht behaupten: Skript-Echo zaehlt nicht.
+          COUNT="$(rclone lsf gdrive:vendora-backups/daily | wc -l)"
+          echo "Offsite-Staende in daily/: $COUNT"
+          echo "done=true" >> "$GITHUB_OUTPUT"
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Retention (90 Tage, nur daily/)
+        if: steps.offsite.outputs.done == 'true'
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive.file
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.RCLONE_GDRIVE_TOKEN }}
+          RCLONE_CONFIG_GDRIVE_CLIENT_ID: ${{ secrets.RCLONE_GDRIVE_CLIENT_ID }}
+          RCLONE_CONFIG_GDRIVE_CLIENT_SECRET: ${{ secrets.RCLONE_GDRIVE_CLIENT_SECRET }}
+        run: |
+          TARGET="gdrive:vendora-backups/daily"
+          # Derselbe rclone-Token sieht bei scope=drive.file die Dateien ALLER
+          # Projekte, die ihn benutzen. Ein Retention-Schritt mit falschem Pfad
+          # koennte die Staende eines anderen Projekts loeschen.
+          case "$TARGET" in
+            *"vendora-backups/daily") : ;;
+            *) echo "::error::Unerwarteter Retention-Pfad: $TARGET"; exit 1 ;;
+          esac
+
+          rclone delete "$TARGET" \
+            --include "*.age" --include "*.sha256" \
+            --min-age 90d --rmdirs
+          echo "Nach der Retention in daily/: $(rclone lsf "$TARGET" | wc -l)"
+
+      # Falle 10: eine Ergebniszeile, die nur "OK" sagt, verbirgt ein
+      # eingefrorenes Backup (Verbindung auf einen alten Stand) tagelang.
+      - name: Ergebnis
+        run: |
+          echo "OK: vendora-$STAMP.tar.gz.age (${{ steps.package.outputs.size }}, sha256=${{ steps.package.outputs.sha }}), canary=${{ steps.verify.outputs.canary }}, offsite=${{ steps.offsite.outputs.done }}, Stand=${{ steps.verify.outputs.stand }}"
+
+      - name: Monitoring — Ergebnis melden
+        if: always()
+        continue-on-error: true
+        env:
+          HC: ${{ secrets.HEALTHCHECK_URL }}
+        run: |
+          if [ -n "$HC" ]; then
+            if [ "${{ job.status }}" = "success" ]; then
+              curl -fsS -m 10 --retry 3 "$HC" >/dev/null || true
+            else
+              curl -fsS -m 10 --retry 3 "$HC/fail" >/dev/null || true
+            fi
+          fi
+
+      - name: Alarm per E-Mail
+        if: failure()
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+        run: npx tsx script/backup/notify-failure.ts

@@ -406,6 +406,48 @@ export const adminAuditLog = pgTable("admin_audit_log", {
 export type SelectAdminAuditLog = typeof adminAuditLog.$inferSelect;
 
 // ============================================================
+// Backup Events — Nachweiskette der naechtlichen Betriebssicherung.
+//
+// NICHT zu verwechseln mit dem In-App-"Backup & Restore" (/api/export,
+// /api/migrate): das ist der Datenexport fuer Nutzer. Diese Tabelle gehoert der
+// Pipeline in .github/workflows/backup.yml und traegt zwei Ereignisarten:
+//
+//   backup_canary   — vor jedem pg_dump geschrieben. Taucht der Token in der
+//                     wiederhergestellten Kopie nicht auf, wurde eine andere
+//                     Datenbank gesichert (falscher Neon-Branch) oder der Dump
+//                     ist abgeschnitten.
+//   backup_verified — erst nach bestandenem Restore-Drill. Dieser Eintrag ist
+//                     der einzige Nachweis, dass ein Backup wiederherstellbar
+//                     WAR; darauf stuetzen sich der App-Waechter (36-h-Alarm)
+//                     und der Guard vor db:migrate/db:push.
+//
+// Append-only und bewusst ohne Fremdschluessel: der Nachweis muss jede
+// Kontoloeschung und jedes Schema ueberleben. Enthaelt keine Geschaeftsdaten,
+// nur Zeilenzahlen — siehe docs/backup-runbook.md.
+// ============================================================
+export const backupEvents = pgTable("backup_events", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  eventType: text("event_type").notNull(),
+  // Canary-Token (randomUUID) bzw. null beim Verifikationsereignis.
+  token: text("token"),
+  // Bericht des Laufs: Zeilenzahlen, Archivgroesse, Run-URL.
+  payload: jsonb("payload").$type<Record<string, unknown>>(),
+  occurredAt: timestamp("occurred_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+}, (t) => [
+  index("idx_backup_events_type_occurred").on(t.eventType, t.occurredAt),
+  check(
+    "chk_backup_events_type",
+    sql`${t.eventType} in ('backup_canary', 'backup_verified')`
+  ),
+]);
+
+export type SelectBackupEvent = typeof backupEvents.$inferSelect;
+
+// ============================================================
 // Better Auth tables (user / session / account / verification)
 // Re-exported so drizzle-kit (schema: schema.ts) creates them too.
 // ============================================================

@@ -70,8 +70,15 @@ bricht der Dev-Server/Runtime mit einer klaren Meldung ab (fail-fast).
 | `EMAIL_FROM`            | ⚠️ Prod-Pflicht, lokal optional | Absender, z. B. `Vendora <info@deine-domain.de>`. Muss dem authentifizierten Postfach entsprechen, sonst lehnt Strato mit 550 ab. |
 | `ARCJET_KEY`            | ⚠️ Prod-Pflicht, lokal optional | Arcjet-Dashboard → API-Key (`ajkey_...`). Siehe Abschnitt 6                                  |
 
-> **Hinweis zu `DATABASE_URL`:** Es wird die **gepoolte** Neon-Verbindung verwendet. Der DB-Client
-> läuft daher mit `prepare: false` und `ssl: "require"` (`src/lib/server/db.ts`).
+> **Hinweis zu `DATABASE_URL`:** Der DB-Client läuft mit `prepare: false` und
+> `ssl: "require"` (`src/lib/server/db.ts`) und funktioniert damit sowohl über die gepoolte
+> als auch über die direkte Neon-Verbindung.
+>
+> **Für die nächtliche Betriebssicherung gilt das nicht:** das GitHub-Secret
+> `BACKUP_DATABASE_URL` muss die **unpooled** Zeichenfolge sein (Host **ohne** `-pooler`).
+> `pg_dump` braucht Session-State und scheitert über PgBouncer — Neon empfiehlt dafür
+> ausdrücklich die direkte Verbindung. `script/backup/assert-backup-url.ts` bricht sonst
+> als allererster Schritt ab. Siehe `docs/backup-runbook.md`.
 
 > **Auth-Tabellen:** Better Auth verwaltet `user`/`session`/`account`/`verification`
 > (`src/lib/server/auth-schema.ts`). Die App-`users`-Tabelle ist das Profil, gekeyt auf die
@@ -106,6 +113,13 @@ Workflow bei Schemaänderungen:
 | `npm run db:migrate`  | Ausstehende Migrationen anwenden (Dev **und** Prod/Deploy)            |
 | `npm run db:push`     | Schema ohne Migration direkt pushen – **nur für lokale Experimente**  |
 | `npm run db:studio`   | Drizzle Studio (DB-Browser) öffnen                                    |
+
+> **Backup-Guard:** `db:migrate` und `db:push` prüfen vorher, ob in der Zieldatenbank
+> ein verifiziertes Backup jünger als 26 Stunden steht (`script/backup/assert-fresh-backup.ts`).
+> Gegen `localhost` winken sie lautlos durch; alles andere gilt als Produktion. Fehlt der
+> Nachweis: erst `npm run backup:now` fahren und den Lauf grün abwarten. Bewusster
+> Notausgang: `npm run db:migrate:unsafe` / `npm run db:push:unsafe`.
+> Siehe `docs/backup-runbook.md`.
 
 > Es gibt **kein** Row Level Security wie unter Supabase. Zugriffsschutz erfolgt
 > anwendungsseitig: jede Query ist über `getAuthUserId()` + `WHERE user_id = ?` an den
@@ -176,6 +190,20 @@ npm run build
    regelmäßig im Spam. Optional zusätzlich ein DMARC-Record mit `p=none`.
 
 Security-Header (HSTS, CSP, X-Frame-Options u. a.) sind in `next.config.ts` konfiguriert.
+
+## 9a. Betriebssicherung der Datenbank
+
+Neon sichert auf dem Free-Plan nur **6 Stunden** History (Instant Restore). Alles
+darüber hinaus leistet die eigene Pipeline in `.github/workflows/backup.yml`: jede
+Nacht um 01:15 UTC Dump + JSON-Export, **Restore-Drill in eine Wegwerf-Datenbank**,
+age-verschlüsseltes Artifact und Offsite-Kopie nach Google Drive (90 Tage).
+
+Der Nachweis eines bestandenen Laufs landet als `backup_verified` in der Tabelle
+`backup_events` — darauf stützen sich der Backup-Guard vor `db:migrate` und der
+App-Wächter im Vercel-Cron (Alarm nach 36 h ohne Sicherung).
+
+Einrichtung, Secrets, Wiederherstellung und die Protokolltabellen:
+**`docs/backup-runbook.md`**. Manueller Lauf: `npm run backup:now`.
 
 ## 10. Projektstruktur (Kurzüberblick)
 

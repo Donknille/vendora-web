@@ -10,10 +10,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:push": "drizzle-kit push",
+    "db:push": "tsx script/backup/assert-fresh-backup.ts && drizzle-kit push",
+    "db:push:unsafe": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate": "tsx script/backup/assert-fresh-backup.ts && drizzle-kit migrate",
+    "db:migrate:unsafe": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "backup:now": "tsx script/backup/trigger-backup.ts"
   },
   "dependencies": {
     "@arcjet/next": "^1.4.0",
@@ -51,6 +54,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

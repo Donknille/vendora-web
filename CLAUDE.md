@@ -67,8 +67,14 @@ npm run lint         # ESLint
 npm run typecheck    # tsc --noEmit
 npm test             # Vitest
 npm run db:generate  # Migration aus Schemaänderung erzeugen (-> drizzle/)
-npm run db:push      # Nur für lokale Experimente
+npm run db:migrate   # Migrationen anwenden — verlangt ein Backup < 26 h (Guard)
+npm run db:push      # Nur für lokale Experimente — gleicher Guard
+npm run backup:now   # Backup-Workflow von Hand anstoßen (gh CLI)
 ```
+
+`db:migrate`/`db:push` laufen nur, wenn in der Zieldatenbank ein `backup_verified`
+jünger als 26 h steht (`script/backup/assert-fresh-backup.ts`); gegen `localhost`
+winken sie durch. Notausgang: `db:migrate:unsafe` / `db:push:unsafe`.
 
 ## Verifikation nach Änderungen
 
@@ -148,9 +154,17 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 - **Server-Env** wird zentral in `src/lib/server/env.ts` per Zod validiert (fail-fast). `import "server-only"` in allen `src/lib/server/*`-Logikmodulen. SMTP ist all-or-nothing (`superRefine`) — halb konfiguriert ist der Zustand, der still scheitert.
 - Settings (Theme/Sprache) leben clientseitig in localStorage (LanguageContext, ThemeContext). Es gibt keine serverseitige Settings-Route/`app_settings`-Tabelle mehr.
 - Proxy-Konvention `src/proxy.ts` (Next.js 16, Node.js-Runtime → kein 1-MB-Edge-Limit) statt der deprecateten `middleware.ts`. Enthält Arcjet-Rate-Limiting + optimistischen Better-Auth-Cookie-Check (echte Session-Validierung passiert in Routen/Layout).
+- **Betriebssicherung ≠ In-App-„Backup".** `/api/export` + `/api/migrate` sind der Datenexport für Nutzer:innen. Die Sicherung der *ganzen* Datenbank ist `.github/workflows/backup.yml` (01:15 UTC, vor dem Vercel-Cron um 03:00) mit `script/backup/*` — Dump + JSON-Export, **Restore-Drill bei jedem Lauf**, age-verschlüsseltes Artifact, Offsite nach Google Drive. Neon Free hält nur 6 h History. Ein Backup, das nie wiederhergestellt wurde, ist kein Backup — deshalb läuft `pg_restore --exit-on-error` täglich und nicht monatlich. Vollständig in `docs/backup-runbook.md`, Guards in `backupGuards.test.ts`.
+  - Tabellenlisten werden **aus dem Drizzle-Schema abgeleitet** (`allTableNames()`), nie hartkodiert — eine neue Tabelle ist damit automatisch mitgesichert und mitgeprüft.
+  - `MUST_NOT_BE_EMPTY` (`user`, `users`, `account`) ist der Leerdump-Detektor gegen den **falschen Neon-Branch** (schema-identisch und leer, Dump läuft sauber durch). Nicht abschwächen.
+  - `BACKUP_DATABASE_URL` muss die **unpooled** Neon-Verbindung sein (kein `-pooler`): `pg_dump` braucht Session-State. `assert-backup-url.ts` bricht sonst als erster Schritt ab.
+  - Skripte unter `script/backup/` importieren **nichts aus `src/lib/server/*`** außer `schema.ts` — im Runner gibt es weder `server-only` noch die validierte Env.
+  - Das Repo ist **öffentlich**: Actions-Logs sind für jeden lesbar, Artifacts herunterladbar. Nur `*.age`/`*.sha256` dürfen ins Artifact (Guard im Workflow), und kein `set -x` in Schritten, die die DB-URL sehen.
+  - Der Nachweis `backup_verified` in `backup_events` trägt zwei Wächter: den Guard vor `db:migrate`/`db:push` und `src/lib/server/backupWatchdog.ts` (36-h-Alarm, läuft im Vercel-Cron `/api/cron/retention` mit, weil Hobby nur zwei Crons erlaubt).
 
 ## Weiterführende Docs
 
+- `docs/backup-runbook.md` – Betriebssicherung: was jede Nacht passiert, Wiederherstellung als kopierbare Befehle, Schlüsselverwaltung, Quartals-Restore, Protokolle
 - `docs/REBUILD-PLAN.md` – Vollständiger Überarbeitungsplan (Phasen 0–5), Ist-Zustand, Zielbild, Abnahmekriterien
 - `SETUP.md` – Lokales Setup (Neon, Better Auth, Env-Variablen, Migrationen)
 - `AGENTS.md` – Gemeinsame Agent-Regeln (Antigravity, Cursor, Claude Code)

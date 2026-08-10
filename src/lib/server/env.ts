@@ -37,6 +37,11 @@ const envSchema = z.object({
   // Gemeinsames Geheimnis fuer den Cron-Endpunkt (Aufbewahrungsfristen).
   // Fehlt es, verweigert die Route den Dienst statt ungeschuetzt zu loeschen.
   CRON_SECRET: z.string().optional(),
+  // Zieladresse fuer Betriebsalarme. Traegt den Backup-Waechter
+  // (src/lib/server/backupWatchdog.ts): bleibt der naechtliche Lauf aus, ist
+  // diese Mail die einzige Meldung, die weder an GitHub noch an
+  // healthchecks.io haengt. Ohne den Wert loggt der Waechter nur.
+  ALERT_EMAIL_TO: z.string().optional(),
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 }).superRefine((value, ctx) => {
