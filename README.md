@@ -4,8 +4,8 @@ Multi-Tenant-SaaS für Markthändler:innen: Auftrags- & Rechnungsverwaltung, Mar
 (Kassen-light für Marktstände), Ausgabenerfassung und EÜR-/Finanzdashboard – mit Backup/Restore
 und Stripe-Abo.
 
-**Stack:** Next.js 16 (App Router) · Better Auth · Neon Postgres + Drizzle ORM · Stripe · Resend ·
-Arcjet · Tailwind v4 · TanStack Query · Zod · Vitest.
+**Stack:** Next.js 16 (App Router) · Better Auth · Neon Postgres + Drizzle ORM · Stripe · SMTP
+(Strato/nodemailer) · Arcjet · Tailwind v4 · TanStack Query · Zod · Vitest.
 
 ## Loslegen
 

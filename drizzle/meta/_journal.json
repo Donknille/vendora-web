@@ -120,6 +120,13 @@
       "when": 1786101618492,
       "tag": "0016_steep_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786320000000,
+      "tag": "0017_grandfather_verified_users",
+      "breakpoints": true
     }
   ]
 }

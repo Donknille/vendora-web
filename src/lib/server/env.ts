@@ -8,6 +8,10 @@ const envSchema = z.object({
   // Required for the app to function at runtime.
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
+  // Baut die Links in den Bestaetigungs- und Reset-Mails
+  // (`${BETTER_AUTH_URL}/api/auth/verify-email?token=...`). Ist der Wert in
+  // Produktion falsch oder fehlt er, sind alle bereits versendeten Links tot --
+  // ohne dass im Log etwas auffaellt.
   BETTER_AUTH_URL: z.string().url().optional(),
 
   // Stripe (billing). Optional so local dev without billing still boots;
@@ -18,14 +22,50 @@ const envSchema = z.object({
 
   // Optional integrations — features degrade gracefully when unset.
   ARCJET_KEY: z.string().optional(),
-  RESEND_API_KEY: z.string().optional(),
+
+  // E-Mail-Versand ueber das Strato-Postfach (SMTP). Alle vier Werte gehoeren
+  // zusammen -- siehe superRefine unten.
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  // Muss bei Strato dem authentifizierten Postfach entsprechen, sonst lehnt der
+  // Server mit 550 ab. Format: `Vendora <info@digitalflowsolutions.de>`.
   EMAIL_FROM: z.string().optional(),
+
   ADMIN_EMAILS: z.string().optional(),
   // Gemeinsames Geheimnis fuer den Cron-Endpunkt (Aufbewahrungsfristen).
   // Fehlt es, verweigert die Route den Dienst statt ungeschuetzt zu loeschen.
   CRON_SECRET: z.string().optional(),
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+}).superRefine((value, ctx) => {
+  // Halb konfiguriertes SMTP ist der Zustand, der still scheitert. Ein
+  // fehlendes Passwort faellt sonst erst beim ersten echten Versand auf --
+  // also mitten in einer Registrierung, deren Fehler Better Auth verschluckt
+  // (runInBackgroundOrAwait loggt nur).
+  //
+  // Der Ausloeser sind bewusst nur die Transportwerte: ist keiner davon
+  // gesetzt, gibt es schlicht kein SMTP, und ein alleinstehendes EMAIL_FROM
+  // (etwa als Rest einer frueheren Konfiguration) darf den Start nicht
+  // blockieren -- lokal soll die Entwicklung ohne Postfach weiterlaufen.
+  //
+  // SMTP_PORT fehlt hier ebenfalls: der hat mit 465 einen brauchbaren Default.
+  const transport = ["SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD"] as const;
+  if (transport.every((key) => !value[key])) return;
+
+  const required = [...transport, "EMAIL_FROM"] as const;
+  const missing = required.filter((key) => !value[key]);
+
+  if (missing.length > 0) {
+    ctx.addIssue({
+      code: "custom",
+      path: [missing[0]],
+      message:
+        `SMTP is only partially configured (missing: ${missing.join(", ")}). ` +
+        `Set all of ${required.join(", ")} or none of them.`,
+    });
+  }
 });
 
 export type ServerEnv = z.infer<typeof envSchema>;

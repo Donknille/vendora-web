@@ -104,10 +104,13 @@ export default function DatenschutzPage() {
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-primary mb-1">Resend (E-Mail-Versand)</h3>
+            <h3 className="text-sm font-medium text-primary mb-1">STRATO (E-Mail-Versand)</h3>
             <p className="text-sm text-secondary">
-              Anbieter: Resend (Plus Five Five, Inc.), USA. Resend versendet transaktionale E-Mails
-              (z.&nbsp;B. Passwort-Reset, E-Mail-Bestätigung) und verarbeitet dazu die E-Mail-Adresse des Empfängers.
+              Anbieter: STRATO GmbH, Otto-Ostrowski-Straße 7, 10249 Berlin, Deutschland. Über die
+              Mailserver von STRATO werden transaktionale E-Mails versendet (E-Mail-Bestätigung bei
+              der Registrierung, Passwort-Zurücksetzen); dabei werden die E-Mail-Adresse des
+              Empfängers und der Inhalt der Nachricht verarbeitet. Die Verarbeitung findet
+              ausschließlich in Deutschland statt, eine Übermittlung in Drittländer erfolgt nicht.
               Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
             </p>
           </div>

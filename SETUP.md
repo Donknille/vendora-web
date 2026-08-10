@@ -13,7 +13,7 @@ Diese Anleitung beschreibt das lokale Setup und Deployment.
 | Datenbank      | Neon Postgres, Zugriff über Drizzle ORM (`postgres-js`)            |
 | Migrationen    | Drizzle Kit – versioniert in `drizzle/` (`db:generate` + `db:migrate`) |
 | Zahlungen      | Stripe (Subscriptions: Checkout, Customer Portal, Webhook)         |
-| E-Mail         | Resend (Passwort-Reset, E-Mail-Bestätigung)                        |
+| E-Mail         | SMTP über Strato via nodemailer (E-Mail-Bestätigung, Passwort-Reset) |
 | Rate Limiting  | Arcjet (Shield + Fixed Window) in `src/proxy.ts`                   |
 | UI             | Tailwind CSS v4, TanStack Query, lucide-react, motion              |
 | Validierung    | Zod                                                                |
@@ -26,7 +26,8 @@ Diese Anleitung beschreibt das lokale Setup und Deployment.
 - **Git**
 - Ein **Neon**-Projekt (Postgres, EU-Region empfohlen)
 - Ein **Stripe**-Konto (Test- oder Live-Modus)
-- Optional: **Resend**-Konto (E-Mail) und **Arcjet**-Konto (Rate Limiting; in Production Pflicht)
+- Ein **E-Mail-Postfach mit SMTP-Zugang** (Strato); lokal optional, in Production Pflicht
+- Optional: **Arcjet**-Konto (Rate Limiting; in Production Pflicht)
 
 ## 2. Schnellstart
 
@@ -58,12 +59,15 @@ bricht der Dev-Server/Runtime mit einer klaren Meldung ab (fail-fast).
 | ----------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`          | ✅                               | Gepoolte Neon-Verbindung (Neon-Konsole → Connection Details → **Pooled**). `?sslmode=require` beibehalten. |
 | `BETTER_AUTH_SECRET`    | ✅                               | Secret zum Signieren von Sessions. Erzeugen: `openssl rand -base64 32`                       |
-| `BETTER_AUTH_URL`       | ➖ (empfohlen)                   | Öffentliche Basis-URL ohne Trailing-Slash. Lokal `http://localhost:3000`                     |
+| `BETTER_AUTH_URL`       | ⚠️ Prod-Pflicht                 | Öffentliche Basis-URL ohne Trailing-Slash. Lokal `http://localhost:3000`. Baut die Links in den E-Mails – ist der Wert falsch, sind alle versendeten Links tot. |
 | `ADMIN_EMAILS`          | ➖                               | Kommaseparierte Liste der Admin-E-Mails (Zugriff auf `/admin`)                              |
 | `STRIPE_SECRET_KEY`     | ➖ (Pflicht für Billing)         | Stripe → Developers → API keys (`sk_test_...` / `sk_live_...`)                              |
 | `STRIPE_WEBHOOK_SECRET` | ➖ (Pflicht für Webhook)         | Signing-Secret des Webhook-Endpoints (`whsec_...`, siehe Abschnitt 5)                       |
-| `RESEND_API_KEY`        | ➖ (Pflicht für E-Mail)          | Resend → API keys (`re_...`). Ohne Key werden E-Mails mit Warnung übersprungen.             |
-| `EMAIL_FROM`            | ➖                               | Absenderadresse, z. B. `Vendora <noreply@deine-domain.de>` (verifizierte Resend-Domain)     |
+| `SMTP_HOST`             | ⚠️ Prod-Pflicht, lokal optional | SMTP-Server, bei Strato `smtp.strato.de`                                                     |
+| `SMTP_PORT`             | ➖ (Default 465)                 | `465` = implizites TLS, `587` = STARTTLS                                                     |
+| `SMTP_USER`             | ⚠️ Prod-Pflicht, lokal optional | Volle E-Mail-Adresse des Postfachs                                                           |
+| `SMTP_PASSWORD`         | ⚠️ Prod-Pflicht, lokal optional | **Postfach**-Passwort (nicht das Strato-Kundenlogin)                                         |
+| `EMAIL_FROM`            | ⚠️ Prod-Pflicht, lokal optional | Absender, z. B. `Vendora <info@deine-domain.de>`. Muss dem authentifizierten Postfach entsprechen, sonst lehnt Strato mit 550 ab. |
 | `ARCJET_KEY`            | ⚠️ Prod-Pflicht, lokal optional | Arcjet-Dashboard → API-Key (`ajkey_...`). Siehe Abschnitt 6                                  |
 
 > **Hinweis zu `DATABASE_URL`:** Es wird die **gepoolte** Neon-Verbindung verwendet. Der DB-Client
@@ -71,8 +75,19 @@ bricht der Dev-Server/Runtime mit einer klaren Meldung ab (fail-fast).
 
 > **Auth-Tabellen:** Better Auth verwaltet `user`/`session`/`account`/`verification`
 > (`src/lib/server/auth-schema.ts`). Die App-`users`-Tabelle ist das Profil, gekeyt auf die
-> Better-Auth-`user.id`. E-Mail-Verifizierung ist aktuell deaktiviert
-> (`requireEmailVerification: false` in `src/lib/auth.ts`), bis eine Resend-Domain live ist.
+> Better-Auth-`user.id`.
+
+> **E-Mail-Bestätigung ist Pflicht** (`requireEmailVerification: true` in `src/lib/auth.ts`).
+> Eine Registrierung erzeugt erst nach dem Klick auf den Bestätigungslink eine Session; der
+> Link ist eine Stunde gültig. **Lokal ohne SMTP-Konfiguration wird die Mail nicht versendet,
+> sondern in die Konsole des Dev-Servers geschrieben** – der Link steht dort im Klartext, der
+> Flow lässt sich also ohne Postfach vollständig durchspielen.
+>
+> Achtung beim Mailversand: Better Auth kapselt den Versand in `runInBackgroundOrAwait` und
+> **verschluckt geworfene Fehler**. Ein SMTP-Ausfall lässt die Registrierung erfolgreich
+> aussehen, obwohl nie eine Mail rausging – deshalb protokolliert `sendEmail` selbst per
+> `console.error`, und deshalb gibt es auf Registrierungs-, Login- und Bestätigungsseite einen
+> „Erneut senden“-Knopf.
 
 ## 4. Datenbank einrichten (Migrationen)
 
@@ -152,8 +167,13 @@ npm run build
 1. Repo mit Vercel verbinden (Framework: Next.js).
 2. **Alle** Umgebungsvariablen aus Abschnitt 3 in Vercel setzen – inkl. **`ARCJET_KEY` (Prod-Pflicht)**.
 3. Migrationen auf die Prod-DB anwenden: `npm run db:migrate` (mit Prod-`DATABASE_URL`).
+   **Vor** dem Code-Deploy – Migration `0017` schaltet Bestandskonten frei, in der umgekehrten
+   Reihenfolge sind alle bestehenden Nutzer für die Dauer des Deploys ausgesperrt.
 4. Stripe-Webhook-URL auf die Production-Domain aktualisieren und das neue `STRIPE_WEBHOOK_SECRET` hinterlegen.
-5. `BETTER_AUTH_URL` auf die Production-Domain setzen; in Resend die Absender-Domain verifizieren.
+5. `BETTER_AUTH_URL` auf die Production-Domain setzen – daraus werden die Links in den E-Mails gebaut.
+6. Beim Domain-Anbieter **DKIM aktivieren** und den **SPF**-Eintrag prüfen (bei Strato:
+   `v=spf1 include:spf.strato.de ~all`). Ohne DKIM landen transaktionale Mails bei Gmail
+   regelmäßig im Spam. Optional zusätzlich ein DMARC-Record mit `p=none`.
 
 Security-Header (HSTS, CSP, X-Frame-Options u. a.) sind in `next.config.ts` konfiguriert.
 

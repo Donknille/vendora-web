@@ -6,6 +6,20 @@ import { Card } from "@/components/ui/Card";
 
 const releases = [
   {
+    version: "1.5.0",
+    date: "2026-08-08",
+    title: "Bestätigte Anmeldung",
+    changes: [
+      "Neue Konten müssen die E-Mail-Adresse bestätigen, bevor die Anmeldung möglich ist — der Link in der Bestätigungsmail ist eine Stunde gültig",
+      "Kommt keine Mail an, lässt sie sich auf der Registrierungs-, Login- und Bestätigungsseite erneut anfordern",
+      "Wer sich mit unbestätigter Adresse anmeldet, liest jetzt den echten Grund statt „falsches Passwort“",
+      "Bestätigungs- und Reset-Mails im Vendora-Design, mit Klartext-Fassung und Dunkelmodus",
+      "E-Mail-Versand läuft jetzt über STRATO in Deutschland statt über einen US-Anbieter",
+      "Beim Zurücksetzen des Passworts werden alle bestehenden Sitzungen beendet",
+      "Bestehende Konten bleiben unverändert nutzbar und müssen nichts bestätigen",
+    ],
+  },
+  {
     version: "1.4.0",
     date: "2026-08-07",
     title: "Verlässlichkeit",

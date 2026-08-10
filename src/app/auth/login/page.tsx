@@ -5,18 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { ResendVerification } from "@/components/auth/ResendVerification";
 
 export default function LoginPage() {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notVerified, setNotVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotVerified(false);
     setLoading(true);
 
     const { error: authError } = await authClient.signIn.email({
@@ -25,7 +28,16 @@ export default function LoginPage() {
     });
 
     if (authError) {
-      setError(t.auth.loginError);
+      // Der Sonderfall muss raus aus der Sammelmeldung: Better Auth antwortet
+      // bei unbestaetigter Adresse mit 403 EMAIL_NOT_VERIFIED, und zwar erst
+      // NACH erfolgreicher Passwortpruefung. Ohne die Unterscheidung liest
+      // jemand mit korrektem Passwort "Ungueltige E-Mail oder Passwort" und
+      // landet im Passwort-Reset -- der das Problem nicht loest.
+      if (authError.code === "EMAIL_NOT_VERIFIED") {
+        setNotVerified(true);
+      } else {
+        setError(t.auth.loginError);
+      }
       setLoading(false);
       return;
     }
@@ -44,6 +56,16 @@ export default function LoginPage() {
           </div>
           <p className="text-faint mt-2">{t.auth.loginSubtitle}</p>
         </div>
+
+        {notVerified && (
+          <div className="mb-6 bg-brand-primary/10 border border-brand-primary/20 rounded-xl p-6">
+            <h2 className="font-bold text-primary mb-1">{t.auth.emailNotVerifiedTitle}</h2>
+            <p className="text-faint text-sm">{t.auth.emailNotVerifiedBody}</p>
+            <div className="mt-4">
+              <ResendVerification email={email} variant="subtle" />
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           {error && (

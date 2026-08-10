@@ -6,18 +6,13 @@ import { env } from "@/lib/server/env";
 import { db } from "@/lib/server/db";
 import { user, session, account, verification } from "@/lib/server/auth-schema";
 import { sendEmail } from "@/lib/server/email";
+import { verificationEmail, passwordResetEmail } from "@/lib/server/emailTemplates";
 import { ensureUserRecord, ensureUserRecordById } from "@/lib/server/provisioning";
 
-function buttonEmail(heading: string, intro: string, url: string, cta: string): string {
-  return `
-  <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #111;">
-    <h2 style="margin: 0 0 12px; font-size: 20px;">${heading}</h2>
-    <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: #444;">${intro}</p>
-    <a href="${url}" style="display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; font-weight: 600; padding: 12px 20px; border-radius: 8px; font-size: 15px;">${cta}</a>
-    <p style="margin: 24px 0 0; font-size: 13px; color: #888;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br><span style="word-break: break-all; color: #4f46e5;">${url}</span></p>
-    <p style="margin: 24px 0 0; font-size: 13px; color: #888;">Wenn du das nicht angefordert hast, kannst du diese E-Mail ignorieren.</p>
-  </div>`;
-}
+/** Eine Stunde. Steht hier explizit, damit die Anforderung im Code sichtbar
+ *  ist und nicht an einem Library-Default haengt, der sich in einer Minor
+ *  aendern kann. */
+const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export const auth = betterAuth({
   appName: "Vendora",
@@ -30,34 +25,62 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    // Verification stays optional so registration/login works without an email
-    // provider configured. Flip to true once Resend is set up with a domain.
-    requireEmailVerification: false,
+    // Ohne bestaetigte Adresse gibt es keine Session. Die Registrierung
+    // antwortet dann mit { token: null } und der Login mit 403
+    // EMAIL_NOT_VERIFIED -- beides wird in der UI gesondert behandelt.
+    requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: ONE_HOUR_IN_SECONDS,
+    // Eine gestohlene Session soll den Passwortwechsel nicht ueberleben --
+    // sonst ist der Reset gegen genau den Fall wirkungslos, fuer den man ihn
+    // benutzt.
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user: recipient, url }) => {
-      await sendEmail({
-        to: recipient.email,
-        subject: "Passwort zurücksetzen – Vendora",
-        html: buttonEmail(
-          "Passwort zurücksetzen",
-          "Klicke auf den Button, um ein neues Passwort zu wählen. Der Link ist eine Stunde gültig.",
-          url,
-          "Passwort zurücksetzen"
-        ),
-      });
+      const mail = passwordResetEmail({ url, baseUrl: env.BETTER_AUTH_URL });
+      await sendEmail({ to: recipient.email, ...mail });
     },
   },
   emailVerification: {
+    // ACHTUNG, nicht auf true "korrigieren". Better Auth 1.6.23 baut den
+    // Aufruf in sign-up.mjs:241-249 so:
+    //
+    //   await ctx.context.runInBackgroundOrAwait(
+    //     sendVerificationEmail({ user, url, token }, ctx.request?.clone())
+    //   );
+    //
+    // `ctx.request?.clone()` wird beim Zusammenbauen der Argumente
+    // ausgewertet -- also BEVOR runInBackgroundOrAwait ueberhaupt laeuft und
+    // damit ausserhalb dessen try/catch. Ist der Body-Stream zu dem Zeitpunkt
+    // schon verbraucht, wirft clone() `TypeError: unusable`, und die ganze
+    // Registrierung endet in einem 500. Gemessen: 1 von 15 Versuchen.
+    //
+    // Deshalb loest die Registrierungsseite die Mail selbst ueber
+    // POST /send-verification-email aus (requestVerificationEmail in
+    // components/auth/ResendVerification.tsx). Dieser Pfad reicht `ctx.request`
+    // unveraendert weiter, ohne clone(), und ist derselbe, den der
+    // "Erneut senden"-Knopf benutzt.
+    //
+    // Nebeneffekt, der uns entgegenkommt: bei einer zweiten Registrierung mit
+    // derselben Adresse antwortet Better Auth aus Enumerations-Schutz mit einem
+    // synthetischen Erfolg und verschickt NICHTS. Der explizite Aufruf schickt
+    // dem bereits angelegten, unbestaetigten Konto trotzdem seinen Link.
+    sendOnSignUp: false,
+    // Ein Klick genuegt: der Nutzer landet direkt angemeldet auf
+    // /auth/verify-email und muss sich nicht erneut einloggen.
+    autoSignInAfterVerification: true,
+    expiresIn: ONE_HOUR_IN_SECONDS,
+    // Bewusst KEIN sendOnSignIn: das verschickt bei jedem Login-Versuch mit
+    // unbestaetigter Adresse automatisch eine Mail und macht aus einer
+    // bekannten Adresse eine Mail-Bombe, die nur Rate-Limits bremsen. Der
+    // Neuversand ist stattdessen ein Button, den die Nutzerin selbst drueckt.
+    //
+    // Wichtig: Better Auth kapselt diesen Aufruf in runInBackgroundOrAwait und
+    // VERSCHLUCKT geworfene Fehler (siehe sign-up.mjs / create-context.mjs).
+    // Ein SMTP-Ausfall laesst die Registrierung erfolgreich aussehen, waehrend
+    // nie eine Mail rausgeht -- deshalb protokolliert sendEmail selbst, und
+    // deshalb ist der "Erneut senden"-Button die eigentliche Rettungsleine.
     sendVerificationEmail: async ({ user: recipient, url }) => {
-      await sendEmail({
-        to: recipient.email,
-        subject: "E-Mail bestätigen – Vendora",
-        html: buttonEmail(
-          "E-Mail bestätigen",
-          "Bestätige deine E-Mail-Adresse, um dein Vendora-Konto zu aktivieren.",
-          url,
-          "E-Mail bestätigen"
-        ),
-      });
+      const mail = verificationEmail({ url, baseUrl: env.BETTER_AUTH_URL });
+      await sendEmail({ to: recipient.email, ...mail });
     },
   },
   databaseHooks: {

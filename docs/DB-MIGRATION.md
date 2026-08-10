@@ -68,8 +68,9 @@ Jeweils für **Production**, **Preview** und **Development** setzen:
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` aus dem Stripe-Webhook | für Billing |
 | `STRIPE_PRICE_ID` | `price_…` des Pro-Produkts (19,90 €/Monat) | für Billing |
 | `ARCJET_KEY` | Arcjet-Key | empfohlen |
-| `RESEND_API_KEY` | Resend-Key | für E-Mails |
-| `EMAIL_FROM` | z. B. `Vendora <noreply@deine-domain.de>` | für E-Mails |
+| `SMTP_HOST` / `SMTP_PORT` | `smtp.strato.de` / `465` | für E-Mails |
+| `SMTP_USER` / `SMTP_PASSWORD` | Postfach-Adresse und Postfach-Passwort | für E-Mails |
+| `EMAIL_FROM` | z. B. `Vendora <info@deine-domain.de>` | für E-Mails |
 | `ADMIN_EMAILS` | `seb.grueber@gmail.com` | für `/admin` |
 
 Ein Secret erzeugst du so:

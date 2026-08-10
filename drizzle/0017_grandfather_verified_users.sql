@@ -1,0 +1,16 @@
+-- E-Mail-Bestaetigung wird zur Pflicht (requireEmailVerification: true in
+-- src/lib/auth.ts).
+--
+-- Alle bis hierher angelegten Konten haben email_verified = false, weil die
+-- Pruefung nie aktiv war und Better Auth deshalb nie einen Link verschickt hat
+-- (sendOnSignUp ?? requireEmailVerification -- beides falsy). Ohne diese
+-- einmalige Korrektur wuerde das Aktivieren der Pflicht jedes bestehende Konto
+-- aussperren: der Login antwortete 403 EMAIL_NOT_VERIFIED fuer eine Bedingung,
+-- die zum Zeitpunkt der Registrierung noch gar nicht existierte.
+--
+-- Nur Bestandsdaten. Jede Registrierung ab jetzt durchlaeuft die Bestaetigung.
+--
+-- WICHTIG: diese Migration muss VOR dem zugehoerigen Code-Deploy auf der
+-- Produktionsdatenbank laufen. In der umgekehrten Reihenfolge sind alle
+-- Bestandsnutzer fuer die Dauer des Deploys ausgesperrt.
+UPDATE "user" SET "email_verified" = true WHERE "email_verified" = false;

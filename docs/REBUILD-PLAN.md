@@ -45,10 +45,10 @@ Vendora ist eine Multi-Tenant-SaaS für **kreative Markthändler:innen in Deutsc
 
 ### 2.1 Stack & Struktur
 
-- Next.js `^16.2.3` (App Router), React 19.2.4, TypeScript strict, Better Auth `^1.6.23` (Drizzle-Adapter), Drizzle `^0.45.2` + `postgres` gegen Neon, Stripe `^22.0.1`, Zod v4, TanStack Query v5, Arcjet (Rate-Limiting in `src/proxy.ts`), Resend, Tailwind v4, Vitest.
+- Next.js `^16.2.3` (App Router), React 19.2.4, TypeScript strict, Better Auth `^1.6.23` (Drizzle-Adapter), Drizzle `^0.45.2` + `postgres` gegen Neon, Stripe `^22.0.1`, Zod v4, TanStack Query v5, Arcjet (Rate-Limiting in `src/proxy.ts`), nodemailer/SMTP (Strato), Tailwind v4, Vitest.
 - ~10.300 Zeilen in `src/`, 28 API-Routen.
 - **Schema liegt in `src/lib/server/schema.ts`** (nicht `src/lib/schema.ts`, wie CLAUDE.md behauptet). Auth-Tabellen: `src/lib/server/auth-schema.ts`. DB-Zugriff zentral in `src/lib/server/storage.ts` (591 Zeilen). React-Query-Setup: `src/lib/api-client.ts` (user-scoped Query-Keys `[userId, '/api/...']`).
-- Auth: `src/lib/auth.ts` (Better Auth Config, `requireEmailVerification: false` bis Resend live ist), `src/lib/server/auth.ts` (`getAuthUserId`, `requireActiveSubscription`), `src/lib/server/admin.ts` (`requireAdmin` via `ADMIN_EMAILS`-Env).
+- Auth: `src/lib/auth.ts` (Better Auth Config, `requireEmailVerification: true` seit v1.5.0; Versand über SMTP/Strato), `src/lib/server/auth.ts` (`getAuthUserId`, `requireActiveSubscription`), `src/lib/server/admin.ts` (`requireAdmin` via `ADMIN_EMAILS`-Env).
 - i18n: hartkodiertes Übersetzungsobjekt in `src/lib/i18n.ts` (DE/EN), Sprache/Theme in localStorage (`LanguageContext`, `ThemeContext`). Teils Inline-Ternaries statt `t`-Objekt.
 - Fast alle Seiten sind Client-Components; Session-Gate im Server-Layout `src/app/(app)/layout.tsx`.
 
@@ -86,7 +86,7 @@ Tabellen in `src/lib/server/schema.ts`: `users` (App-Profil, `id` = Better-Auth-
 3. `getAuthUserId` lässt User ohne App-Profilzeile passieren (`dbUser?.isBlocked || dbUser?.deletedAt` ist bei fehlender Zeile falsy) — Lücke falls `ensureUserRecord`-Hook fehlschlägt.
 
 **Rechtlich:**
-4. **Datenschutzerklärung nennt „Supabase Inc." als Auftragsverarbeiter** (`src/app/legal/datenschutz/page.tsx` Z. 61–66) — real sind es Neon, Better Auth (selbst gehostet in DB), Resend, Vercel, Stripe. Falsche Pflichtangabe, dringend.
+4. **Datenschutzerklärung nennt „Supabase Inc." als Auftragsverarbeiter** (`src/app/legal/datenschutz/page.tsx` Z. 61–66) — real sind es Neon, Better Auth (selbst gehostet in DB), STRATO (E-Mail), Vercel, Stripe. Falsche Pflichtangabe, dringend.
 5. **GoBD/AO-Konflikt:** Rechnungen nach Nummernvergabe editierbar; Account-Löschung vernichtet Rechnungsdaten trotz 10-jähriger Aufbewahrungspflicht (§ 147 AO, § 14b UStG; Art. 17 Abs. 3 lit. b DSGVO erlaubt Aufbewahrung).
 
 **Tech-Debt (offen aus Audits B1–B7/M1–M4/L1–L3):** Trial-Abuse via E-Mail-Aliase, keine Pagination (kein `limit()` in storage.ts), Admin via Env-Whitelist, kein `server-only`-Import in Server-Modulen, Rate-Limiting nur IP-basiert, CSP mit `unsafe-inline` für Styles, keine Env-Validierung (`process.env.DATABASE_URL!`), Preview-Deployments gegen Produktionsdaten.
@@ -107,7 +107,7 @@ Vendora wird das **offline-fähige, mobile „Betriebssystem für Markthändler"
 ### Phase 0 — Fundament & Pflichtreparaturen
 
 **0.1 Rechtstexte (sofort, unabhängig):**
-- `src/app/legal/datenschutz/page.tsx`: Supabase-Absatz ersetzen durch korrekte Auftragsverarbeiter: Neon (DB, EU-Region angeben), Vercel (Hosting), Stripe (Zahlungen), Resend (E-Mail), Arcjet (Rate-Limiting). Better Auth läuft in eigener DB (kein externer Prozessor). Abschnitt zur Rechnungsdaten-Aufbewahrung ergänzen (Vorgriff auf Phase 2).
+- `src/app/legal/datenschutz/page.tsx`: Supabase-Absatz ersetzen durch korrekte Auftragsverarbeiter: Neon (DB, EU-Region angeben), Vercel (Hosting), Stripe (Zahlungen), STRATO (E-Mail), Arcjet (Rate-Limiting). Better Auth läuft in eigener DB (kein externer Prozessor). Abschnitt zur Rechnungsdaten-Aufbewahrung ergänzen (Vorgriff auf Phase 2).
 
 **0.2 Geld auf Integer-Cents:**
 - Alle Betragsspalten (`orders.total`, `orders.shippingCost`, `order_items.price`, `market_events.standFee`/`travelCost`, `market_sales.amount`, `expenses.amount`, `company_profiles.defaultShippingCost`, `quickItems[].price`) auf `integer` (Cents) umstellen.

@@ -86,11 +86,17 @@ export async function proxy(request: NextRequest) {
       // durch, und die Nutzerin waere weiterhin angemeldet, ohne es zu merken.
       // Pfadnamen aus better-auth 1.6.23 verifiziert (nicht geraten):
       // /sign-in/*, /sign-up/*, /request-password-reset, /reset-password,
-      // /change-password, /change-email, /delete-user, /verify-password.
+      // /change-password, /change-email, /delete-user, /verify-password,
+      // /send-verification-email.
       // "forget-password" existiert dort NICHT -- der Reset-Pfad waere durch
       // eine falsch geratene Regex ungebremst geblieben.
+      //
+      // /send-verification-email gehoert dazu, weil jeder Aufruf eine Mail
+      // ausloest -- ungebremst waere das ein Versandwerkzeug gegen fremde
+      // Adressen. /verify-email ist dagegen GET und faellt korrekt unter den
+      // allgemeinen 100/min-Limiter.
       const isCredentialPath =
-        /\/api\/auth\/(sign-in|sign-up|request-password-reset|reset-password|change-password|change-email|delete-user|verify-password)/.test(
+        /\/api\/auth\/(sign-in|sign-up|request-password-reset|reset-password|change-password|change-email|delete-user|verify-password|send-verification-email)/.test(
           pathname
         );
       if (process.env.NODE_ENV === "production" && isCredentialPath) {
@@ -157,8 +163,13 @@ function handleAuthRedirect(
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
-  if (hasSession && pathname.startsWith("/auth")) {
+  // Redirect authenticated users away from auth pages.
+  //
+  // /auth/verify-email ist ausgenommen: Better Auth meldet nach einem gueltigen
+  // Bestaetigungslink sofort an (autoSignInAfterVerification) und leitet erst
+  // DANN hierher weiter. Ohne die Ausnahme wuerde das frische Session-Cookie
+  // den Nutzer auf /dashboard werfen, bevor er die Erfolgsmeldung sieht.
+  if (hasSession && pathname.startsWith("/auth") && pathname !== "/auth/verify-email") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
