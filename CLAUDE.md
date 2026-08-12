@@ -164,6 +164,7 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 
 ## Weiterführende Docs
 
+- `docs/REFACTORING-PLAN.md` – Verhaltensneutrales Refactoring (Phasen 0–6): Ist-Vermessung, Risiken (Quelltext-Guards, Styling, fehlende UI-Tests), Reihenfolge, Abnahmekriterien
 - `docs/backup-runbook.md` – Betriebssicherung: was jede Nacht passiert, Wiederherstellung als kopierbare Befehle, Schlüsselverwaltung, Quartals-Restore, Protokolle
 - `docs/REBUILD-PLAN.md` – Vollständiger Überarbeitungsplan (Phasen 0–5), Ist-Zustand, Zielbild, Abnahmekriterien
 - `SETUP.md` – Lokales Setup (Neon, Better Auth, Env-Variablen, Migrationen)
