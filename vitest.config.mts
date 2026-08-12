@@ -23,10 +23,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve(import.meta.dirname, "src"),
       // `server-only` throws unless the bundler sets the react-server condition
       // (which Vitest doesn't); stub it so tests can import server modules.
-      "server-only": path.resolve(__dirname, "src/test-utils/server-only-stub.ts"),
+      "server-only": path.resolve(import.meta.dirname, "src/test-utils/server-only-stub.ts"),
     },
   },
 });
