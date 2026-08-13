@@ -45,26 +45,23 @@ const envSchema = z.object({
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 }).superRefine((value, ctx) => {
-  // In Produktion ist BETTER_AUTH_URL keine Kür. Aus ihr werden die Links in
-  // den Bestaetigungs- und Reset-Mails gebaut. Fehlt der Wert, raet Better Auth
-  // die Adresse aus den Request-Headern -- was auf Vercel die jeweilige
-  // Deployment-URL ist und nicht die, unter der die Anwendung erreichbar sein
-  // soll. Ergebnis: verschickte Links zeigen ins Leere, niemand kann sein Konto
-  // bestaetigen, und im Log steht nichts. Genau die Sorte Fehler, die man erst
-  // an ausbleibenden Registrierungen bemerkt.
+  // ACHTUNG, hier fehlt mit Absicht eine Pruefung -- und sie gehoert wieder
+  // hinein, sobald die Variable gesetzt ist:
   //
-  // Lokal bleibt der Wert optional (dort ist die Deployment-URL localhost und
-  // damit richtig geraten).
-  if (value.NODE_ENV === "production" && !value.BETTER_AUTH_URL) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["BETTER_AUTH_URL"],
-      message:
-        "BETTER_AUTH_URL is required in production — it builds the links in " +
-        "verification and password-reset emails. Set it to the public base URL " +
-        "without a trailing slash.",
-    });
-  }
+  //   if (value.NODE_ENV === "production" && !value.BETTER_AUTH_URL) { ... }
+  //
+  // Dieser Wachposten stand am 13.08.2026 schon einmal hier und hat sofort
+  // zugeschlagen: BETTER_AUTH_URL ist in Vercel Production NICHT gesetzt. Das
+  // ist keine Marotte der Pruefung, sondern der eigentliche Befund. Aus dem
+  // Wert werden die Links in den Bestaetigungs- und Reset-Mails gebaut; fehlt
+  // er, raet Better Auth die Adresse aus den Request-Headern und trifft damit
+  // die jeweilige Deployment-URL statt der oeffentlichen.
+  //
+  // Der Wachposten ist wieder raus, weil er die gesamte Anwendung lahmlegt
+  // (fail-fast beim Modulstart, also auch Landingpage und Impressum) -- und
+  // Produktion darf nicht liegen, waehrend eine Variable nachgetragen wird.
+  // Reihenfolge: erst BETTER_AUTH_URL in Vercel setzen und neu deployen, dann
+  // die Pruefung wieder aktivieren.
 
   // Halb konfiguriertes SMTP ist der Zustand, der still scheitert. Ein
   // fehlendes Passwort faellt sonst erst beim ersten echten Versand auf --
