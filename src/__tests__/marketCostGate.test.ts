@@ -1,16 +1,25 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-const ROOT = path.resolve(__dirname, "..", "..");
-const SRC = path.resolve(__dirname, "..");
-const read = (rel: string) => readFileSync(path.join(SRC, rel), "utf8");
+import { readSource, readUnit, ROOT } from "@/test-utils/sourceScan";
 
 // The gate itself is unit-tested in euer.test.ts. What cannot be checked there
 // is the wiring — whether the writers actually pass a status — because
 // syncMarketExpenses is module-private and there is no test database. These are
 // source guards in the style of appQuery.test.ts.
 describe("market cost writers pass the status through", () => {
-  const storage = read("lib/server/storage.ts");
+  // `readUnit` liest die Speicherschicht als Einheit: heute die eine Datei
+  // storage.ts, nach ihrer Aufteilung das Verzeichnis storage/. Der Guard haengt
+  // damit an der Regel, nicht am Dateinamen — sonst wuerde ihn die Aufteilung
+  // entweder rot faerben oder, schlimmer, ins Leere laufen lassen.
+  const storage = readUnit("lib/server/storage");
+
+  it("the storage layer was actually found", () => {
+    // Selbsttest gegen den stillen Fehlschlag: callWindow wirft zwar bei einem
+    // leeren Eingabetext, aber `toContain` auf "" waere schlicht rot statt
+    // aussagekraeftig. Diese Zeile benennt die Ursache.
+    expect(storage.length, "Speicherschicht nicht gefunden").toBeGreaterThan(5000);
+  });
 
   /** The body of a call, from `fn(` to its matching close paren. */
   function callWindow(source: string, marker: string, from = 0): string {
@@ -43,7 +52,10 @@ describe("market cost writers pass the status through", () => {
   });
 
   it("the backup restore goes through the same gate", () => {
-    const route = read("app/api/migrate/route.ts");
+    // readSource statt readFileSync: verschwindet die Route, wirft es mit
+    // Ansage, statt den Guard an einem ENOENT scheitern zu lassen, das nach
+    // Testinfrastruktur aussieht.
+    const route = readSource("app/api/migrate/route.ts");
     expect(callWindow(route, "planMarketCostRows(")).toMatch(/status:/);
   });
 });

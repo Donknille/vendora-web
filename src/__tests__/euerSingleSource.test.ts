@@ -1,18 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
-const SRC = path.resolve(__dirname, "..");
-const read = (rel: string) => readFileSync(path.join(SRC, rel), "utf8");
+import { readRoute } from "@/test-utils/sourceScan";
 
 // Source guards in the style of appQuery.test.ts / adminDataBoundary.test.ts.
 // The dashboard used to reimplement the booking rules: its own date parsing via
 // new Date() (timezone drift), its own paid-status literals, market sales dated
 // by insertion time instead of the market day. Three surfaces, three numbers for
 // the same year. These guards keep the second implementation from growing back.
+//
+// Gelesen wird die Route als Einheit — `page.tsx` plus ein etwaiges eigenes
+// `_components/`. Sonst genuegte es, die Seite in Abschnitte zu zerlegen, und
+// die zweite Buchungslogik koennte in einer Unterkomponente zurueckwachsen,
+// ohne dass hier je etwas rot wuerde.
 describe("dashboard and /steuer share one booking implementation", () => {
-  const DASHBOARD = "app/(app)/dashboard/page.tsx";
-  const STEUER = "app/(app)/steuer/page.tsx";
+  const DASHBOARD = "app/(app)/dashboard";
+  const STEUER = "app/(app)/steuer";
+  const read = readRoute;
 
   it("the dashboard has no private year/month parsing", () => {
     const source = read(DASHBOARD);
@@ -47,5 +49,14 @@ describe("dashboard and /steuer share one booking implementation", () => {
     const source = read(DASHBOARD);
     expect(source).not.toContain("window.open");
     expect(source).not.toContain("<!DOCTYPE html>");
+  });
+
+  it("both routes actually carry code (an empty read would pass everything)", () => {
+    // Selbsttest. Die Haelfte der Zusicherungen hier ist negativ formuliert —
+    // gegen einen leeren String sind die alle gruen. Ohne diese Zeile waere
+    // eine leergelaufene Lesung nicht von Erfolg zu unterscheiden.
+    for (const route of [DASHBOARD, STEUER]) {
+      expect(read(route).length, `${route} liefert keinen Quelltext`).toBeGreaterThan(1000);
+    }
   });
 });
