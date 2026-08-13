@@ -9,6 +9,56 @@
 
 ---
 
+## Fortschritt
+
+Stand 2026-08-13. Die Ist-Vermessung in Abschnitt 1 bleibt als Momentaufnahme vom 2026-08-12 stehen;
+was seither erledigt ist, steht hier.
+
+| Schritt | Stand | Commit |
+|---|---|---|
+| 0.1 Baseline grün | ✅ | `e48342e` |
+| 0.2 Vitest-Config bereinigt | ✅ | `4e1ea40`, `de76a5e` |
+| 0.3 Quelltext-Guards gehärtet | ✅ | `7113b84` |
+| 0.4 UI-Testharness | ✅ | `e103ffe` |
+| 0.5 Charakterisierungs-Snapshots | ✅ | `e75b17a` |
+| 0.6 API-Vertragstests | ✅ | `b555e15` |
+| **Phase-0-Gate** | **erreicht** | |
+| 1–6 | offen | |
+
+Testbestand: **430 Tests in 41 Dateien** (381 node + 49 dom), vorher 349 in 35 Dateien.
+Alle vier Verifikationsschritte grün.
+
+### Was Phase 0 nebenbei zutage gefördert hat
+
+Drei Abweichungen, die vorher niemand festgehalten hatte. Alle drei sind **unverändert geblieben** —
+sie sind jetzt begründet notiert und mit einem Stolperdraht versehen:
+
+1. **`Sidebar.tsx` ruft `useQuery` direkt auf.** Es stand in keiner der hartkodierten Guard-Listen und
+   war deshalb nie aufgefallen — der Fall „grün, bewacht aber nichts" aus Risiko R1, live im Bestand.
+   Zulässig ist es, weil die Sidebar nur `data` liest und nie `isLoading`; der Phantom-Leer-Bug kann
+   dort also nicht auftreten. Ein Test hält genau das fest: sobald sie `isLoading` anfasst, fällt die Ausnahme.
+2. **`/api/admin/check` antwortet ohne Sitzung 200 statt 401** (`{isAdmin:false}`), weil die Sidebar
+   daran den Admin-Link entscheidet. Gewollt, aber nirgends dokumentiert. Ein eigener Test pinnt fest,
+   dass die Antwort genau ein Feld trägt — ein später ergänztes Feld wäre eine Preisgabe an jede
+   anonyme Anfrage.
+3. **Der Better-Auth-Browser-Client entkommt `vi.stubGlobal`**, weil er `fetch` beim Import festhält.
+   Die Einstellungsseite baute im Test eine echte Verbindung nach `localhost:3000` auf. Der Lauf blieb
+   grün und endete mit Exit-Code 1 — also *nach* den Zusicherungen, wo es leicht zu übersehen ist.
+
+### Neue Werkzeuge, auf die die Phasen 1–5 aufsetzen
+
+- `src/test-utils/sourceScan.ts` — `readSource` / `readUnit` / `readRoute`. Guards hängen ab jetzt an
+  der Regel, nicht am Dateipfad. `readUnit("lib/server/storage")` liest heute die Datei und nach
+  Phase 3 das Verzeichnis; `readRoute` liest Seite **plus eigenes `_components/`**, überlebt also die
+  Zerlegung in Phase 4. Beides wurde durch vorweggenommene Umbauten geprüft.
+- `src/test-utils/renderWithProviders.tsx` + `setupDom.ts` + `fixtures.ts` — Oberflächentests unter jsdom.
+- `src/__tests__/ui/__snapshots__/` — **11 DOM-Snapshots. Das ist der Vertrag für Phase 1.3 und Phase 4.**
+  Ändert sich einer, ist der Umbau nicht verhaltensneutral gewesen. Nicht „aktualisieren".
+- `src/__tests__/routeContract.test.ts` — scannt alle Routen, prüft 401 samt wörtlicher Meldung.
+  Der Wächter für Phase 2.1.
+
+---
+
 ## 0. Arbeitsregeln (verbindlich)
 
 1. **Verhaltensgleichheit ist das einzige Abnahmekriterium.** Jeder Schritt muss so beschaffen sein, dass
@@ -605,6 +655,7 @@ Jeder ist ein eigenes Ticket:
 
 1. **Pflichtfeldprüfung Auftrag:** `orders/new` verlangt Straße/PLZ/Ort, `orders/[id]/edit` nicht.
    Eine der beiden ist falsch — das ist eine fachliche Entscheidung.
+   *(Seit 0.5 durch einen Test festgehalten, damit ihn niemand versehentlich einebnet.)*
 2. **Rundungen und Flächenfarben:** `rounded-lg`/`bg-surface` vs. `rounded-xl`/`bg-input`.
    Designentscheidung.
 3. **`force-dynamic`-Regel** in `CLAUDE.md` deckt sich nicht mit dem Code (2 von 27 Seiten).
