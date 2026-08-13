@@ -4,6 +4,7 @@ import { planMarketCostRows, type MarketCostSource } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
 // Alias, weil mehrere Funktionen hier eine lokale Konstante `today` fuehren.
 import { isoDay, today as todayIso } from "@/lib/date";
+import { pickDefined, emptyToNull } from "@/lib/pickDefined";
 import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
@@ -275,23 +276,29 @@ export async function updateOrder(
   if (!existing) return undefined;
 
   const { items: newItems, ...fields } = updates;
-  const dbUpdates: Record<string, unknown> = { updatedAt: new Date() };
+  const dbUpdates: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...pickDefined(fields, [
+      "customerName",
+      "customerEmail",
+      "customerStreet",
+      "customerZip",
+      "customerCity",
+      "customerCountry",
+      "status",
+      "notes",
+      "orderDate",
+      "shippingCost",
+      "processingStatus",
+      "comment",
+    ]),
+  };
 
-  if (fields.customerName !== undefined) dbUpdates.customerName = fields.customerName;
-  if (fields.customerEmail !== undefined) dbUpdates.customerEmail = fields.customerEmail;
-  if (fields.customerStreet !== undefined) dbUpdates.customerStreet = fields.customerStreet;
-  if (fields.customerZip !== undefined) dbUpdates.customerZip = fields.customerZip;
-  if (fields.customerCity !== undefined) dbUpdates.customerCity = fields.customerCity;
-  if (fields.customerCountry !== undefined) dbUpdates.customerCountry = fields.customerCountry;
-  if (fields.status !== undefined) dbUpdates.status = fields.status;
-  if (fields.notes !== undefined) dbUpdates.notes = fields.notes;
-  if (fields.orderDate !== undefined) dbUpdates.orderDate = fields.orderDate;
-  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = fields.serviceDate || null;
-  if (fields.paidAt !== undefined) dbUpdates.paidAt = fields.paidAt || null;
-  if (fields.paymentMethod !== undefined) dbUpdates.paymentMethod = fields.paymentMethod || null;
-  if (fields.shippingCost !== undefined) dbUpdates.shippingCost = fields.shippingCost;
-  if (fields.processingStatus !== undefined) dbUpdates.processingStatus = fields.processingStatus;
-  if (fields.comment !== undefined) dbUpdates.comment = fields.comment;
+  // Diese drei sind loeschbar: ein geleertes Formularfeld kommt als "" an und
+  // muss in der Spalte NULL werden, nicht ein leerer String.
+  if (fields.serviceDate !== undefined) dbUpdates.serviceDate = emptyToNull(fields.serviceDate);
+  if (fields.paidAt !== undefined) dbUpdates.paidAt = emptyToNull(fields.paidAt);
+  if (fields.paymentMethod !== undefined) dbUpdates.paymentMethod = emptyToNull(fields.paymentMethod);
 
   // Auto-set the inflow date when an order first moves into a paid-like status
   // (unless the caller supplied one explicitly).
@@ -528,16 +535,23 @@ export async function updateMarket(
   const existing = await getMarket(userId, id);
   if (!existing) return undefined;
 
-  const dbUpdates: Record<string, unknown> = {};
-  if (updates.name !== undefined) dbUpdates.name = updates.name;
-  if (updates.date !== undefined) dbUpdates.date = updates.date;
-  if (updates.location !== undefined) dbUpdates.location = updates.location;
-  if (updates.standFee !== undefined) dbUpdates.standFee = updates.standFee;
-  if (updates.travelCost !== undefined) dbUpdates.travelCost = updates.travelCost;
-  if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-  if (updates.status !== undefined) dbUpdates.status = updates.status;
-  if (updates.applicationDeadline !== undefined) dbUpdates.applicationDeadline = updates.applicationDeadline || null;
-  if (updates.quickItems !== undefined) dbUpdates.quickItems = updates.quickItems;
+  // Bleibt leer, wenn nichts gesetzt wurde — das UPDATE unten entfaellt dann,
+  // die Marktkosten werden aber trotzdem neu abgeleitet.
+  const dbUpdates: Record<string, unknown> = pickDefined(updates, [
+    "name",
+    "date",
+    "location",
+    "standFee",
+    "travelCost",
+    "notes",
+    "status",
+    "quickItems",
+  ]);
+
+  // Die Bewerbungsfrist ist loeschbar: "" muss in der Spalte NULL werden.
+  if (updates.applicationDeadline !== undefined) {
+    dbUpdates.applicationDeadline = emptyToNull(updates.applicationDeadline);
+  }
 
   await db.transaction(async (tx) => {
     if (Object.keys(dbUpdates).length > 0) {
@@ -1115,13 +1129,14 @@ export async function updateSubscription(
   userId: string,
   data: Partial<{ plan: Plan; subscriptionStatus: string; trialEndsAt: Date; subscriptionExpiresAt: Date; stripeCustomerId: string; stripeSubscriptionId: string }>
 ): Promise<void> {
-  const updates: Record<string, unknown> = {};
-  if (data.plan !== undefined) updates.plan = data.plan;
-  if (data.subscriptionStatus !== undefined) updates.subscriptionStatus = data.subscriptionStatus;
-  if (data.trialEndsAt !== undefined) updates.trialEndsAt = data.trialEndsAt;
-  if (data.subscriptionExpiresAt !== undefined) updates.subscriptionExpiresAt = data.subscriptionExpiresAt;
-  if (data.stripeCustomerId !== undefined) updates.stripeCustomerId = data.stripeCustomerId;
-  if (data.stripeSubscriptionId !== undefined) updates.stripeSubscriptionId = data.stripeSubscriptionId;
+  const updates = pickDefined(data, [
+    "plan",
+    "subscriptionStatus",
+    "trialEndsAt",
+    "subscriptionExpiresAt",
+    "stripeCustomerId",
+    "stripeSubscriptionId",
+  ]);
 
   if (Object.keys(updates).length > 0) {
     await db.update(users).set(updates).where(eq(users.id, userId));
