@@ -3,6 +3,10 @@ import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { Order, Customer } from "@/lib/types";
+// Die Nutzlast-Formen kommen aus dem Zod-Schema der Route, nicht aus einer
+// zweiten Handabschrift (Refactoring-Plan 2.2). Reiner Typ-Import: im
+// Bundle landet davon nichts.
+import type { CreateOrderInput, UpdateOrderInput } from "@/lib/schemas/order";
 
 function useKey() {
   const userId = useCurrentUserId();
@@ -23,22 +27,7 @@ export function useOrders() {
 export function useCreateOrder() {
   const key = useKey();
   return useMutation({
-    mutationFn: async (data: {
-      customerName: string;
-      customerEmail: string;
-      customerStreet: string;
-      customerZip: string;
-      customerCity: string;
-      customerCountry?: string;
-      status: string;
-      notes: string;
-      orderDate: string;
-      serviceDate?: string; // Leistungsdatum, § 14 Abs. 4 Nr. 6 UStG
-      paidAt?: string;
-      paymentMethod?: string;
-      shippingCost?: number; // cents
-      items: { name: string; quantity: number; price: number }[];
-    }) => {
+    mutationFn: async (data: CreateOrderInput) => {
       const res = await apiRequest("POST", "/api/orders", data);
       return res.json() as Promise<Order>;
     },
@@ -51,22 +40,7 @@ export function useCreateOrder() {
 export function useUpdateOrder() {
   const key = useKey();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string } & Partial<{
-      customerName: string;
-      customerEmail: string;
-      customerStreet: string;
-      customerZip: string;
-      customerCity: string;
-      customerCountry?: string;
-      status: string;
-      notes: string;
-      orderDate: string;
-      serviceDate: string; // Leistungsdatum, "" leert es wieder
-      paidAt: string;
-      paymentMethod: string;
-      shippingCost: number; // cents
-      items: { name: string; quantity: number; price: number }[];
-    }>) => {
+    mutationFn: async ({ id, ...data }: { id: string } & UpdateOrderInput) => {
       const res = await apiRequest("PUT", `/api/orders/${id}`, data);
       return res.json() as Promise<Order>;
     },

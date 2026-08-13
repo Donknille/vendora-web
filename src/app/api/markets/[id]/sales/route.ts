@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import { fail, validationError, withAuth } from "@/lib/server/route";
+import { createMarketSaleSchema } from "@/lib/schemas/market";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
-import { z } from "zod";
-
-const createMarketSaleSchema = z.object({
-  description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().int().min(0).max(99999999), // cents
-  quantity: z.number().int().min(1).max(9999).default(1),
-});
 
 export const GET = withAuth<{ id: string }>(
   "GET /api/markets/[id]/sales",

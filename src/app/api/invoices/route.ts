@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 import { fail, validationError, withAuth } from "@/lib/server/route";
+import { issueInvoiceSchema } from "@/lib/schemas/misc";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
-import { z } from "zod";
-
-const issueInvoiceSchema = z.object({
-  orderId: z.string().min(1).max(100),
-});
 
 export const GET = withAuth("GET /api/invoices", async ({ userId, request }) => {
   const data = await storage.getInvoices(userId, parsePagination(request));

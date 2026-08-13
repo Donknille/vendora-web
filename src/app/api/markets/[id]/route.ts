@@ -1,25 +1,8 @@
 import { NextResponse } from "next/server";
 import { fail, validationError, withAuth } from "@/lib/server/route";
+import { updateMarketSchema } from "@/lib/schemas/market";
 import * as storage from "@/lib/server/storage";
 import { requireWriteAccess } from "@/lib/server/limits";
-import { z } from "zod";
-
-const quickItemSchema = z.object({
-  name: z.string().min(1).max(200),
-  price: z.number().int().min(0).max(99999999), // cents
-});
-
-const updateMarketSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  date: z.string().max(50).optional(),
-  location: z.string().max(300).optional(),
-  standFee: z.number().int().min(0).max(9999999).optional(), // cents
-  travelCost: z.number().int().min(0).max(9999999).optional(), // cents
-  notes: z.string().max(5000).optional(),
-  status: z.enum(["open", "applied", "confirmed", "completed", "cancelled"]).optional(),
-  applicationDeadline: z.string().max(50).nullish(),
-  quickItems: z.array(quickItemSchema).max(50).optional(),
-});
 
 export const PUT = withAuth<{ id: string }>(
   "PUT /api/markets/[id]",

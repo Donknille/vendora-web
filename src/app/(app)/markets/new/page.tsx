@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCreateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
-import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
+import { MARKET_STATUSES, statusLabel, type MarketStatus } from "@/lib/marketCalendar";
 import { today } from "@/lib/date";
 import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
 
@@ -24,7 +24,9 @@ export default function NewMarketPage() {
   const [name, setName] = useState("");
   const [date, setDate] = useState(today());
   const [location, setLocation] = useState("");
-  const [status, setStatus] = useState("open");
+  // MarketStatus statt string: das Schema der Route kennt genau diese fuenf
+  // Werte, und die Auswahlliste erzeugt ohnehin keine anderen.
+  const [status, setStatus] = useState<MarketStatus>("open");
   const [applicationDeadline, setApplicationDeadline] = useState("");
   const [standFee, setStandFee] = useState("");
   const [travelCost, setTravelCost] = useState("");
@@ -146,7 +148,7 @@ export default function NewMarketPage() {
               </label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={(e) => setStatus(e.target.value as MarketStatus)}
                 className={inputClass}
               >
                 {MARKET_STATUSES.map((s) => (

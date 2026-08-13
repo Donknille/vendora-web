@@ -8,7 +8,7 @@ import { useOrders, useUpdateOrder, useCustomers } from "@/lib/hooks/useOrders";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
-import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payments";
+import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, isPaymentMethod } from "@/lib/payments";
 import { dayOf } from "@/lib/date";
 import { ghostBrandButton, iconButton, inputNested, inputSurface, labelClass } from "@/lib/styles";
 
@@ -157,7 +157,9 @@ export default function EditOrderPage() {
         serviceDate,
         notes: notes.trim() || undefined,
         paidAt: paidAt || undefined,
-        paymentMethod: paymentMethod || undefined,
+        // isPaymentMethod statt eines Casts: der Zustand ist ein String aus
+        // der Auswahlliste, und "" heisst "keine Angabe".
+        paymentMethod: isPaymentMethod(paymentMethod) ? paymentMethod : undefined,
         shippingCost: shippingCents,
         items: orderItems,
         status,

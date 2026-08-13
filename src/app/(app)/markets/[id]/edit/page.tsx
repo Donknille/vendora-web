@@ -8,7 +8,7 @@ import { useMarkets, useUpdateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
-import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
+import { MARKET_STATUSES, statusLabel, type MarketStatus } from "@/lib/marketCalendar";
 import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
 
 interface QuickItem {
@@ -30,7 +30,7 @@ export default function EditMarketPage() {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
-  const [status, setStatus] = useState("open");
+  const [status, setStatus] = useState<MarketStatus>("open");
   const [applicationDeadline, setApplicationDeadline] = useState("");
   const [standFee, setStandFee] = useState("");
   const [travelCost, setTravelCost] = useState("");
@@ -46,7 +46,7 @@ export default function EditMarketPage() {
       setName(market.name || "");
       setDate(market.date || "");
       setLocation(market.location || "");
-      setStatus(market.status || "open");
+      setStatus((market.status as MarketStatus) || "open");
       setApplicationDeadline(market.applicationDeadline || "");
       setStandFee(market.standFee ? formatAmountInput(market.standFee) : "");
       setTravelCost(market.travelCost ? formatAmountInput(market.travelCost) : "");
@@ -162,7 +162,7 @@ export default function EditMarketPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelTight}>Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
+              <select value={status} onChange={(e) => setStatus(e.target.value as MarketStatus)} className={inputClass}>
                 {MARKET_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {statusLabel(s, language === "de")}

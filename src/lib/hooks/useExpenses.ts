@@ -3,6 +3,7 @@ import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { Expense } from "@/lib/types";
+import type { CreateExpenseInput } from "@/lib/schemas/misc";
 
 function useKey() {
   const userId = useCurrentUserId();
@@ -27,12 +28,7 @@ export function useExpenses() {
 export function useCreateExpense() {
   const invalidate = useInvalidateExpenseWrites();
   return useMutation({
-    mutationFn: async (data: {
-      description: string;
-      amount: number;
-      category: string;
-      expenseDate: string;
-    }) => {
+    mutationFn: async (data: CreateExpenseInput) => {
       const res = await apiRequest("POST", "/api/expenses", data);
       return res.json() as Promise<Expense>;
     },

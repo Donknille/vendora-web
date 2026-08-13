@@ -3,6 +3,7 @@ import { apiRequest, queryClient } from "@/lib/api-client";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { useAppQuery } from "@/lib/hooks/useAppQuery";
 import type { MarketEvent } from "@/lib/types";
+import type { CreateMarketInput, UpdateMarketInput } from "@/lib/schemas/market";
 
 function useKey() {
   const userId = useCurrentUserId();
@@ -31,17 +32,7 @@ export function useMarkets() {
 export function useCreateMarket() {
   const invalidate = useInvalidateMarketWrites();
   return useMutation({
-    mutationFn: async (data: {
-      name: string;
-      date: string;
-      location: string;
-      standFee: number;
-      travelCost: number;
-      notes: string;
-      status?: string;
-      applicationDeadline?: string | null;
-      quickItems?: { name: string; price: number }[];
-    }) => {
+    mutationFn: async (data: CreateMarketInput) => {
       const res = await apiRequest("POST", "/api/markets", data);
       return res.json() as Promise<MarketEvent>;
     },
@@ -52,17 +43,7 @@ export function useCreateMarket() {
 export function useUpdateMarket() {
   const invalidate = useInvalidateMarketWrites();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string } & Partial<{
-      name: string;
-      date: string;
-      location: string;
-      standFee: number;
-      travelCost: number;
-      notes: string;
-      status: string;
-      applicationDeadline: string | null;
-      quickItems: { name: string; price: number }[];
-    }>) => {
+    mutationFn: async ({ id, ...data }: { id: string } & UpdateMarketInput) => {
       const res = await apiRequest("PUT", `/api/markets/${id}`, data);
       return res.json() as Promise<MarketEvent>;
     },

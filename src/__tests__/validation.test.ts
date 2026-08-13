@@ -4,7 +4,9 @@ import { z } from "zod";
 // Das Auftragsschema wird aus der Route IMPORTIERT, nicht nachgebaut. Eine
 // Kopie driftet unbemerkt ab: sie bestaetigt dann Regeln, die in Produktion
 // laengst anders sind.
-import { createOrderSchema, MAX_ORDER_TOTAL_CENTS } from "@/app/api/orders/route";
+// Seit Refactoring-Plan 2.2 liegt das Schema in lib/schemas — die Regeln,
+// die hier geprueft werden, sind unveraendert.
+import { createOrderSchema, MAX_ORDER_TOTAL_CENTS } from "@/lib/schemas/order";
 
 const createExpenseSchema = z.object({
   description: z.string().min(1).max(200),
