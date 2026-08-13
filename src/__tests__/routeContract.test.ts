@@ -42,6 +42,11 @@ const NOT_SESSION_AUTHENTICATED: Record<string, string> = {
   "src/app/api/auth/[...all]/route.ts": "Better Auths eigener Handler — er stellt die Sitzung erst aus.",
   "src/app/api/stripe/webhook/route.ts": "Signaturgeprueft (constructEvent), kommt von Stripe ohne Cookie.",
   "src/app/api/cron/retention/route.ts": "Vercel Cron, geschuetzt ueber CRON_SECRET im Authorization-Header.",
+  "src/app/api/session/expired/route.ts":
+    "Raeumt ein ungueltiges Session-Cookie weg und leitet auf /landing. Ohne " +
+    "Sitzung aufrufbar zu sein ist hier der Zweck, nicht ein Loch: der Endpunkt " +
+    "gibt nichts preis und kann nur das eigene Cookie der Aufruferin loeschen. " +
+    "Eigener Test in staleSession.test.ts.",
   "src/app/api/admin/check/route.ts":
     "Antwortet bewusst 200 mit isAdmin:false statt 401 — die Sidebar entscheidet " +
     "daran, ob der Admin-Link erscheint, und ein 401 waere dort ein Fehlerfall. " +

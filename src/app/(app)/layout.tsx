@@ -11,10 +11,16 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   // Real server-side session validation (defense in depth beyond the
-  // cookie-only middleware check). Unauthenticated users go to the landing page.
+  // cookie-only middleware check).
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    redirect("/landing");
+    // Nicht direkt nach /landing: hierher kommt nur, wer ein Session-Cookie
+    // MITBRINGT (ohne eines hätte der Proxy schon vorher umgeleitet) — es aber
+    // ist ungültig. Bliebe es stehen, hielte der Proxy die Person weiter für
+    // angemeldet und würfe sie von /auth/login erneut auf /dashboard, von wo
+    // sie hier wieder landet. Die Anmeldeseite wäre unerreichbar. Der Endpunkt
+    // löscht das Cookie und leitet dann auf /landing.
+    redirect("/api/session/expired");
   }
 
   // The session is already validated here, so hand the user id to the client
