@@ -3,8 +3,31 @@ import path from "path";
 
 export default defineConfig({
   test: {
-    environment: "node",
     globals: true,
+    // Zwei Projekte statt einer Umgebung: die 35 bestehenden Dateien laufen
+    // unveraendert unter Node weiter, die neuen Oberflaechentests daneben unter
+    // jsdom. Getrennt, weil jsdom fuer die reinen Rechenmodule nur Startzeit
+    // kosten wuerde -- und weil ein Test, der DOM braucht, das an seiner Endung
+    // zeigen soll.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["src/__tests__/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          include: ["src/__tests__/**/*.dom.test.tsx"],
+          setupFiles: ["./src/test-utils/setupDom.ts"],
+        },
+      },
+    ],
     // Der Vitest-Standard von 5 s misst beim ersten `await import(...)` die
     // Ladezeit des halben Modulgraphen mit. Isoliert kostet der schwerste Pfad
     // (db -> drizzle -> postgres, stripe, storage) ~1,3 s; im Parallellauf über
