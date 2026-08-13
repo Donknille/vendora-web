@@ -130,13 +130,6 @@ export interface CompanyProfile {
   defaultShippingCost: number | null;
 }
 
-export interface AppSettings {
-  id: string;
-  userId: string;
-  theme: string;
-  currency: string;
-}
-
 export interface SubscriptionInfo {
   plan: "free" | "trial" | "pro";
   canCreate: boolean; // false = read-only (FREE)

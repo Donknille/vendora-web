@@ -23,10 +23,16 @@ was seither erledigt ist, steht hier.
 | 0.5 Charakterisierungs-Snapshots | ✅ | `e75b17a` |
 | 0.6 API-Vertragstests | ✅ | `b555e15` |
 | **Phase-0-Gate** | **erreicht** | |
-| 1–6 | offen | |
+| 0.5b Auth-Seiten nachgezogen | ✅ | `985ce6b` |
+| 1.1 `date.ts` | ✅ | `5abf55a` |
+| 1.2 `pickDefined` | ✅ | `f080851` |
+| 1.3 Styling-Inventar | ✅ | `5c48ae8` |
+| 1.4 Toter Code | ✅ | siehe unten |
+| **Phase 1** | **abgeschlossen** | |
+| 2–6 | offen | |
 
-Testbestand: **430 Tests in 41 Dateien** (381 node + 49 dom), vorher 349 in 35 Dateien.
-Alle vier Verifikationsschritte grün.
+Testbestand: **471 Tests in 45 Dateien** (415 node + 56 dom), vorher 349 in 35 Dateien.
+15 DOM-Snapshots. Alle vier Verifikationsschritte grün.
 
 ### Was Phase 0 nebenbei zutage gefördert hat
 
@@ -664,3 +670,12 @@ Jeder ist ein eigenes Ticket:
    Bei wachsenden Datenmengen wird das relevant — dann als Performance-Ticket, nicht hier.
 5. **Modulgraph-Ladezeit:** 31 s Importzeit über den Testlauf deutet darauf hin, dass
    Routen mehr ziehen als sie brauchen. Eigenes Thema (Bundle-Analyse), nicht Teil dieses Plans.
+6. **`today()` rechnet nach UTC** (`src/lib/date.ts`, seit 1.1). In Deutschland liefert es
+   zwischen Mitternacht und 01:00/02:00 Ortszeit den **Vortag** — betrifft das automatisch
+   gesetzte Zahldatum, Belegdaten und neue Markttage. Ein Test hält das Verhalten fest.
+   Die Korrektur ändert Zahlen, die in die EÜR laufen, und braucht deshalb eine eigene
+   Entscheidung samt Migrationsüberlegung für Bestandsdaten.
+7. **Über-Exporte.** Ein grober Scan meldet ~70 Exporte ohne Importeur außerhalb ihres Moduls.
+   Der größte Teil davon sind legitime Typ-Exporte oder modulintern genutzte Funktionen —
+   die Liste taugt als Hinweis, nicht als Arbeitsauftrag. Ein sauberer Durchgang braucht ein
+   Werkzeug, das Namespace-Importe (`storage.x`) und `import type` versteht.
