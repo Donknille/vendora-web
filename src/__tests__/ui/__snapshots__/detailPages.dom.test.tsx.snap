@@ -1,0 +1,2168 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`markets/[id] — Marktdetail > rendert die Detailseite unveraendert 1`] = `
+<div
+  class="mx-auto max-w-2xl space-y-6"
+>
+  <div
+    class="flex items-center justify-between"
+  >
+    <div
+      class="flex items-center gap-3"
+    >
+      <a
+        class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+        href="/markets"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-arrow-left h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m12 19-7-7 7-7"
+          />
+          <path
+            d="M19 12H5"
+          />
+        </svg>
+      </a>
+      <h1
+        class="text-2xl font-bold text-primary"
+      >
+        Marktdetails
+      </h1>
+    </div>
+    <div
+      class="flex items-center gap-2"
+    >
+      <a
+        class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+        href="/markets/market-1/edit"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-pencil h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+          />
+          <path
+            d="m15 5 4 4"
+          />
+        </svg>
+      </a>
+      <button
+        class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-red-400 transition-colors"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-trash2 lucide-trash-2 h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 11v6"
+          />
+          <path
+            d="M14 11v6"
+          />
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+          />
+          <path
+            d="M3 6h18"
+          />
+          <path
+            d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <h2
+      class="text-lg font-semibold text-primary"
+    >
+      Frühlingsmarkt
+    </h2>
+    <div
+      class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-faint"
+    >
+      <span
+        class="inline-flex items-center gap-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-calendar h-3.5 w-3.5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M8 2v4"
+          />
+          <path
+            d="M16 2v4"
+          />
+          <rect
+            height="18"
+            rx="2"
+            width="18"
+            x="3"
+            y="4"
+          />
+          <path
+            d="M3 10h18"
+          />
+        </svg>
+        14.3.2026
+      </span>
+      <span
+        class="inline-flex items-center gap-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-map-pin h-3.5 w-3.5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+          />
+          <circle
+            cx="12"
+            cy="10"
+            r="3"
+          />
+        </svg>
+        Marktplatz Musterstadt
+      </span>
+    </div>
+    <p
+      class="mt-3 text-sm text-faint"
+    >
+      Stand 14, Aufbau ab 7 Uhr.
+    </p>
+  </div>
+  <a
+    class="flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3.5 text-base font-semibold text-white hover:bg-brand-primary/90 active:scale-[0.99] transition-all"
+    href="/markets/market-1/kasse"
+  >
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-store h-5 w-5"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"
+      />
+      <path
+        d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"
+      />
+      <path
+        d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"
+      />
+    </svg>
+    Kasse öffnen
+  </a>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <h3
+      class="text-sm font-medium text-faint uppercase tracking-wider mb-3"
+    >
+      Kostenübersicht
+    </h3>
+    <div
+      class="space-y-2"
+    >
+      <div
+        class="flex items-center justify-between text-sm"
+      >
+        <span
+          class="text-secondary"
+        >
+          Standgebühr
+        </span>
+        <span
+          class="text-primary"
+        >
+          €45,00
+        </span>
+      </div>
+      <div
+        class="flex items-center justify-between text-sm"
+      >
+        <span
+          class="text-secondary"
+        >
+          Fahrt
+        </span>
+        <span
+          class="text-primary"
+        >
+          €12,00
+        </span>
+      </div>
+      <div
+        class="border-t border-line pt-2 flex items-center justify-between text-sm font-medium"
+      >
+        <span
+          class="text-secondary"
+        >
+          Kosten
+        </span>
+        <span
+          class="text-primary"
+        >
+          €57,00
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <h3
+      class="text-sm font-medium text-faint uppercase tracking-wider mb-3"
+    >
+      Schnellverkauf
+    </h3>
+    <div
+      class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+    >
+      <button
+        class="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all disabled:opacity-50"
+      >
+        <span
+          class="text-sm font-semibold text-primary truncate w-full text-center"
+        >
+          Tasse
+        </span>
+        <span
+          class="text-lg font-bold text-green-600"
+        >
+          €15,00
+        </span>
+        <span
+          class="text-xs text-muted"
+        >
+          2
+          × 
+          verkauft
+        </span>
+      </button>
+      <button
+        class="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all disabled:opacity-50"
+      >
+        <span
+          class="text-sm font-semibold text-primary truncate w-full text-center"
+        >
+          Schale
+        </span>
+        <span
+          class="text-lg font-bold text-green-600"
+        >
+          €22,00
+        </span>
+        <span
+          class="text-xs text-muted"
+        >
+          1
+          × 
+          verkauft
+        </span>
+      </button>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center justify-between mb-3"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <h3
+          class="text-sm font-medium text-faint uppercase tracking-wider"
+        >
+          Sonstiger Verkauf
+        </h3>
+        <span
+          class="inline-flex items-center gap-1 text-xs text-muted"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-check h-3 w-3 text-green-600"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="m9 12 2 2 4-4"
+            />
+          </svg>
+          Synchronisiert
+        </span>
+      </div>
+      <button
+        class="rounded-lg p-1.5 text-brand-primary hover:bg-elevated transition-colors"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+      </button>
+    </div>
+    <div
+      class="space-y-2"
+    >
+      <div
+        class="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5"
+      >
+        <div
+          class="min-w-0 flex-1"
+        >
+          <p
+            class="text-sm font-medium text-secondary truncate"
+          >
+            Tasse
+          </p>
+          <p
+            class="text-xs text-muted"
+          >
+            2 × €15,00
+          </p>
+        </div>
+        <div
+          class="flex items-center gap-3"
+        >
+          <span
+            class="text-sm font-medium text-green-600"
+          >
+            €30,00
+          </span>
+          <button
+            class="rounded p-1 text-muted hover:text-red-400 transition-colors"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div
+        class="flex items-center justify-between rounded-lg border border-line bg-page px-3 py-2.5"
+      >
+        <div
+          class="min-w-0 flex-1"
+        >
+          <p
+            class="text-sm font-medium text-secondary truncate"
+          >
+            Schale
+          </p>
+          <p
+            class="text-xs text-muted"
+          >
+            €22,00
+          </p>
+        </div>
+        <div
+          class="flex items-center gap-3"
+        >
+          <span
+            class="text-sm font-medium text-green-600"
+          >
+            €22,00
+          </span>
+          <button
+            class="rounded p-1 text-muted hover:text-red-400 transition-colors"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      class="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium"
+    >
+      <span
+        class="text-secondary"
+      >
+        Gesamt
+      </span>
+      <span
+        class="text-green-600"
+      >
+        €52,00
+      </span>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <h3
+      class="mb-3 text-sm font-medium text-faint uppercase tracking-wider"
+    >
+      Tagesabschluss
+    </h3>
+    <div
+      class="grid grid-cols-2 gap-3"
+    >
+      <div
+        class="rounded-lg border border-line bg-page p-3"
+      >
+        <p
+          class="inline-flex items-center gap-1.5 text-xs text-faint"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-banknote h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="12"
+              rx="2"
+              width="20"
+              x="2"
+              y="6"
+            />
+            <circle
+              cx="12"
+              cy="12"
+              r="2"
+            />
+            <path
+              d="M6 12h.01M18 12h.01"
+            />
+          </svg>
+           
+          Bar
+        </p>
+        <p
+          class="mt-1 text-lg font-semibold text-primary tabular-nums"
+        >
+          €30,00
+        </p>
+      </div>
+      <div
+        class="rounded-lg border border-line bg-page p-3"
+      >
+        <p
+          class="inline-flex items-center gap-1.5 text-xs text-faint"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-credit-card h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="14"
+              rx="2"
+              width="20"
+              x="2"
+              y="5"
+            />
+            <line
+              x1="2"
+              x2="22"
+              y1="10"
+              y2="10"
+            />
+          </svg>
+           
+          Karte
+        </p>
+        <p
+          class="mt-1 text-lg font-semibold text-primary tabular-nums"
+        >
+          €22,00
+        </p>
+      </div>
+    </div>
+    <div
+      class="mt-3 space-y-2 border-t border-line pt-3 text-sm"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <span
+          class="text-secondary"
+        >
+          Verkäufe
+           (
+          2
+          )
+        </span>
+        <span
+          class="text-primary tabular-nums"
+        >
+          €52,00
+        </span>
+      </div>
+      <div
+        class="flex items-center justify-between"
+      >
+        <span
+          class="text-secondary"
+        >
+          Kosten
+        </span>
+        <span
+          class="text-primary tabular-nums"
+        >
+          −
+          €57,00
+        </span>
+      </div>
+      <div
+        class="flex items-center justify-between border-t border-line pt-2 font-medium"
+      >
+        <span
+          class="text-secondary"
+        >
+          Gewinn
+        </span>
+        <span
+          class="text-lg font-bold tabular-nums text-brand-primary"
+        >
+          €-5,00
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="rounded-lg border border-line bg-elevated p-3 text-xs text-faint"
+  >
+    <div
+      class="flex items-start gap-2"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-info mt-0.5 h-4 w-4 shrink-0 text-muted"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M12 16v-4"
+        />
+        <path
+          d="M12 8h.01"
+        />
+      </svg>
+      <p>
+        Vendora ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
+      </p>
+    </div>
+    <a
+      class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1.5 font-medium text-secondary hover:border-brand-primary hover:text-primary transition-colors"
+      href="https://www.sumup.com/de-de/"
+      rel="noopener noreferrer nofollow sponsored"
+      target="_blank"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-credit-card h-3.5 w-3.5"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          height="14"
+          rx="2"
+          width="20"
+          x="2"
+          y="5"
+        />
+        <line
+          x1="2"
+          x2="22"
+          y1="10"
+          y2="10"
+        />
+      </svg>
+      Kartenleser: SumUp entdecken
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-external-link h-3 w-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M15 3h6v6"
+        />
+        <path
+          d="M10 14 21 3"
+        />
+        <path
+          d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+        />
+      </svg>
+      <span
+        class="ml-1 rounded bg-elevated px-1 py-0.5 text-[10px] uppercase tracking-wide text-muted"
+      >
+        Anzeige
+      </span>
+    </a>
+  </div>
+  <div
+    class="space-y-3"
+  >
+    <button
+      class="w-full flex items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm font-medium text-secondary hover:bg-elevated transition-colors disabled:opacity-50"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-copy h-4 w-4"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          height="14"
+          rx="2"
+          ry="2"
+          width="14"
+          x="8"
+          y="8"
+        />
+        <path
+          d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+        />
+      </svg>
+      Markt kopieren
+    </button>
+    <button
+      class="w-full rounded-lg border border-red-500/20 bg-red-500/5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+    >
+      Markt löschen
+    </button>
+  </div>
+</div>
+`;
+
+exports[`markets/[id]/kasse — Kassenmodus > rendert die Kasse unveraendert 1`] = `
+<div
+  class="fixed inset-0 z-50 flex flex-col bg-page"
+>
+  <header
+    class="flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3"
+  >
+    <div
+      class="min-w-0"
+    >
+      <h1
+        class="truncate text-lg font-bold text-primary"
+      >
+        Frühlingsmarkt
+      </h1>
+      <p
+        class="truncate text-xs text-faint"
+      >
+        14.3.2026
+         · Marktplatz Musterstadt
+      </p>
+    </div>
+    <div
+      class="flex items-center gap-2"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-circle-check h-4 w-4 text-green-600"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="m9 12 2 2 4-4"
+        />
+      </svg>
+      <a
+        aria-label="Kasse schließen"
+        class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+        href="/markets/market-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-x h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 6 6 18"
+          />
+          <path
+            d="m6 6 12 12"
+          />
+        </svg>
+      </a>
+    </div>
+  </header>
+  <div
+    class="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2"
+  >
+    <div
+      class="inline-flex flex-1 rounded-lg border border-line p-0.5"
+    >
+      <button
+        class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-brand-primary text-white"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-banknote h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="12"
+            rx="2"
+            width="20"
+            x="2"
+            y="6"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="2"
+          />
+          <path
+            d="M6 12h.01M18 12h.01"
+          />
+        </svg>
+        Bar
+      </button>
+      <button
+        class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors text-secondary hover:bg-elevated"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-credit-card h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="14"
+            rx="2"
+            width="20"
+            x="2"
+            y="5"
+          />
+          <line
+            x1="2"
+            x2="22"
+            y1="10"
+            y2="10"
+          />
+        </svg>
+        Karte
+      </button>
+    </div>
+    <div
+      class="inline-flex items-center gap-2"
+    >
+      <span
+        class="text-xs text-faint"
+      >
+        Menge
+      </span>
+      <button
+        aria-label="Menge verringern"
+        class="rounded-lg border border-line p-2 text-secondary hover:bg-elevated active:scale-95 transition-all"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-minus h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+        </svg>
+      </button>
+      <span
+        class="w-8 text-center text-lg font-bold text-primary tabular-nums"
+      >
+        1
+      </span>
+      <button
+        aria-label="Menge erhöhen"
+        class="rounded-lg border border-line p-2 text-secondary hover:bg-elevated active:scale-95 transition-all"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div
+    class="flex-1 overflow-y-auto p-4 space-y-4"
+  >
+    <div
+      class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+    >
+      <button
+        class="flex min-h-24 flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all"
+      >
+        <span
+          class="w-full truncate text-center text-base font-semibold text-primary"
+        >
+          Tasse
+        </span>
+        <span
+          class="text-xl font-bold text-green-600"
+        >
+          €15,00
+        </span>
+        <span
+          class="text-xs text-muted"
+        >
+          2
+          × 
+          verkauft
+        </span>
+      </button>
+      <button
+        class="flex min-h-24 flex-col items-center justify-center gap-1 rounded-2xl border border-line bg-surface p-4 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95 transition-all"
+      >
+        <span
+          class="w-full truncate text-center text-base font-semibold text-primary"
+        >
+          Schale
+        </span>
+        <span
+          class="text-xl font-bold text-green-600"
+        >
+          €22,00
+        </span>
+        <span
+          class="text-xs text-muted"
+        >
+          1
+          × 
+          verkauft
+        </span>
+      </button>
+    </div>
+    <form
+      class="rounded-2xl border border-line bg-surface p-3 space-y-3"
+    >
+      <p
+        class="text-sm font-medium text-faint"
+      >
+        Sonstiger Verkauf
+      </p>
+      <input
+        class="w-full rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+        placeholder="Artikelbeschreibung"
+        required=""
+        type="text"
+        value=""
+      />
+      <div
+        class="flex gap-2"
+      >
+        <input
+          class="flex-1 rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+          inputmode="decimal"
+          placeholder="Betrag"
+          required=""
+          type="text"
+          value=""
+        />
+        <button
+          class="rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-primary/90 active:scale-95 transition-all"
+          type="submit"
+        >
+          Buchen
+        </button>
+      </div>
+    </form>
+    <div
+      class="rounded-lg border border-line bg-elevated p-3 text-xs text-faint"
+    >
+      <div
+        class="flex items-start gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-info mt-0.5 h-4 w-4 shrink-0 text-muted"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="M12 16v-4"
+          />
+          <path
+            d="M12 8h.01"
+          />
+        </svg>
+        <p>
+          Vendora ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
+        </p>
+      </div>
+      <a
+        class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1.5 font-medium text-secondary hover:border-brand-primary hover:text-primary transition-colors"
+        href="https://www.sumup.com/de-de/"
+        rel="noopener noreferrer nofollow sponsored"
+        target="_blank"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-credit-card h-3.5 w-3.5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="14"
+            rx="2"
+            width="20"
+            x="2"
+            y="5"
+          />
+          <line
+            x1="2"
+            x2="22"
+            y1="10"
+            y2="10"
+          />
+        </svg>
+        Kartenleser: SumUp entdecken
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-external-link h-3 w-3"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M15 3h6v6"
+          />
+          <path
+            d="M10 14 21 3"
+          />
+          <path
+            d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+          />
+        </svg>
+        <span
+          class="ml-1 rounded bg-elevated px-1 py-0.5 text-[10px] uppercase tracking-wide text-muted"
+        >
+          Anzeige
+        </span>
+      </a>
+    </div>
+  </div>
+  <footer
+    class="border-t border-line bg-surface px-4 py-3 space-y-3"
+  >
+    <div
+      class="grid grid-cols-3 gap-2 text-center"
+    >
+      <div>
+        <p
+          class="text-[11px] uppercase tracking-wide text-faint"
+        >
+          Bar
+        </p>
+        <p
+          class="text-sm font-semibold text-primary tabular-nums"
+        >
+          €30,00
+        </p>
+      </div>
+      <div>
+        <p
+          class="text-[11px] uppercase tracking-wide text-faint"
+        >
+          Karte
+        </p>
+        <p
+          class="text-sm font-semibold text-primary tabular-nums"
+        >
+          €22,00
+        </p>
+      </div>
+      <div>
+        <p
+          class="text-[11px] uppercase tracking-wide text-faint"
+        >
+          Gesamt
+        </p>
+        <p
+          class="text-sm font-bold text-green-600 tabular-nums"
+        >
+          €52,00
+        </p>
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-3"
+    >
+      <button
+        class="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-40 transition-colors"
+        disabled=""
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-undo2 lucide-undo-2 h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9 14 4 9l5-5"
+          />
+          <path
+            d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"
+          />
+        </svg>
+        Rückgängig
+      </button>
+      <div
+        class="ml-auto text-right"
+      >
+        <span
+          class="text-[11px] uppercase tracking-wide text-faint"
+        >
+          Gewinn
+          : 
+        </span>
+        <span
+          class="text-sm font-bold tabular-nums text-brand-primary"
+        >
+          €-5,00
+        </span>
+      </div>
+    </div>
+  </footer>
+</div>
+`;
+
+exports[`settings — Einstellungen > rendert alle Abschnitte unveraendert 1`] = `
+<div
+  class="mx-auto max-w-2xl space-y-6 pb-10"
+>
+  <h1
+    class="text-2xl font-bold text-primary font-display"
+  >
+    Einstellungen
+  </h1>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-user h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"
+        />
+        <circle
+          cx="12"
+          cy="7"
+          r="4"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Konto
+      </h2>
+    </div>
+    <div
+      class="space-y-3"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <span
+          class="text-sm text-faint"
+        >
+          E-Mail
+        </span>
+        <span
+          class="text-sm text-secondary"
+        >
+          test@example.org
+        </span>
+      </div>
+      <div
+        class="flex items-center justify-between"
+      >
+        <span
+          class="text-sm text-faint"
+        >
+          Aktueller Plan
+        </span>
+        <span
+          class="text-sm font-medium text-brand-primary"
+        >
+          Pro (bis 31.12.2026)
+        </span>
+      </div>
+      <button
+        class="w-full rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+      >
+        Abo verwalten / kündigen
+      </button>
+    </div>
+    <button
+      class="mt-4 inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm font-medium text-red-400 hover:bg-elevated transition-colors"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-log-out h-4 w-4"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m16 17 5-5-5-5"
+        />
+        <path
+          d="M21 12H9"
+        />
+        <path
+          d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+        />
+      </svg>
+      Abmelden
+    </button>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-building2 lucide-building-2 h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 12h4"
+        />
+        <path
+          d="M10 8h4"
+        />
+        <path
+          d="M14 21v-3a2 2 0 0 0-4 0v3"
+        />
+        <path
+          d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"
+        />
+        <path
+          d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Firmenprofil
+      </h2>
+    </div>
+    <form
+      class="space-y-4"
+    >
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Firmenname
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Firmenname"
+          type="text"
+          value="Keramik Krug"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Adresse
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+          placeholder="Adresse"
+          rows="2"
+        >
+          Töpferweg 3, 12345 Musterstadt
+        </textarea>
+      </div>
+      <div
+        class="grid grid-cols-2 gap-4"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            E-Mail
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="E-Mail"
+            type="email"
+            value="hallo@keramik-krug.de"
+          />
+        </div>
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Telefon
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="Telefon"
+            type="tel"
+            value="0123 456789"
+          />
+        </div>
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Steuerhinweis (auf Rechnungen)
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="z.B. Gem. §19 UStG wird keine Umsatzsteuer berechnet."
+          type="text"
+          value="Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+        />
+      </div>
+      <label
+        class="flex items-start gap-2.5 cursor-pointer"
+      >
+        <input
+          checked=""
+          class="mt-0.5 h-4 w-4 rounded border-line text-brand-primary focus:ring-brand-primary"
+          type="checkbox"
+        />
+        <span
+          class="text-sm text-secondary"
+        >
+          Kleinunternehmer nach § 19 UStG (keine Umsatzsteuer ausweisen)
+        </span>
+      </label>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Zusätzlicher Steuerhinweis
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="z.B. Gem. §19 UStG wird keine Umsatzsteuer berechnet."
+          type="text"
+          value=""
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Standardversandkosten
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          inputmode="decimal"
+          placeholder="0,00"
+          type="text"
+          value="4,50"
+        />
+      </div>
+      <button
+        class="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        type="submit"
+      >
+        Speichern
+      </button>
+    </form>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-palette h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"
+        />
+        <circle
+          cx="13.5"
+          cy="6.5"
+          fill="currentColor"
+          r=".5"
+        />
+        <circle
+          cx="17.5"
+          cy="10.5"
+          fill="currentColor"
+          r=".5"
+        />
+        <circle
+          cx="6.5"
+          cy="12.5"
+          fill="currentColor"
+          r=".5"
+        />
+        <circle
+          cx="8.5"
+          cy="7.5"
+          fill="currentColor"
+          r=".5"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Darstellung
+      </h2>
+    </div>
+    <div
+      class="flex gap-2"
+    >
+      <button
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-brand-primary text-white"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-sun h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="4"
+          />
+          <path
+            d="M12 2v2"
+          />
+          <path
+            d="M12 20v2"
+          />
+          <path
+            d="m4.93 4.93 1.41 1.41"
+          />
+          <path
+            d="m17.66 17.66 1.41 1.41"
+          />
+          <path
+            d="M2 12h2"
+          />
+          <path
+            d="M20 12h2"
+          />
+          <path
+            d="m6.34 17.66-1.41 1.41"
+          />
+          <path
+            d="m19.07 4.93-1.41 1.41"
+          />
+        </svg>
+        Hell
+      </button>
+      <button
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-elevated text-faint hover:bg-hover hover:text-secondary"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-moon h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
+          />
+        </svg>
+        Dunkel
+      </button>
+      <button
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-elevated text-faint hover:bg-hover hover:text-secondary"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-monitor h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="14"
+            rx="2"
+            width="20"
+            x="2"
+            y="3"
+          />
+          <line
+            x1="8"
+            x2="16"
+            y1="21"
+            y2="21"
+          />
+          <line
+            x1="12"
+            x2="12"
+            y1="17"
+            y2="21"
+          />
+        </svg>
+        System
+      </button>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-globe h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"
+        />
+        <path
+          d="M2 12h20"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Sprache
+      </h2>
+    </div>
+    <div
+      class="flex gap-2"
+    >
+      <button
+        class="rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-brand-primary text-white"
+      >
+        Deutsch
+      </button>
+      <button
+        class="rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-elevated text-faint hover:bg-hover hover:text-secondary"
+      >
+        English
+      </button>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-circle-question-mark h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+        />
+        <path
+          d="M12 17h.01"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Hilfe
+      </h2>
+    </div>
+    <p
+      class="text-sm text-faint leading-relaxed mb-4"
+    >
+      Die Kurzfassung gibt es als Tour. Sie erscheint beim ersten Anmelden automatisch — hier kannst du sie dir jederzeit noch einmal ansehen.
+    </p>
+    <a
+      class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
+      href="/hilfe"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-circle-question-mark h-4 w-4"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+        />
+        <path
+          d="M12 17h.01"
+        />
+      </svg>
+      Hilfe
+    </a>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="mb-4 flex items-center gap-3"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-smartphone h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          height="20"
+          rx="2"
+          ry="2"
+          width="14"
+          x="5"
+          y="2"
+        />
+        <path
+          d="M12 18h.01"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Als App installieren
+      </h2>
+    </div>
+    <p
+      class="mb-4 text-sm leading-relaxed text-faint"
+    >
+      Vendora kann auf dem Startbildschirm liegen: eigenes Symbol, Vollbild ohne Adressleiste, ein Tipp statt Browser und Lesezeichen. Bricht am Stand das Netz weg, läuft die bereits geöffnete Kasse weiter und reicht die Verkäufe später nach.
+    </p>
+    <p
+      class="text-sm text-muted"
+    >
+      Dein Browser bietet keine direkte Installation an. Über das Browsermenü lässt sich Vendora meist trotzdem als App speichern — und im normalen Browser-Tab funktioniert ohnehin alles.
+    </p>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-database h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <ellipse
+          cx="12"
+          cy="5"
+          rx="9"
+          ry="3"
+        />
+        <path
+          d="M3 5V19A9 3 0 0 0 21 19V5"
+        />
+        <path
+          d="M3 12A9 3 0 0 0 21 12"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Daten & Sicherung
+      </h2>
+    </div>
+    <div
+      class="flex flex-col gap-3 sm:flex-row"
+    >
+      <button
+        class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-download h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 15V3"
+          />
+          <path
+            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+          />
+          <path
+            d="m7 10 5 5 5-5"
+          />
+        </svg>
+        Backup exportieren
+      </button>
+      <button
+        class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-upload h-4 w-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 3v12"
+          />
+          <path
+            d="m17 8-5-5-5 5"
+          />
+          <path
+            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+          />
+        </svg>
+        Aus Backup wiederherstellen
+      </button>
+      <input
+        accept=".json"
+        class="hidden"
+        type="file"
+      />
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-shield h-5 w-5 text-brand-primary"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Datenschutz
+      </h2>
+    </div>
+    <p
+      class="text-sm text-faint leading-relaxed mb-4"
+    >
+      Vendora speichert deine Daten sicher in der Cloud, geschützt durch dein Konto. Kein Tracking, keine Analysen. Du besitzt 100% deiner Daten.
+    </p>
+    <div
+      class="flex flex-wrap gap-3"
+    >
+      <a
+        class="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+        href="/legal/datenschutz"
+      >
+        Datenschutzerklärung →
+      </a>
+      <a
+        class="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+        href="/legal/agb"
+      >
+        AGB →
+      </a>
+      <a
+        class="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+        href="/legal/impressum"
+      >
+        Impressum →
+      </a>
+      <a
+        class="text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+        href="/legal/changelog"
+      >
+        Changelog →
+      </a>
+    </div>
+  </div>
+  <div
+    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+  >
+    <div
+      class="flex items-center gap-3 mb-4"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-trash2 lucide-trash-2 h-5 w-5 text-red-400"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 11v6"
+        />
+        <path
+          d="M14 11v6"
+        />
+        <path
+          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+        />
+        <path
+          d="M3 6h18"
+        />
+        <path
+          d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+        />
+      </svg>
+      <h2
+        class="text-base font-semibold text-primary"
+      >
+        Konto löschen
+      </h2>
+    </div>
+    <p
+      class="text-sm text-faint mb-4"
+    >
+      Alle deine Daten werden unwiderruflich gelöscht. Ausgestellte Rechnungen bleiben gesetzlich vorgeschrieben aufbewahrt (§ 147 AO, § 14b UStG) — ohne Verbindung zu deinem Konto.
+    </p>
+    <button
+      class="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 11v6"
+        />
+        <path
+          d="M14 11v6"
+        />
+        <path
+          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+        />
+        <path
+          d="M3 6h18"
+        />
+        <path
+          d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+        />
+      </svg>
+      Konto und alle Daten löschen
+    </button>
+  </div>
+</div>
+`;

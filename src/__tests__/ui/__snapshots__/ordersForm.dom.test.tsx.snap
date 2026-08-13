@@ -1,0 +1,869 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formular unveraendert 1`] = `
+<div
+  class="mx-auto max-w-2xl space-y-6"
+>
+  <div
+    class="flex items-center gap-3"
+  >
+    <a
+      class="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+      href="/orders/order-1"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-arrow-left h-5 w-5"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m12 19-7-7 7-7"
+        />
+        <path
+          d="M19 12H5"
+        />
+      </svg>
+    </a>
+    <h1
+      class="text-2xl font-bold text-primary"
+    >
+      Auftrag bearbeiten
+    </h1>
+  </div>
+  <form
+    class="space-y-6"
+  >
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Kunde
+      </h2>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Kundenname
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          list="customer-suggestions"
+          placeholder="Kundenname"
+          type="text"
+          value="Anna Beispiel"
+        />
+        <datalist
+          id="customer-suggestions"
+        >
+          <option
+            value="Anna Beispiel"
+          />
+          <option
+            value="Bernd Muster"
+          />
+        </datalist>
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          E-Mail (optional)
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="E-Mail (optional)"
+          type="email"
+          value="anna@example.org"
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Straße + Hausnr.
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Musterstraße 1"
+          type="text"
+          value="Musterstraße 1"
+        />
+      </div>
+      <div
+        class="flex gap-3"
+      >
+        <div
+          class="w-1/3"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            PLZ
+             *
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="12345"
+            type="text"
+            value="10115"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            Ort
+             *
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="Musterstadt"
+            type="text"
+            value="Berlin"
+          />
+        </div>
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Land
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Land"
+          type="text"
+          value="Deutschland"
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Datum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value="2026-03-01"
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Leistungsdatum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value="2026-03-05"
+        />
+        <p
+          class="mt-1 text-xs text-muted"
+        >
+          Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum.
+        </p>
+      </div>
+      <div
+        class="flex gap-3"
+      >
+        <div
+          class="flex-1"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            Zahlungsart
+          </label>
+          <select
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          >
+            <option
+              value=""
+            >
+              — keine —
+            </option>
+            <option
+              value="cash"
+            >
+              Bar
+            </option>
+            <option
+              value="card"
+            >
+              Karte
+            </option>
+            <option
+              value="transfer"
+            >
+              Überweisung
+            </option>
+            <option
+              value="paypal"
+            >
+              PayPal
+            </option>
+            <option
+              value="other"
+            >
+              Sonstiges
+            </option>
+          </select>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            Bezahlt am
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            type="date"
+            value=""
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h2
+          class="text-sm font-medium text-faint uppercase tracking-wider"
+        >
+          Artikel
+        </h2>
+        <button
+          class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-plus h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12h14"
+            />
+            <path
+              d="M12 5v14"
+            />
+          </svg>
+          Artikel
+        </button>
+      </div>
+      <div
+        class="space-y-3"
+      >
+        <div
+          class="flex items-start gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <div
+            class="flex-1 space-y-2"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder="Artikelname"
+              type="text"
+              value="Vase groß"
+            />
+            <div
+              class="flex gap-2"
+            >
+              <div
+                class="w-24"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Anz.
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  min="1"
+                  type="number"
+                  value="1"
+                />
+              </div>
+              <div
+                class="flex-1"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Preis
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  inputmode="decimal"
+                  placeholder="0,00"
+                  type="text"
+                  value="25,00"
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            class="mt-1 rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="flex items-start gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <div
+            class="flex-1 space-y-2"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder="Artikelname"
+              type="text"
+              value="Untersetzer"
+            />
+            <div
+              class="flex gap-2"
+            >
+              <div
+                class="w-24"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Anz.
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  min="1"
+                  type="number"
+                  value="2"
+                />
+              </div>
+              <div
+                class="flex-1"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Preis
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  inputmode="decimal"
+                  placeholder="0,00"
+                  type="text"
+                  value="2,50"
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            class="mt-1 rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div
+        class="space-y-3 rounded-lg border border-line bg-surface px-4 py-3"
+      >
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <span
+            class="text-sm text-secondary"
+          >
+            Zwischensumme
+          </span>
+          <span
+            class="text-sm text-primary"
+          >
+            €30,00
+          </span>
+        </div>
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <label
+            class="text-sm text-secondary"
+            for="shipping-cost"
+          >
+            Versandkosten
+          </label>
+          <input
+            class="w-28 rounded-lg border border-line bg-page px-3 py-2 text-right text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="shipping-cost"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value="4,50"
+          />
+        </div>
+        <div
+          class="flex items-center justify-between border-t border-line pt-3"
+        >
+          <span
+            class="text-sm font-medium text-secondary"
+          >
+            Gesamt
+          </span>
+          <span
+            class="text-lg font-bold text-green-600"
+          >
+            €34,50
+          </span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label
+        class="block text-sm font-medium text-secondary mb-1.5"
+      >
+        Notizen
+      </label>
+      <textarea
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        placeholder="Zusätzliche Notizen (optional)"
+        rows="3"
+      >
+        Bitte in Geschenkpapier einpacken.
+      </textarea>
+    </div>
+    <button
+      class="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      type="submit"
+    >
+      Speichern
+    </button>
+  </form>
+</div>
+`;
+
+exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraendert 1`] = `
+<div
+  class="mx-auto max-w-2xl space-y-6"
+>
+  <div
+    class="flex items-center gap-3"
+  >
+    <a
+      class="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+      href="/orders"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-arrow-left h-5 w-5"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m12 19-7-7 7-7"
+        />
+        <path
+          d="M19 12H5"
+        />
+      </svg>
+    </a>
+    <h1
+      class="text-2xl font-bold text-primary"
+    >
+      Neuer Auftrag
+    </h1>
+  </div>
+  <form
+    class="space-y-6"
+  >
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Kunde
+      </h2>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Kundenname
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          list="customer-suggestions"
+          placeholder="Kundenname"
+          type="text"
+          value=""
+        />
+        <datalist
+          id="customer-suggestions"
+        >
+          <option
+            value="Anna Beispiel"
+          />
+          <option
+            value="Bernd Muster"
+          />
+        </datalist>
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          E-Mail (optional)
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="E-Mail (optional)"
+          type="email"
+          value=""
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Straße + Hausnr.
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Musterstraße 1"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="flex gap-3"
+      >
+        <div
+          class="w-1/3"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            PLZ
+             *
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="12345"
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <label
+            class="block text-sm font-medium text-secondary mb-1.5"
+          >
+            Ort
+             *
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            placeholder="Musterstadt"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Land
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Land"
+          type="text"
+          value=""
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Datum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value="2026-03-15"
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-secondary mb-1.5"
+        >
+          Leistungsdatum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value=""
+        />
+        <p
+          class="mt-1 text-xs text-muted"
+        >
+          Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum.
+        </p>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h2
+          class="text-sm font-medium text-faint uppercase tracking-wider"
+        >
+          Artikel
+        </h2>
+        <button
+          class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-plus h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12h14"
+            />
+            <path
+              d="M12 5v14"
+            />
+          </svg>
+          Artikel
+        </button>
+      </div>
+      <div
+        class="space-y-3"
+      >
+        <div
+          class="flex items-start gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <div
+            class="flex-1 space-y-2"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder="Artikelname"
+              type="text"
+              value=""
+            />
+            <div
+              class="flex gap-2"
+            >
+              <div
+                class="w-24"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Anz.
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  min="1"
+                  type="number"
+                  value="1"
+                />
+              </div>
+              <div
+                class="flex-1"
+              >
+                <label
+                  class="block text-xs text-muted mb-1"
+                >
+                  Preis
+                </label>
+                <input
+                  class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  inputmode="decimal"
+                  placeholder="0,00"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="space-y-3 rounded-lg border border-line bg-surface px-4 py-3"
+      >
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <span
+            class="text-sm text-secondary"
+          >
+            Zwischensumme
+          </span>
+          <span
+            class="text-sm text-primary"
+          >
+            €0,00
+          </span>
+        </div>
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <label
+            class="text-sm text-secondary"
+            for="shipping-cost"
+          >
+            Versandkosten
+          </label>
+          <input
+            class="w-28 rounded-lg border border-line bg-page px-3 py-2 text-right text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="shipping-cost"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="flex items-center justify-between border-t border-line pt-3"
+        >
+          <span
+            class="text-sm font-medium text-secondary"
+          >
+            Gesamt
+          </span>
+          <span
+            class="text-lg font-bold text-green-600"
+          >
+            €0,00
+          </span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label
+        class="block text-sm font-medium text-secondary mb-1.5"
+      >
+        Notizen
+      </label>
+      <textarea
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        placeholder="Zusätzliche Notizen (optional)"
+        rows="3"
+      />
+    </div>
+    <button
+      class="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      type="submit"
+    >
+      Auftrag erstellen
+    </button>
+  </form>
+</div>
+`;

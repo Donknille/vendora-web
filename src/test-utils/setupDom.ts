@@ -17,6 +17,39 @@ vi.mock("next/navigation", async () => {
   return nextNavigationMock;
 });
 
+/**
+ * Der Better-Auth-Browser-Client haelt sein `fetch` beim Import fest und
+ * entkommt damit `vi.stubGlobal`. Ohne Ersatz baut z. B. die
+ * Einstellungsseite ueber authClient.getSession() eine echte Verbindung nach
+ * http://localhost:3000 auf; der Testlauf blieb gruen, endete aber mit vier
+ * ECONNREFUSED-Fehlern und Exit-Code 1.
+ *
+ * Ein Test darf das Netz nicht anfassen -- schon gar nicht unbemerkt, waehrend
+ * die Zusicherungen laengst durch sind.
+ */
+vi.mock("@/lib/auth-client", () => {
+  const session = {
+    data: { user: { id: "test-user", email: "test@example.org" } },
+    error: null,
+    isPending: false,
+  };
+  const authClient = {
+    getSession: async () => session,
+    useSession: () => session,
+    signOut: vi.fn(async () => ({ data: null, error: null })),
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    sendVerificationEmail: vi.fn(async () => ({ data: null, error: null })),
+  };
+  return {
+    authClient,
+    signIn: authClient.signIn,
+    signUp: authClient.signUp,
+    signOut: authClient.signOut,
+    useSession: authClient.useSession,
+  };
+});
+
 // ThemeProvider fragt beim ersten Effekt `prefers-color-scheme` ab. jsdom
 // bringt matchMedia nicht mit — ohne Ersatz wirft jeder Render.
 if (!window.matchMedia) {

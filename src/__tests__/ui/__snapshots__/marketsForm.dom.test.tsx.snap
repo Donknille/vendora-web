@@ -1,0 +1,640 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular unveraendert 1`] = `
+<div
+  class="mx-auto max-w-lg space-y-6"
+>
+  <div
+    class="flex items-center gap-3"
+  >
+    <a
+      class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+      href="/markets/market-1"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-arrow-left h-5 w-5"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m12 19-7-7 7-7"
+        />
+        <path
+          d="M19 12H5"
+        />
+      </svg>
+    </a>
+    <h1
+      class="text-2xl font-bold text-primary"
+    >
+      Markt bearbeiten
+    </h1>
+  </div>
+  <form
+    class="space-y-6"
+  >
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Veranstaltungsdetails
+      </h2>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Marktname
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Marktname"
+          required=""
+          type="text"
+          value="Frühlingsmarkt"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Datum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value="2026-03-14"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Ort (optional)
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Ort (optional)"
+          type="text"
+          value="Marktplatz Musterstadt"
+        />
+      </div>
+      <div
+        class="grid grid-cols-2 gap-4"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Status
+          </label>
+          <select
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          >
+            <option
+              value="open"
+            >
+              Geplant
+            </option>
+            <option
+              value="applied"
+            >
+              Beworben
+            </option>
+            <option
+              value="confirmed"
+            >
+              Zugesagt
+            </option>
+            <option
+              value="completed"
+            >
+              Abgeschlossen
+            </option>
+            <option
+              value="cancelled"
+            >
+              Abgesagt
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Bewerbungsfrist
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            type="date"
+            value="2026-02-01"
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Kosten
+      </h2>
+      <div
+        class="grid grid-cols-2 gap-4"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Standgebühr
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value="45,00"
+          />
+        </div>
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Fahrtkosten
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value="12,00"
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h2
+          class="text-sm font-medium text-faint uppercase tracking-wider"
+        >
+          Artikel
+        </h2>
+        <button
+          class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-plus h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12h14"
+            />
+            <path
+              d="M12 5v14"
+            />
+          </svg>
+          Artikel hinzufügen
+        </button>
+      </div>
+      <div
+        class="space-y-3"
+      >
+        <div
+          class="flex items-center gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <div
+            class="flex-1"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder="Artikelname"
+              type="text"
+              value="Tasse"
+            />
+          </div>
+          <div
+            class="w-28"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors text-right"
+              inputmode="decimal"
+              placeholder="0,00 €"
+              type="text"
+              value="15,00"
+            />
+          </div>
+          <button
+            class="rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="flex items-center gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <div
+            class="flex-1"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              placeholder="Artikelname"
+              type="text"
+              value="Schale"
+            />
+          </div>
+          <div
+            class="w-28"
+          >
+            <input
+              class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors text-right"
+              inputmode="decimal"
+              placeholder="0,00 €"
+              type="text"
+              value="22,00"
+            />
+          </div>
+          <button
+            class="rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 h-4 w-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label
+        class="mb-1 block text-sm font-medium text-secondary"
+      >
+        Notizen
+      </label>
+      <textarea
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        placeholder="Zusätzliche Notizen (optional)"
+        rows="3"
+      >
+        Stand 14, Aufbau ab 7 Uhr.
+      </textarea>
+    </div>
+    <button
+      class="w-full rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      type="submit"
+    >
+      Markt speichern
+    </button>
+  </form>
+</div>
+`;
+
+exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert 1`] = `
+<div
+  class="mx-auto max-w-lg space-y-6"
+>
+  <div
+    class="flex items-center gap-3"
+  >
+    <a
+      class="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+      href="/markets"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-arrow-left h-5 w-5"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m12 19-7-7 7-7"
+        />
+        <path
+          d="M19 12H5"
+        />
+      </svg>
+    </a>
+    <h1
+      class="text-2xl font-bold text-primary"
+    >
+      Neuer Markt
+    </h1>
+  </div>
+  <form
+    class="space-y-6"
+  >
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Veranstaltungsdetails
+      </h2>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Marktname
+           *
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Marktname"
+          required=""
+          type="text"
+          value=""
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Datum
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          type="date"
+          value="2026-03-15"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-1 block text-sm font-medium text-secondary"
+        >
+          Ort (optional)
+        </label>
+        <input
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          placeholder="Ort (optional)"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="grid grid-cols-2 gap-4"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Status
+          </label>
+          <select
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          >
+            <option
+              value="open"
+            >
+              Geplant
+            </option>
+            <option
+              value="applied"
+            >
+              Beworben
+            </option>
+            <option
+              value="confirmed"
+            >
+              Zugesagt
+            </option>
+            <option
+              value="completed"
+            >
+              Abgeschlossen
+            </option>
+            <option
+              value="cancelled"
+            >
+              Abgesagt
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Bewerbungsfrist
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            type="date"
+            value=""
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <h2
+        class="text-sm font-medium text-faint uppercase tracking-wider"
+      >
+        Kosten
+      </h2>
+      <div
+        class="grid grid-cols-2 gap-4"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Standgebühr
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value=""
+          />
+        </div>
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium text-secondary"
+          >
+            Fahrtkosten
+          </label>
+          <input
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            inputmode="decimal"
+            placeholder="0,00"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="space-y-4"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h2
+          class="text-sm font-medium text-faint uppercase tracking-wider"
+        >
+          Artikel
+        </h2>
+        <button
+          class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-plus h-3.5 w-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12h14"
+            />
+            <path
+              d="M12 5v14"
+            />
+          </svg>
+          Artikel hinzufügen
+        </button>
+      </div>
+      <button
+        class="w-full rounded-lg border border-dashed border-line py-6 text-sm text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus h-5 w-5 mx-auto mb-1"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Artikel hinzufügen
+      </button>
+    </div>
+    <div>
+      <label
+        class="mb-1 block text-sm font-medium text-secondary"
+      >
+        Notizen
+      </label>
+      <textarea
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        placeholder="Zusätzliche Notizen (optional)"
+        rows="3"
+      />
+    </div>
+    <button
+      class="w-full rounded-lg bg-brand-primary py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      disabled=""
+      type="submit"
+    >
+      Markt erstellen
+    </button>
+  </form>
+</div>
+`;
