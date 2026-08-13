@@ -29,10 +29,22 @@ was seither erledigt ist, steht hier.
 | 1.3 Styling-Inventar | ✅ | `5c48ae8` |
 | 1.4 Toter Code | ✅ | siehe unten |
 | **Phase 1** | **abgeschlossen** | |
-| 2–6 | offen | |
+| 2.1 Route-Gerüst (`withAuth`) | ✅ | `bae2235` |
+| 2.2 Zod-Schemas zentral | ✅ | `d4c8291` |
+| **Phase 2** | **abgeschlossen** | |
+| 3–6 | offen | |
 
-Testbestand: **471 Tests in 45 Dateien** (415 node + 56 dom), vorher 349 in 35 Dateien.
+Testbestand: **508 Tests in 45 Dateien** (452 node + 56 dom), vorher 349 in 35 Dateien.
 15 DOM-Snapshots. Alle vier Verifikationsschritte grün.
+
+Gerüst-Bilanz nach Phase 2 (`src/app/api`, −478 Zeilen):
+
+| | vorher | nachher |
+|---|---:|---:|
+| 401-Block mit `"Unauthorized"` | 38 | 0 |
+| 500-Fang mit `"Internal server error"` | 37 | 0 |
+| 400-Block mit `flatten().fieldErrors` | 10 | 0 |
+| `console.error` in Routen | 50 | 7 |
 
 ### Was Phase 0 nebenbei zutage gefördert hat
 
@@ -50,6 +62,11 @@ sie sind jetzt begründet notiert und mit einem Stolperdraht versehen:
 3. **Der Better-Auth-Browser-Client entkommt `vi.stubGlobal`**, weil er `fetch` beim Import festhält.
    Die Einstellungsseite baute im Test eine echte Verbindung nach `localhost:3000` auf. Der Lauf blieb
    grün und endete mit Exit-Code 1 — also *nach* den Zusicherungen, wo es leicht zu übersehen ist.
+4. **Vier Eingabefeld-Looks und zwei Label-Abstände** (Phase 1.3). Über 20 Dateien verteilt fiel das
+   nicht auf; in `styles.ts` nebeneinander schon. Unverändert gelassen, per Test festgehalten.
+5. **Die UI reichte an drei Stellen einen rohen `string` durch, wo der Server ein Enum erwartet**
+   (Marktstatus, Zahlungsart) — aufgedeckt in 2.2 durch die aus Zod abgeleiteten Hook-Typen.
+   Der Server hat solche Werte immer schon mit 400 abgelehnt; jetzt sagt es der Typ vorher.
 
 ### Neue Werkzeuge, auf die die Phasen 1–5 aufsetzen
 
