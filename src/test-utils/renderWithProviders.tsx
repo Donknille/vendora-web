@@ -26,10 +26,11 @@ export function renderWithProviders(
   opts: {
     route?: string;
     params?: Record<string, string>;
+    searchParams?: Record<string, string>;
     language?: Language;
   } = {}
 ): RenderResult {
-  setRoute(opts.route ?? "/", opts.params ?? {});
+  setRoute(opts.route ?? "/", opts.params ?? {}, opts.searchParams ?? {});
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>

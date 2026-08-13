@@ -13,6 +13,12 @@ import { vi } from "vitest";
 export const navigationState = {
   pathname: "/",
   params: {} as Record<string, string>,
+  /**
+   * Suchparameter der Route. Ohne die rendert `/auth/update-password` seinen
+   * "Link ungueltig"-Zweig statt des Formulars — es gibt Seiten, deren
+   * eigentlicher Inhalt an der Query haengt.
+   */
+  searchParams: {} as Record<string, string>,
 };
 
 export const routerMock = {
@@ -24,16 +30,22 @@ export const routerMock = {
   prefetch: vi.fn(),
 };
 
-/** Setzt Pfad und Route-Parameter fuer den naechsten Render. */
-export function setRoute(pathname: string, params: Record<string, string> = {}): void {
+/** Setzt Pfad, Route-Parameter und Suchparameter fuer den naechsten Render. */
+export function setRoute(
+  pathname: string,
+  params: Record<string, string> = {},
+  searchParams: Record<string, string> = {}
+): void {
   navigationState.pathname = pathname;
   navigationState.params = params;
+  navigationState.searchParams = searchParams;
 }
 
 /** Zuruecksetzen zwischen zwei Tests — sonst leckt ein `push` in den naechsten. */
 export function resetNavigation(): void {
   navigationState.pathname = "/";
   navigationState.params = {};
+  navigationState.searchParams = {};
   for (const fn of Object.values(routerMock)) fn.mockClear();
 }
 
@@ -41,7 +53,7 @@ export const nextNavigationMock = {
   useRouter: () => routerMock,
   usePathname: () => navigationState.pathname,
   useParams: () => navigationState.params,
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(navigationState.searchParams),
   redirect: vi.fn(),
   notFound: vi.fn(),
 };
