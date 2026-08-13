@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
+import { validationError, withAuth } from "@/lib/server/route";
 import { z } from "zod";
 
 const orderItemSchema = z.object({
@@ -53,44 +53,20 @@ export const createOrderSchema = z.object({
   }
 });
 
-export async function GET(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+export const GET = withAuth("GET /api/orders", async ({ userId, request }) => {
+  const data = await storage.getOrders(userId, parsePagination(request));
+  return NextResponse.json(data);
+});
 
-    const data = await storage.getOrders(userId, parsePagination(request));
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("GET /api/orders error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
-}
+export const POST = withAuth("POST /api/orders", async ({ userId, request }) => {
+  // Bleibt bewusst im Rumpf und nicht im Wrapper: wer eine Route liest, muss
+  // sehen, wer sie benutzen darf.
+  const gate = await requireWriteAccess(userId);
+  if (gate) return gate;
 
-export async function POST(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+  const parsed = createOrderSchema.safeParse(await request.json());
+  if (!parsed.success) return validationError(parsed.error);
 
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
-
-    const body = await request.json();
-    const parsed = createOrderSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const order = await storage.createOrder(userId, parsed.data);
-    return NextResponse.json(order, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/orders error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
-}
+  const order = await storage.createOrder(userId, parsed.data);
+  return NextResponse.json(order, { status: 201 });
+});

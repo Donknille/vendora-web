@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { collectSourceFiles, rel, SRC } from "@/test-utils/sourceScan";
 
@@ -104,6 +105,39 @@ describe("/api/admin/check — die eine Route, die ohne Sitzung 200 antwortet", 
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ isAdmin: false });
+  });
+});
+
+describe("Das Protokoll-Label passt zur Route", () => {
+  // withAuth/withRoute bekommen ihr Label von Hand, weil die Protokollzeile das
+  // Routen*muster* nennt und nicht die aufgerufene URL. Von Hand heisst:
+  // kopierbar. Ein falsches Label faellt im Betrieb niemandem auf -- es steht
+  // ja etwas Plausibles da, nur eben der Name der Nachbarroute.
+  const LABEL = /with(?:Auth|Route)(?:<[^>]*>)?\(\s*\n?\s*"([A-Z]+) ([^"]+)"/g;
+
+  it.each(routeFiles.map((f) => [rel(f), f]))("%s", (label, file) => {
+    const source = readFileSync(file, "utf8");
+    const erwarteterPfad = rel(file)
+      .replace(/^src\/app/, "")
+      .replace(/\/route\.ts$/, "");
+
+    const labels = [...source.matchAll(LABEL)];
+    for (const [, method, pfad] of labels) {
+      expect(pfad, `${label}: Label nennt ${pfad}`).toBe(erwarteterPfad);
+      expect(
+        source,
+        `${label}: Label sagt ${method}, aber die Datei exportiert keinen solchen Handler`
+      ).toContain(`export const ${method} =`);
+    }
+  });
+
+  it("die meisten Routen benutzen das gemeinsame Geruest", () => {
+    // Selbsttest gegen einen leeren Scan: findet die Regex nichts, prueft die
+    // Schleife oben auch nichts.
+    const mitGeruest = routeFiles.filter((f) =>
+      /with(?:Auth|Route)(?:<[^>]*>)?\(/.test(readFileSync(f, "utf8"))
+    );
+    expect(mitGeruest.length).toBeGreaterThanOrEqual(30);
   });
 });
 

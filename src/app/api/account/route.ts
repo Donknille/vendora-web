@@ -1,29 +1,24 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, withAuth } from "@/lib/server/route";
 import { deleteAccount } from "@/lib/server/accountDeletion";
 
-export async function DELETE() {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
+export const DELETE = withAuth(
+  "DELETE /api/account",
+  async ({ userId }) => {
     const result = await deleteAccount(userId);
 
     if (!result.ok) {
-      if (result.reason === "not_found") {
-        return NextResponse.json({ message: "User not found" }, { status: 404 });
-      }
-      return NextResponse.json(
-        { message: "Failed to delete payment data. Please try again or contact support." },
-        { status: 500 }
+      if (result.reason === "not_found") return fail(404, "User not found");
+      return fail(
+        500,
+        "Failed to delete payment data. Please try again or contact support."
       );
     }
 
     return NextResponse.json({ message: "Account and all data deleted successfully" });
-  } catch (error) {
-    console.error("DELETE /api/account error:", error);
-    return NextResponse.json({ message: "Failed to delete account" }, { status: 500 });
-  }
-}
+  },
+  // Abweichender 500-Wortlaut, siehe RouteOptions: eine gescheiterte
+  // Kontoloeschung ist fuer die Nutzerin etwas anderes als ein allgemeiner
+  // Serverfehler.
+  { errorMessage: "Failed to delete account" }
+);

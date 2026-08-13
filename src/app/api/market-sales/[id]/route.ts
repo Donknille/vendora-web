@@ -1,25 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { fail, withAuth } from "@/lib/server/route";
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const deleted = await storage.deleteMarketSale(userId, id);
-    if (!deleted) {
-      return NextResponse.json({ message: "Market sale not found" }, { status: 404 });
-    }
+export const DELETE = withAuth<{ id: string }>(
+  "DELETE /api/market-sales/[id]",
+  async ({ userId, params }) => {
+    const deleted = await storage.deleteMarketSale(userId, params.id);
+    if (!deleted) return fail(404, "Market sale not found");
     return NextResponse.json({ message: "Market sale deleted" });
-  } catch (error) {
-    console.error("DELETE /api/market-sales/[id] error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);

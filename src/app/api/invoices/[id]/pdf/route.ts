@@ -1,25 +1,15 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, withAuth } from "@/lib/server/route";
 import * as storage from "@/lib/server/storage";
 import { buildInvoicePdf } from "@/lib/server/invoicePdf";
 
 // Render the invoice PDF on demand from the immutable snapshot — no stored file,
 // always byte-identical for the same invoice.
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const invoice = await storage.getInvoice(userId, id);
-    if (!invoice) {
-      return NextResponse.json({ message: "Invoice not found" }, { status: 404 });
-    }
+export const GET = withAuth<{ id: string }>(
+  "GET /api/invoices/[id]/pdf",
+  async ({ userId, params }) => {
+    const invoice = await storage.getInvoice(userId, params.id);
+    if (!invoice) return fail(404, "Invoice not found");
 
     const bytes = await buildInvoicePdf(invoice);
     const prefix = invoice.type === "cancellation" ? "Stornorechnung" : "Rechnung";
@@ -32,8 +22,6 @@ export async function GET(
         "Cache-Control": "no-store",
       },
     });
-  } catch (error) {
-    console.error("GET /api/invoices/[id]/pdf error:", error);
-    return NextResponse.json({ message: "PDF generation failed" }, { status: 500 });
-  }
-}
+  },
+  { errorMessage: "PDF generation failed" }
+);

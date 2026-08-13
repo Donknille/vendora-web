@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, validationError, withAuth } from "@/lib/server/route";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { z } from "zod";
@@ -10,62 +10,33 @@ const createMarketSaleSchema = z.object({
   quantity: z.number().int().min(1).max(9999).default(1),
 });
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id: marketId } = await params;
-    const data = await storage.getMarketSales(userId, marketId);
+export const GET = withAuth<{ id: string }>(
+  "GET /api/markets/[id]/sales",
+  async ({ userId, params }) => {
+    const data = await storage.getMarketSales(userId, params.id);
     return NextResponse.json(data);
-  } catch (error) {
-    console.error("GET /api/markets/[id]/sales error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id: marketId } = await params;
+export const POST = withAuth<{ id: string }>(
+  "POST /api/markets/[id]/sales",
+  async ({ userId, request, params }) => {
+    const marketId = params.id;
 
     // Validate market exists and belongs to user
     const market = await storage.getMarket(userId, marketId);
-    if (!market) {
-      return NextResponse.json({ message: "Market not found" }, { status: 404 });
-    }
+    if (!market) return fail(404, "Market not found");
 
     const gate = await requireWriteAccess(userId);
     if (gate) return gate;
 
-    const body = await request.json();
-    const parsed = createMarketSaleSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
+    const parsed = createMarketSaleSchema.safeParse(await request.json());
+    if (!parsed.success) return validationError(parsed.error);
 
     const sale = await storage.createMarketSale(userId, {
       marketId,
       ...parsed.data,
     });
     return NextResponse.json(sale, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/markets/[id]/sales error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);

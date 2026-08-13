@@ -1,34 +1,18 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, withAuth } from "@/lib/server/route";
 import * as storage from "@/lib/server/storage";
 
 // Issue a cancellation (Storno) invoice for an issued invoice. Corrective and
 // legally required, so it is not subscription-gated (only auth + ownership).
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const result = await storage.cancelInvoice(userId, id);
+export const POST = withAuth<{ id: string }>(
+  "POST /api/invoices/[id]/cancel",
+  async ({ userId, params }) => {
+    const result = await storage.cancelInvoice(userId, params.id);
     if (!result.ok) {
-      if (result.code === "not_found") {
-        return NextResponse.json({ message: "Invoice not found" }, { status: 404 });
-      }
-      return NextResponse.json(
-        { message: "This invoice cannot be cancelled", code: "NOT_CANCELLABLE" },
-        { status: 409 }
-      );
+      if (result.code === "not_found") return fail(404, "Invoice not found");
+      return fail(409, "This invoice cannot be cancelled", { code: "NOT_CANCELLABLE" });
     }
 
     return NextResponse.json(result);
-  } catch (error) {
-    console.error("POST /api/invoices/[id]/cancel error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);

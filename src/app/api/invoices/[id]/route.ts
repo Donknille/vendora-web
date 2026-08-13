@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
 import * as storage from "@/lib/server/storage";
+import { fail, withAuth } from "@/lib/server/route";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const invoice = await storage.getInvoice(userId, id);
-    if (!invoice) {
-      return NextResponse.json({ message: "Invoice not found" }, { status: 404 });
-    }
-
+export const GET = withAuth<{ id: string }>(
+  "GET /api/invoices/[id]",
+  async ({ userId, params }) => {
+    const invoice = await storage.getInvoice(userId, params.id);
+    if (!invoice) return fail(404, "Invoice not found");
     return NextResponse.json(invoice);
-  } catch (error) {
-    console.error("GET /api/invoices/[id] error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);

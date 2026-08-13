@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, validationError, withAuth } from "@/lib/server/route";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
@@ -9,65 +9,32 @@ const issueInvoiceSchema = z.object({
   orderId: z.string().min(1).max(100),
 });
 
-export async function GET(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+export const GET = withAuth("GET /api/invoices", async ({ userId, request }) => {
+  const data = await storage.getInvoices(userId, parsePagination(request));
+  return NextResponse.json(data);
+});
 
-    const data = await storage.getInvoices(userId, parsePagination(request));
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("GET /api/invoices error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+export const POST = withAuth("POST /api/invoices", async ({ userId, request }) => {
+  // Issuing an invoice creates a new record → requires PRO (FREE is read-only).
+  const gate = await requireWriteAccess(userId);
+  if (gate) return gate;
+
+  const parsed = issueInvoiceSchema.safeParse(await request.json());
+  if (!parsed.success) return validationError(parsed.error);
+
+  const result = await storage.issueInvoice(userId, parsed.data.orderId);
+  if (!result.ok) {
+    if (result.code === "order_not_found") return fail(404, "Order not found");
+    if (result.code === "profile_incomplete") {
+      // § 14 Abs. 4 UStG: ohne Name und Anschrift des Ausstellers keine Rechnung.
+      return fail(409, "Firmenname und Anschrift fehlen im Firmenprofil.", {
+        code: "PROFILE_INCOMPLETE",
+      });
+    }
+    return fail(409, "An active invoice already exists for this order", {
+      code: "ALREADY_ISSUED",
+    });
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    // Issuing an invoice creates a new record → requires PRO (FREE is read-only).
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
-
-    const body = await request.json();
-    const parsed = issueInvoiceSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const result = await storage.issueInvoice(userId, parsed.data.orderId);
-    if (!result.ok) {
-      if (result.code === "order_not_found") {
-        return NextResponse.json({ message: "Order not found" }, { status: 404 });
-      }
-      if (result.code === "profile_incomplete") {
-        // § 14 Abs. 4 UStG: ohne Name und Anschrift des Ausstellers keine Rechnung.
-        return NextResponse.json(
-          {
-            message: "Firmenname und Anschrift fehlen im Firmenprofil.",
-            code: "PROFILE_INCOMPLETE",
-          },
-          { status: 409 }
-        );
-      }
-      return NextResponse.json(
-        { message: "An active invoice already exists for this order", code: "ALREADY_ISSUED" },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(result.invoice, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/invoices error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
-}
+  return NextResponse.json(result.invoice, { status: 201 });
+});

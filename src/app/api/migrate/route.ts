@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, validationError, withAuth } from "@/lib/server/route";
 import { getUser } from "@/lib/server/storage";
 import { getEffectivePlan } from "@/lib/plan";
 import { db } from "@/lib/server/db";
@@ -111,228 +111,219 @@ function toCents(val: unknown, fromEuros: boolean): number {
   return Math.max(0, Math.min(cents, MAX_CENTS));
 }
 
-export async function POST(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+export const POST = withAuth(
+  "POST /api/migrate",
+  async ({ userId, request }) => {
+  // Import (bulk restore) bypasses the free monthly limits, so it is a PRO
+  // feature — also prevents free-account-hopping to sidestep limits.
+  const user = await getUser(userId);
+  if (!user) {
+    return fail(404, "User not found");
+  }
+  if (getEffectivePlan(user) !== "pro") {
+    return NextResponse.json(
+      { message: "Der Import ist im Pro-Plan enthalten.", code: "PRO_REQUIRED" },
+      { status: 403 }
+    );
+  }
+
+  const raw = await request.json();
+  const parsed = migrateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return validationError(parsed.error);
+  }
+
+  const data = parsed.data;
+  // Legacy backups (no version, or < 2) store money as euro decimals.
+  const fromEuros = (data.schemaVersion ?? 1) < 2;
+
+  // Entire restore runs in a single transaction — rollback on any failure
+  await db.transaction(async (tx) => {
+    // Step 1: Delete all existing user data
+    await tx.delete(marketSales).where(eq(marketSales.userId, userId));
+    const userOrders = await tx.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
+    if (userOrders.length > 0) {
+      await tx.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
     }
+    await tx.delete(orders).where(eq(orders.userId, userId));
+    // Drop the stale customer master set so restore stays consistent. It is
+    // rebuilt as the user next creates/edits orders (imported orders keep their
+    // address snapshot; customerId is left null). Invoices are intentionally kept.
+    await tx.delete(customers).where(eq(customers.userId, userId));
+    await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
+    await tx.delete(expenses).where(eq(expenses.userId, userId));
+    await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
 
-    // Import (bulk restore) bypasses the free monthly limits, so it is a PRO
-    // feature — also prevents free-account-hopping to sidestep limits.
-    const user = await getUser(userId);
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
-    if (getEffectivePlan(user) !== "pro") {
-      return NextResponse.json(
-        { message: "Der Import ist im Pro-Plan enthalten.", code: "PRO_REQUIRED" },
-        { status: 403 }
-      );
-    }
+    // Step 2: Import orders (with original invoice numbers preserved)
+    const now = new Date();
+    const today = isoDay(now);
+    if (data.orders) {
+      for (const order of data.orders) {
+        const total = (order.items || []).reduce(
+          (sum, item) => sum + toCents(item.price, fromEuros) * (item.quantity || 1), 0
+        );
+        const [inserted] = await tx.insert(orders).values({
+          userId,
+          customerName: order.customerName || "",
+          customerEmail: order.customerEmail || "",
+          customerStreet: order.customerStreet || order.customerAddress || "",
+          customerZip: order.customerZip || "",
+          customerCity: order.customerCity || "",
+          customerCountry: order.customerCountry || "",
+          status: order.status || "open",
+          invoiceNumber: order.invoiceNumber || "",
+          notes: order.notes || "",
+          orderDate: order.orderDate || today,
+          serviceDate: order.serviceDate || null,
+          paidAt: order.paidAt || null,
+          paymentMethod: order.paymentMethod || null,
+          shippingCost: order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null,
+          total,
+          processingStatus: order.processingStatus,
+          comment: order.comment,
+          createdAt: now,
+          updatedAt: now,
+        }).returning();
 
-    const raw = await request.json();
-    const parsed = migrateSchema.safeParse(raw);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const data = parsed.data;
-    // Legacy backups (no version, or < 2) store money as euro decimals.
-    const fromEuros = (data.schemaVersion ?? 1) < 2;
-
-    // Entire restore runs in a single transaction — rollback on any failure
-    await db.transaction(async (tx) => {
-      // Step 1: Delete all existing user data
-      await tx.delete(marketSales).where(eq(marketSales.userId, userId));
-      const userOrders = await tx.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
-      if (userOrders.length > 0) {
-        await tx.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
-      }
-      await tx.delete(orders).where(eq(orders.userId, userId));
-      // Drop the stale customer master set so restore stays consistent. It is
-      // rebuilt as the user next creates/edits orders (imported orders keep their
-      // address snapshot; customerId is left null). Invoices are intentionally kept.
-      await tx.delete(customers).where(eq(customers.userId, userId));
-      await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
-      await tx.delete(expenses).where(eq(expenses.userId, userId));
-      await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-
-      // Step 2: Import orders (with original invoice numbers preserved)
-      const now = new Date();
-      const today = isoDay(now);
-      if (data.orders) {
-        for (const order of data.orders) {
-          const total = (order.items || []).reduce(
-            (sum, item) => sum + toCents(item.price, fromEuros) * (item.quantity || 1), 0
+        const items = order.items || [];
+        if (items.length > 0) {
+          await tx.insert(orderItems).values(
+            items.map((item) => ({
+              orderId: inserted.id,
+              name: item.name || "",
+              quantity: item.quantity || 1,
+              price: toCents(item.price, fromEuros),
+              processingStatus: item.processingStatus,
+              comment: item.comment,
+            }))
           );
-          const [inserted] = await tx.insert(orders).values({
-            userId,
-            customerName: order.customerName || "",
-            customerEmail: order.customerEmail || "",
-            customerStreet: order.customerStreet || order.customerAddress || "",
-            customerZip: order.customerZip || "",
-            customerCity: order.customerCity || "",
-            customerCountry: order.customerCountry || "",
-            status: order.status || "open",
-            invoiceNumber: order.invoiceNumber || "",
-            notes: order.notes || "",
-            orderDate: order.orderDate || today,
-            serviceDate: order.serviceDate || null,
-            paidAt: order.paidAt || null,
-            paymentMethod: order.paymentMethod || null,
-            shippingCost: order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null,
-            total,
-            processingStatus: order.processingStatus,
-            comment: order.comment,
-            createdAt: now,
-            updatedAt: now,
-          }).returning();
-
-          const items = order.items || [];
-          if (items.length > 0) {
-            await tx.insert(orderItems).values(
-              items.map((item) => ({
-                orderId: inserted.id,
-                name: item.name || "",
-                quantity: item.quantity || 1,
-                price: toCents(item.price, fromEuros),
-                processingStatus: item.processingStatus,
-                comment: item.comment,
-              }))
-            );
-          }
         }
       }
+    }
 
-      // Step 3: Import markets (+ re-derive their market-cost expense rows,
-      // since we insert directly and bypass storage.syncMarketExpenses).
-      const marketIdMap = new Map<string, string>();
-      if (data.markets) {
-        for (const market of data.markets) {
-          const standFee = toCents(market.standFee, fromEuros);
-          const travelCost = toCents(market.travelCost, fromEuros);
-          const marketDate = market.date || today;
-          const marketName = market.name || "";
-          const [inserted] = await tx.insert(marketEvents).values({
-            userId,
-            name: marketName,
-            date: marketDate,
-            location: market.location || "",
-            standFee,
-            travelCost,
-            notes: market.notes || "",
-            status: market.status || "open",
-            quickItems: market.quickItems?.map((q) => ({
-              name: q.name,
-              price: toCents(q.price, fromEuros),
-            })),
-            createdAt: now,
-          }).returning();
+    // Step 3: Import markets (+ re-derive their market-cost expense rows,
+    // since we insert directly and bypass storage.syncMarketExpenses).
+    const marketIdMap = new Map<string, string>();
+    if (data.markets) {
+      for (const market of data.markets) {
+        const standFee = toCents(market.standFee, fromEuros);
+        const travelCost = toCents(market.travelCost, fromEuros);
+        const marketDate = market.date || today;
+        const marketName = market.name || "";
+        const [inserted] = await tx.insert(marketEvents).values({
+          userId,
+          name: marketName,
+          date: marketDate,
+          location: market.location || "",
+          standFee,
+          travelCost,
+          notes: market.notes || "",
+          status: market.status || "open",
+          quickItems: market.quickItems?.map((q) => ({
+            name: q.name,
+            price: toCents(q.price, fromEuros),
+          })),
+          createdAt: now,
+        }).returning();
 
-          // Status mitgeben, sonst wuerde der Restore am Gate vorbei buchen.
-          const derived = planMarketCostRows(
-            { name: marketName, date: marketDate, standFee, travelCost, status: inserted.status },
-            { userId, marketId: inserted.id }
-          ).map((r) => ({ ...r, createdAt: now }));
-          if (derived.length > 0) await tx.insert(expenses).values(derived);
+        // Status mitgeben, sonst wuerde der Restore am Gate vorbei buchen.
+        const derived = planMarketCostRows(
+          { name: marketName, date: marketDate, standFee, travelCost, status: inserted.status },
+          { userId, marketId: inserted.id }
+        ).map((r) => ({ ...r, createdAt: now }));
+        if (derived.length > 0) await tx.insert(expenses).values(derived);
 
-          if (market.id) {
-            marketIdMap.set(market.id, inserted.id);
-          }
+        if (market.id) {
+          marketIdMap.set(market.id, inserted.id);
         }
       }
+    }
 
-      // Step 4: Import market sales
-      if (data.marketSales) {
-        for (const sale of data.marketSales) {
-          const newMarketId = marketIdMap.get(sale.marketId);
-          if (newMarketId) {
-            await tx.insert(marketSales).values({
-              userId,
-              marketId: newMarketId,
-              description: sale.description || "",
-              amount: toCents(sale.amount, fromEuros),
-              quantity: sale.quantity || 1,
-              createdAt: now,
-            });
-          }
-        }
-      }
-
-      // Step 5: Import manual expenses (market cost rows are re-derived above).
-      if (data.expenses) {
-        for (const expense of data.expenses) {
-          await tx.insert(expenses).values({
+    // Step 4: Import market sales
+    if (data.marketSales) {
+      for (const sale of data.marketSales) {
+        const newMarketId = marketIdMap.get(sale.marketId);
+        if (newMarketId) {
+          await tx.insert(marketSales).values({
             userId,
-            description: expense.description || "",
-            amount: toCents(expense.amount, fromEuros),
-            category: mapLegacyCategory(expense.category),
-            source: "manual",
-            expenseDate: expense.expenseDate || expense.date || today,
+            marketId: newMarketId,
+            description: sale.description || "",
+            amount: toCents(sale.amount, fromEuros),
+            quantity: sale.quantity || 1,
             createdAt: now,
           });
         }
       }
+    }
 
-      // Step 6: Import profile
-      if (data.profile) {
-        await tx.insert(companyProfiles).values({
+    // Step 5: Import manual expenses (market cost rows are re-derived above).
+    if (data.expenses) {
+      for (const expense of data.expenses) {
+        await tx.insert(expenses).values({
           userId,
-          name: data.profile.name || "",
-          address: data.profile.address || "",
-          email: data.profile.email || "",
-          phone: data.profile.phone || "",
-          taxNote: data.profile.taxNote || "",
-          smallBusinessNote: data.profile.smallBusinessNote ?? undefined,
-          isSmallBusiness: data.profile.isSmallBusiness ?? true,
-          defaultShippingCost: data.profile.defaultShippingCost != null
-            ? toCents(data.profile.defaultShippingCost, fromEuros)
-            : null,
+          description: expense.description || "",
+          amount: toCents(expense.amount, fromEuros),
+          category: mapLegacyCategory(expense.category),
+          source: "manual",
+          expenseDate: expense.expenseDate || expense.date || today,
+          createdAt: now,
         });
       }
+    }
 
-      // Step 7: Rechnungszaehler NUR anheben, nie zuruecksetzen.
-      //
-      // Rechnungen bleiben beim Restore bewusst stehen (siehe Schritt 1). Ein
-      // aelteres Backup traegt aber einen kleineren Zaehlerstand. Wuerde man den
-      // blind setzen, vergaebe die naechste Rechnung eine bereits benutzte
-      // Nummer, verletzte uq_invoices_user_number, und weil issueInvoice in
-      // einer Transaktion laeuft, rollte die Zaehlererhoehung gleich mit zurueck:
-      // die Rechnungsstellung waere dauerhaft mit 500 blockiert, ohne Ausweg in
-      // der Oberflaeche. Deshalb ist der Zielwert das Maximum aus Backup-Wert
-      // und dem hoechsten bereits vergebenen Stand des laufenden Jahres.
-      const yearPrefix = `${new Date().getFullYear().toString().slice(-2)}-`;
-      const issued = await tx
-        .select({ invoiceNumber: invoices.invoiceNumber })
-        .from(invoices)
-        .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)));
+    // Step 6: Import profile
+    if (data.profile) {
+      await tx.insert(companyProfiles).values({
+        userId,
+        name: data.profile.name || "",
+        address: data.profile.address || "",
+        email: data.profile.email || "",
+        phone: data.profile.phone || "",
+        taxNote: data.profile.taxNote || "",
+        smallBusinessNote: data.profile.smallBusinessNote ?? undefined,
+        isSmallBusiness: data.profile.isSmallBusiness ?? true,
+        defaultShippingCost: data.profile.defaultShippingCost != null
+          ? toCents(data.profile.defaultShippingCost, fromEuros)
+          : null,
+      });
+    }
 
-      const highestUsed = issued.reduce((max, row) => {
-        const n = row.invoiceNumber?.startsWith(yearPrefix)
-          ? Number.parseInt(row.invoiceNumber.slice(yearPrefix.length), 10)
-          : NaN;
-        return Number.isFinite(n) && n > max ? n : max;
-      }, 0);
+    // Step 7: Rechnungszaehler NUR anheben, nie zuruecksetzen.
+    //
+    // Rechnungen bleiben beim Restore bewusst stehen (siehe Schritt 1). Ein
+    // aelteres Backup traegt aber einen kleineren Zaehlerstand. Wuerde man den
+    // blind setzen, vergaebe die naechste Rechnung eine bereits benutzte
+    // Nummer, verletzte uq_invoices_user_number, und weil issueInvoice in
+    // einer Transaktion laeuft, rollte die Zaehlererhoehung gleich mit zurueck:
+    // die Rechnungsstellung waere dauerhaft mit 500 blockiert, ohne Ausweg in
+    // der Oberflaeche. Deshalb ist der Zielwert das Maximum aus Backup-Wert
+    // und dem hoechsten bereits vergebenen Stand des laufenden Jahres.
+    const yearPrefix = `${new Date().getFullYear().toString().slice(-2)}-`;
+    const issued = await tx
+      .select({ invoiceNumber: invoices.invoiceNumber })
+      .from(invoices)
+      .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)));
 
-      const target = Math.max(data.invoiceCounter ?? 0, highestUsed);
-      if (target > 0) {
-        await tx
-          .insert(invoiceCounters)
-          .values({ userId, counter: target })
-          .onConflictDoUpdate({
-            target: invoiceCounters.userId,
-            set: { counter: sql`greatest(${invoiceCounters.counter}, ${target})` },
-          });
-      }
-    });
+    const highestUsed = issued.reduce((max, row) => {
+      const n = row.invoiceNumber?.startsWith(yearPrefix)
+        ? Number.parseInt(row.invoiceNumber.slice(yearPrefix.length), 10)
+        : NaN;
+      return Number.isFinite(n) && n > max ? n : max;
+    }, 0);
 
-    return NextResponse.json({ message: "Import successful" });
-  } catch (error) {
-    console.error("POST /api/migrate error:", error);
-    return NextResponse.json({ message: "Import failed" }, { status: 500 });
-  }
-}
+    const target = Math.max(data.invoiceCounter ?? 0, highestUsed);
+    if (target > 0) {
+      await tx
+        .insert(invoiceCounters)
+        .values({ userId, counter: target })
+        .onConflictDoUpdate({
+          target: invoiceCounters.userId,
+          set: { counter: sql`greatest(${invoiceCounters.counter}, ${target})` },
+        });
+    }
+  });
+
+  return NextResponse.json({ message: "Import successful" });
+  },
+  { errorMessage: "Import failed" }
+);

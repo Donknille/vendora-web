@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, validationError, withAuth } from "@/lib/server/route";
 import * as storage from "@/lib/server/storage";
 import { requireWriteAccess } from "@/lib/server/limits";
 import { z } from "zod";
@@ -21,25 +21,12 @@ const updateMarketSchema = z.object({
   quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const body = await request.json();
-    const parsed = updateMarketSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
+export const PUT = withAuth<{ id: string }>(
+  "PUT /api/markets/[id]",
+  async ({ userId, request, params }) => {
+    const { id } = params;
+    const parsed = updateMarketSchema.safeParse(await request.json());
+    if (!parsed.success) return validationError(parsed.error);
 
     // Das PUT ist sonst ein Create-Pfad: updateMarket erzeugt ueber
     // syncMarketExpenses abgeleitete Ausgabenzeilen und schreibt quickItems.
@@ -57,9 +44,7 @@ export async function PUT(
     // Oberflaeche nie erreichbar gewesen -- die Ausnahme haette es auf dem
     // Papier gegeben und in der Anwendung nicht.
     const current = await storage.getMarket(userId, id);
-    if (!current) {
-      return NextResponse.json({ message: "Market not found" }, { status: 404 });
-    }
+    if (!current) return fail(404, "Market not found");
     // Leerwerte normalisieren: ein Markt ohne Schnellartikel steht in der DB als
     // NULL, das Formular sendet aber [] -- ohne diese Angleichung zaehlte das
     // als Aenderung und die Kostenfalle waere zurueck gewesen.
@@ -84,35 +69,17 @@ export async function PUT(
     }
 
     const market = await storage.updateMarket(userId, id, parsed.data);
-    if (!market) {
-      return NextResponse.json({ message: "Market not found" }, { status: 404 });
-    }
+    if (!market) return fail(404, "Market not found");
 
     return NextResponse.json(market);
-  } catch (error) {
-    console.error("PUT /api/markets/[id] error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const deleted = await storage.deleteMarket(userId, id);
-    if (!deleted) {
-      return NextResponse.json({ message: "Market not found" }, { status: 404 });
-    }
+export const DELETE = withAuth<{ id: string }>(
+  "DELETE /api/markets/[id]",
+  async ({ userId, params }) => {
+    const deleted = await storage.deleteMarket(userId, params.id);
+    if (!deleted) return fail(404, "Market not found");
     return NextResponse.json({ message: "Market deleted" });
-  } catch (error) {
-    console.error("DELETE /api/markets/[id] error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+);

@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
+import { fail, withAuth } from "@/lib/server/route";
 import { getStripe } from "@/lib/server/stripe";
 import * as storage from "@/lib/server/storage";
 
-export async function POST(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
+export const POST = withAuth(
+  "POST /api/stripe/portal",
+  async ({ userId, request }) => {
     const user = await storage.getUser(userId);
     if (!user || !user.stripeCustomerId) {
-      return NextResponse.json({ message: "No active subscription found" }, { status: 404 });
+      return fail(404, "No active subscription found");
     }
 
     const { origin } = new URL(request.url);
@@ -23,8 +19,6 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error("POST /api/stripe/portal error:", error);
-    return NextResponse.json({ message: "Failed to create portal session" }, { status: 500 });
-  }
-}
+  },
+  { errorMessage: "Failed to create portal session" }
+);

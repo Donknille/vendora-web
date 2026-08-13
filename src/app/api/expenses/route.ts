@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/server/auth";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
 import { parsePagination } from "@/lib/server/pagination";
+import { validationError, withAuth } from "@/lib/server/route";
 import { EUER_CATEGORIES } from "@/lib/euer";
 import { z } from "zod";
 
@@ -13,44 +13,18 @@ const createExpenseSchema = z.object({
   expenseDate: z.string().min(1, "Date is required").max(50),
 });
 
-export async function GET(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+export const GET = withAuth("GET /api/expenses", async ({ userId, request }) => {
+  const data = await storage.getExpenses(userId, parsePagination(request));
+  return NextResponse.json(data);
+});
 
-    const data = await storage.getExpenses(userId, parsePagination(request));
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("GET /api/expenses error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
-}
+export const POST = withAuth("POST /api/expenses", async ({ userId, request }) => {
+  const gate = await requireWriteAccess(userId);
+  if (gate) return gate;
 
-export async function POST(request: Request) {
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+  const parsed = createExpenseSchema.safeParse(await request.json());
+  if (!parsed.success) return validationError(parsed.error);
 
-    const gate = await requireWriteAccess(userId);
-    if (gate) return gate;
-
-    const body = await request.json();
-    const parsed = createExpenseSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Validation error", errors: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const expense = await storage.createExpense(userId, parsed.data);
-    return NextResponse.json(expense, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/expenses error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
-}
+  const expense = await storage.createExpense(userId, parsed.data);
+  return NextResponse.json(expense, { status: 201 });
+});
