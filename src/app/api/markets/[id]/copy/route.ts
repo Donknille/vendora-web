@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/server/auth";
 import { requireWriteAccess } from "@/lib/server/limits";
 import * as storage from "@/lib/server/storage";
+import { today } from "@/lib/date";
 
 export async function POST(
   _request: Request,
@@ -25,7 +26,7 @@ export async function POST(
 
     const copy = await storage.createMarket(userId, {
       name: original.name,
-      date: new Date().toISOString().split("T")[0],
+      date: today(),
       location: original.location,
       standFee: original.standFee,
       travelCost: original.travelCost,

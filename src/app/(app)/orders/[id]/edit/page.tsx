@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payments";
+import { dayOf } from "@/lib/date";
 
 interface OrderItem {
   name: string;
@@ -58,12 +59,12 @@ export default function EditOrderPage() {
       setCustomerCity(order.customerCity || "");
       setCustomerCountry(order.customerCountry || "");
       setOrderDate(
-        order.orderDate || order.createdAt?.split("T")[0] || ""
+        order.orderDate || (order.createdAt ? dayOf(order.createdAt) : "")
       );
-      setServiceDate(order.serviceDate ? order.serviceDate.slice(0, 10) : "");
+      setServiceDate(order.serviceDate ? dayOf(order.serviceDate) : "");
       setNotes(order.notes || "");
       setStatus(order.status || "open");
-      setPaidAt(order.paidAt ? order.paidAt.slice(0, 10) : "");
+      setPaidAt(order.paidAt ? dayOf(order.paidAt) : "");
       setPaymentMethod(order.paymentMethod ?? "");
       // Show what the order actually carries — no profile default here, editing an
       // existing order must not silently change its total.

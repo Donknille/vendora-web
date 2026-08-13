@@ -33,6 +33,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ReferralCard } from "@/components/ReferralCard";
 import { InstallAppCard } from "@/components/pwa/InstallAppCard";
+import { today } from "@/lib/date";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -154,7 +155,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `vendora-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `vendora-backup-${today()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

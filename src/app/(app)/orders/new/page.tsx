@@ -8,6 +8,7 @@ import { useCreateOrder, useCustomers } from "@/lib/hooks/useOrders";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
+import { today } from "@/lib/date";
 
 interface OrderItem {
   name: string;
@@ -29,7 +30,7 @@ export default function NewOrderPage() {
   const [customerCity, setCustomerCity] = useState("");
   const [customerCountry, setCustomerCountry] = useState("");
   const [orderDate, setOrderDate] = useState(
-    new Date().toISOString().split("T")[0]
+    today()
   );
   const [serviceDate, setServiceDate] = useState("");
   const [notes, setNotes] = useState("");

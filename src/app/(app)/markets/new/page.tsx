@@ -8,6 +8,7 @@ import { useCreateMarket } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
+import { today } from "@/lib/date";
 
 interface QuickItem {
   name: string;
@@ -20,7 +21,7 @@ export default function NewMarketPage() {
   const createMarket = useCreateMarket();
 
   const [name, setName] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(today());
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("open");
   const [applicationDeadline, setApplicationDeadline] = useState("");

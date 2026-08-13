@@ -11,6 +11,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { mapLegacyCategory } from "@/lib/euer";
 import { planMarketCostRows } from "@/lib/marketCosts";
 import { z } from "zod";
+import { isoDay } from "@/lib/date";
 
 // v1: money as euro decimals. v2: money as integer cents.
 const CURRENT_SCHEMA_VERSION = 2;
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
 
       // Step 2: Import orders (with original invoice numbers preserved)
       const now = new Date();
-      const today = now.toISOString().slice(0, 10);
+      const today = isoDay(now);
       if (data.orders) {
         for (const order of data.orders) {
           const total = (order.items || []).reduce(

@@ -26,6 +26,7 @@ import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { dayOf } from "@/lib/date";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
@@ -175,7 +176,7 @@ export default function OrderDetailPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted" />
                 <span>
-                  {formatDate(order.orderDate || order.createdAt?.split("T")[0] || "", language === "de" ? "de-DE" : "en-US")}
+                  {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), language === "de" ? "de-DE" : "en-US")}
                 </span>
               </div>
             )}

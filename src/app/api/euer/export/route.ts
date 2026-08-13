@@ -5,6 +5,7 @@ import * as storage from "@/lib/server/storage";
 import { computeEuerReport } from "@/lib/euerReport";
 import { buildEuerCsv, buildEuerPdf, type EuerExportMeta } from "@/lib/server/euerExport";
 import type { Order, MarketEvent, MarketSale, Expense } from "@/lib/types";
+import { isoDay } from "@/lib/date";
 
 export async function GET(request: Request) {
   try {
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
     const meta: EuerExportMeta = {
       companyName: profile.name || "Vendora",
       isSmallBusiness: profile.isSmallBusiness,
-      generatedOn: now.toISOString().slice(0, 10),
+      generatedOn: isoDay(now),
     };
 
     if (format === "pdf") {

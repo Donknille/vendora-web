@@ -2,6 +2,8 @@ import "server-only";
 import { eq, and, sql, inArray, isNull, isNotNull, lt } from "drizzle-orm";
 import { planMarketCostRows, type MarketCostSource } from "@/lib/marketCosts";
 import { isPaidLike } from "@/lib/orderStatus";
+// Alias, weil mehrere Funktionen hier eine lokale Konstante `today` fuehren.
+import { isoDay, today as todayIso } from "@/lib/date";
 import { getEffectivePlan, canCreate, daysLeft, type Plan } from "@/lib/plan";
 import {
   buildInvoiceSnapshot,
@@ -187,7 +189,7 @@ export async function createOrder(
   const shippingCost = data.shippingCost ?? null;
   const { total } = computeInvoiceTotals(data.items, shippingCost ?? 0);
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = isoDay(now);
 
   // Link (or create) the customer master record for autocomplete.
   const customerId = await upsertCustomerFromOrder(userId, {
@@ -299,7 +301,7 @@ export async function updateOrder(
     !existing.paidAt &&
     fields.paidAt === undefined
   ) {
-    dbUpdates.paidAt = new Date().toISOString().slice(0, 10);
+    dbUpdates.paidAt = todayIso();
   }
 
   // Re-link the customer master record when the recipient snapshot changes.
@@ -722,7 +724,7 @@ export async function createExpense(
       description: data.description,
       amount: data.amount,
       category: data.category,
-      expenseDate: data.expenseDate || now.toISOString().slice(0, 10),
+      expenseDate: data.expenseDate || isoDay(now),
       createdAt: now,
     })
     .returning();
@@ -956,7 +958,7 @@ export async function issueInvoice(userId: string, orderId: string): Promise<Iss
   const profile = await getProfile(userId);
   if (!isInvoiceReadyProfile(profile)) return { ok: false, code: "profile_incomplete" };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const row = await db.transaction(async (tx) => {
     const invoiceNumber = await getNextInvoiceNumber(userId, tx);
@@ -1004,7 +1006,7 @@ export async function cancelInvoice(userId: string, invoiceId: string): Promise<
     return { ok: false, code: "not_cancellable" };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const result = await db.transaction(async (tx) => {
     const invoiceNumber = await getNextInvoiceNumber(userId, tx);
@@ -1068,7 +1070,7 @@ export async function archiveUserInvoices(
  * seine Rechnungen ihm, unabhängig vom Alter.
  */
 export async function purgeExpiredArchivedInvoices(
-  today: string = new Date().toISOString().slice(0, 10)
+  today: string = todayIso()
 ): Promise<number> {
   const deleted = await db
     .delete(invoices)

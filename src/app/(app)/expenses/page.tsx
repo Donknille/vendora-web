@@ -15,6 +15,7 @@ import { useCanCreate } from "@/lib/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { today, isoDay } from "@/lib/date";
 
 const categoryColors: Record<EuerCategory, string> = {
   wareneinkauf_material: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -53,7 +54,7 @@ export default function ExpensesPage() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<EuerCategory>("sonstiges");
   const [expenseDate, setExpenseDate] = useState(
-    new Date().toISOString().slice(0, 10)
+    today()
   );
 
   // Delete confirm state
@@ -105,7 +106,7 @@ export default function ExpensesPage() {
       setDescription("");
       setAmount("");
       setCategory("sonstiges");
-      setExpenseDate(new Date().toISOString().slice(0, 10));
+      setExpenseDate(today());
       setShowForm(false);
     } catch {
       setFormError(language === "en" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut.");
@@ -334,9 +335,7 @@ export default function ExpensesPage() {
                       {formatDate(
                         expense.expenseDate ??
                           (expense.createdAt
-                            ? new Date(expense.createdAt)
-                                .toISOString()
-                                .slice(0, 10)
+                            ? isoDay(new Date(expense.createdAt))
                             : ""),
                         language === "de" ? "de-DE" : "en-US"
                       )}

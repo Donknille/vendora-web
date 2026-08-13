@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { dayOf } from "@/lib/date";
 
 const statusOptions: { value: string | null; en: string; de: string }[] = [
   { value: null, en: "All", de: "Alle" },
@@ -148,7 +149,7 @@ export default function OrdersPage() {
                           {(order.orderDate || order.createdAt) && (
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {formatDate(order.orderDate || order.createdAt?.split("T")[0] || "", language === "de" ? "de-DE" : "en-US")}
+                              {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), language === "de" ? "de-DE" : "en-US")}
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1">

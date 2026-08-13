@@ -16,6 +16,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SubscriptionBanner } from "@/components/ui/SubscriptionBanner";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+// Alias: die Seite fuehrt eine lokale Konstante `today`.
+import { today as todayIso } from "@/lib/date";
 
 export default function MarketsPage() {
   const { t, language } = useLanguage();
@@ -50,7 +52,7 @@ export default function MarketsPage() {
     }
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const renderMarketCard = (market: MarketEvent) => {
     const marketSales = salesByMarket[market.id] || [];
