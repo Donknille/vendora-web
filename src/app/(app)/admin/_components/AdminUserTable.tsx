@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Ban, ChevronRight, Search } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { formatDate } from "@/lib/formatCurrency";
+import { pagerButton } from "@/lib/styles";
 
 export type AdminUserRow = {
   id: string;
@@ -178,7 +179,7 @@ export function AdminUserTable() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg border border-line text-primary disabled:opacity-40"
+            className={pagerButton}
           >
             Zurück
           </button>
@@ -188,7 +189,7 @@ export function AdminUserTable() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg border border-line text-primary disabled:opacity-40"
+            className={pagerButton}
           >
             Weiter
           </button>

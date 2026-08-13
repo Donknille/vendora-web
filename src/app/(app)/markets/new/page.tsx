@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
 import { today } from "@/lib/date";
+import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
 
 interface QuickItem {
   name: string;
@@ -83,7 +84,7 @@ export default function NewMarketPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/markets"
-          className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+          className={iconButtonMuted}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -100,7 +101,7 @@ export default function NewMarketPage() {
           </h2>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.markets.marketName} *
             </label>
             <input
@@ -114,7 +115,7 @@ export default function NewMarketPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.orders.orderDate}
             </label>
             <input
@@ -126,7 +127,7 @@ export default function NewMarketPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.markets.location}
             </label>
             <input
@@ -140,7 +141,7 @@ export default function NewMarketPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 Status
               </label>
               <select
@@ -156,7 +157,7 @@ export default function NewMarketPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
               </label>
               <input
@@ -177,7 +178,7 @@ export default function NewMarketPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.markets.standFee}
               </label>
               <input
@@ -190,7 +191,7 @@ export default function NewMarketPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.markets.travelCost}
               </label>
               <input
@@ -214,7 +215,7 @@ export default function NewMarketPage() {
             <button
               type="button"
               onClick={addQuickItem}
-              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+              className={ghostBrandButton}
             >
               <Plus className="h-3.5 w-3.5" />
               {t.markets.addArticle}
@@ -242,7 +243,7 @@ export default function NewMarketPage() {
                       type="text"
                       value={item.name}
                       onChange={(e) => updateQuickItem(index, "name", e.target.value)}
-                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                      className={inputNested}
                       placeholder={t.markets.articleName}
                     />
                   </div>
@@ -252,7 +253,7 @@ export default function NewMarketPage() {
                       inputMode="decimal"
                       value={item.price}
                       onChange={(e) => updateQuickItem(index, "price", e.target.value)}
-                      className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors text-right"
+                      className={`${inputNested} text-right`}
                       placeholder="0,00 €"
                     />
                   </div>
@@ -271,7 +272,7 @@ export default function NewMarketPage() {
 
         {/* Notes */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-secondary">
+          <label className={labelTight}>
             {t.markets.notes}
           </label>
           <textarea

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { ResendVerification } from "@/components/auth/ResendVerification";
+import { authSubmit, errorBox, inputAuth } from "@/lib/styles";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -69,7 +70,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">
+            <div className={errorBox}>
               {error}
             </div>
           )}
@@ -80,7 +81,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+              className={inputAuth}
               placeholder="deine@email.de"
               required
             />
@@ -92,7 +93,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+              className={inputAuth}
               placeholder="••••••••"
               required
             />
@@ -101,7 +102,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
+            className={authSubmit}
           >
             {loading ? t.common.loading : t.auth.login}
           </button>

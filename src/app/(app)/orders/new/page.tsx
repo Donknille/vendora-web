@@ -9,6 +9,7 @@ import { useProfile } from "@/lib/hooks/useProfile";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { today } from "@/lib/date";
+import { ghostBrandButton, iconButton, inputNested, inputSurface, labelClass } from "@/lib/styles";
 
 interface OrderItem {
   name: string;
@@ -138,7 +139,7 @@ export default function NewOrderPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/orders"
-          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+          className={iconButton}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -155,7 +156,7 @@ export default function NewOrderPage() {
           </h2>
 
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.customerName} *
             </label>
             <input
@@ -163,7 +164,7 @@ export default function NewOrderPage() {
               list="customer-suggestions"
               value={customerName}
               onChange={(e) => handleCustomerNameChange(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
               placeholder={t.orders.customerName}
             />
             <datalist id="customer-suggestions">
@@ -174,94 +175,94 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.email}
             </label>
             <input
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
               placeholder={t.orders.email}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.street} *
             </label>
             <input
               type="text"
               value={customerStreet}
               onChange={(e) => setCustomerStreet(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
               placeholder={t.orders.streetPlaceholder}
             />
           </div>
 
           <div className="flex gap-3">
             <div className="w-1/3">
-              <label className="block text-sm font-medium text-secondary mb-1.5">
+              <label className={labelClass}>
                 {t.orders.zip} *
               </label>
               <input
                 type="text"
                 value={customerZip}
                 onChange={(e) => setCustomerZip(e.target.value)}
-                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                className={inputSurface}
                 placeholder={t.orders.zipPlaceholder}
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-secondary mb-1.5">
+              <label className={labelClass}>
                 {t.orders.city} *
               </label>
               <input
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
-                className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                className={inputSurface}
                 placeholder={t.orders.cityPlaceholder}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.country}
             </label>
             <input
               type="text"
               value={customerCountry}
               onChange={(e) => setCustomerCountry(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
               placeholder={t.orders.country}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.orderDate}
             </label>
             <input
               type="date"
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
             />
           </div>
 
           {/* Leistungsdatum: § 14 Abs. 4 Nr. 6 UStG. Leer lassen ist erlaubt —
               dann gilt das Rechnungsdatum als Leistungsdatum. */}
           <div>
-            <label className="block text-sm font-medium text-secondary mb-1.5">
+            <label className={labelClass}>
               {t.orders.serviceDateLabel}
             </label>
             <input
               type="date"
               value={serviceDate}
               onChange={(e) => setServiceDate(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+              className={inputSurface}
             />
             <p className="mt-1 text-xs text-muted">
               {language === "de"
@@ -280,7 +281,7 @@ export default function NewOrderPage() {
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors"
+              className={ghostBrandButton}
             >
               <Plus className="h-3.5 w-3.5" />
               {t.orders.item}
@@ -298,7 +299,7 @@ export default function NewOrderPage() {
                     type="text"
                     value={item.name}
                     onChange={(e) => updateItem(index, "name", e.target.value)}
-                    className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                    className={inputNested}
                     placeholder={t.orders.itemName}
                   />
                   <div className="flex gap-2">
@@ -313,7 +314,7 @@ export default function NewOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "quantity", e.target.value)
                         }
-                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                        className={inputNested}
                       />
                     </div>
                     <div className="flex-1">
@@ -327,7 +328,7 @@ export default function NewOrderPage() {
                         onChange={(e) =>
                           updateItem(index, "price", e.target.value)
                         }
-                        className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                        className={inputNested}
                         placeholder="0,00"
                       />
                     </div>
@@ -388,14 +389,14 @@ export default function NewOrderPage() {
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-secondary mb-1.5">
+          <label className={labelClass}>
             {t.orders.notes}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+            className={`${inputSurface} resize-none`}
             placeholder={t.orders.additionalNotes}
           />
         </div>

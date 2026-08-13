@@ -23,6 +23,7 @@ import { computeDayClosing } from "@/lib/marketDay";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
 import { TseNotice } from "@/components/markets/TseNotice";
+import { iconButtonMuted } from "@/lib/styles";
 
 export default function MarketPosPage() {
   const { t, language } = useLanguage();
@@ -248,7 +249,7 @@ export default function MarketPosPage() {
           )}
           <Link
             href={`/markets/${marketId}`}
-            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+            className={iconButtonMuted}
             aria-label={de ? "Kasse schließen" : "Close register"}
           >
             <X className="h-5 w-5" />

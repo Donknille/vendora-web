@@ -27,6 +27,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { dayOf } from "@/lib/date";
+import { iconButton } from "@/lib/styles";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
@@ -138,7 +139,7 @@ export default function OrderDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/orders"
-            className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+            className={iconButton}
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -148,7 +149,7 @@ export default function OrderDetailPage() {
         </div>
         <Link
           href={`/orders/${id}/edit`}
-          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+          className={iconButton}
         >
           <Pencil className="h-5 w-5" />
         </Link>

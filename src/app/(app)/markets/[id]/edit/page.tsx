@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel } from "@/lib/marketCalendar";
+import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
 
 interface QuickItem {
   name: string;
@@ -129,7 +130,7 @@ export default function EditMarketPage() {
       <div className="flex items-center gap-3">
         <Link
           href={`/markets/${marketId}`}
-          className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+          className={iconButtonMuted}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -145,22 +146,22 @@ export default function EditMarketPage() {
             {t.markets.eventDetails}
           </h2>
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.markets.marketName} *
             </label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder={t.markets.marketName} required />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">{t.orders.orderDate}</label>
+            <label className={labelTight}>{t.orders.orderDate}</label>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.location}</label>
+            <label className={labelTight}>{t.markets.location}</label>
             <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder={t.markets.location} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">Status</label>
+              <label className={labelTight}>Status</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
                 {MARKET_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -170,7 +171,7 @@ export default function EditMarketPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
               </label>
               <input type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} className={inputClass} />
@@ -183,11 +184,11 @@ export default function EditMarketPage() {
           <h2 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.costs}</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.standFee}</label>
+              <label className={labelTight}>{t.markets.standFee}</label>
               <input type="text" inputMode="decimal" value={standFee} onChange={(e) => setStandFee(e.target.value)} className={inputClass} placeholder="0,00" />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.travelCost}</label>
+              <label className={labelTight}>{t.markets.travelCost}</label>
               <input type="text" inputMode="decimal" value={travelCost} onChange={(e) => setTravelCost(e.target.value)} className={inputClass} placeholder="0,00" />
             </div>
           </div>
@@ -197,7 +198,7 @@ export default function EditMarketPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.articles}</h2>
-            <button type="button" onClick={addQuickItem} className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/10 transition-colors">
+            <button type="button" onClick={addQuickItem} className={ghostBrandButton}>
               <Plus className="h-3.5 w-3.5" />
               {t.markets.addArticle}
             </button>
@@ -213,10 +214,10 @@ export default function EditMarketPage() {
               {quickItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-2 rounded-lg border border-line bg-surface p-3">
                   <div className="flex-1">
-                    <input type="text" value={item.name} onChange={(e) => updateQuickItem(index, "name", e.target.value)} className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors" placeholder={t.markets.articleName} />
+                    <input type="text" value={item.name} onChange={(e) => updateQuickItem(index, "name", e.target.value)} className={inputNested} placeholder={t.markets.articleName} />
                   </div>
                   <div className="w-28">
-                    <input type="text" inputMode="decimal" value={item.price} onChange={(e) => updateQuickItem(index, "price", e.target.value)} className="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors text-right" placeholder="0,00 €" />
+                    <input type="text" inputMode="decimal" value={item.price} onChange={(e) => updateQuickItem(index, "price", e.target.value)} className={`${inputNested} text-right`} placeholder="0,00 €" />
                   </div>
                   <button type="button" onClick={() => removeQuickItem(index)} className="rounded-lg p-2 text-muted hover:text-red-400 hover:bg-elevated transition-colors">
                     <Trash2 className="h-4 w-4" />
@@ -229,7 +230,7 @@ export default function EditMarketPage() {
 
         {/* Notes */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-secondary">{t.markets.notes}</label>
+          <label className={labelTight}>{t.markets.notes}</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputClass} resize-none`} rows={3} placeholder={t.markets.additionalNotes} />
         </div>
 

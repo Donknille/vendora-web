@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { authSubmit, inputAuth } from "@/lib/styles";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -79,8 +80,9 @@ export function ResendVerification({ email: knownEmail, variant = "primary" }: R
 
   const buttonClass =
     variant === "primary"
-      ? "w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
-      : "w-full border border-brand-primary/40 hover:bg-brand-primary/10 disabled:opacity-50 text-brand-primary font-medium py-2.5 rounded-lg transition";
+      ? authSubmit
+      : // Die Umriss-Variante gibt es nur hier, deshalb bleibt sie vor Ort.
+        "w-full border border-brand-primary/40 hover:bg-brand-primary/10 disabled:opacity-50 text-brand-primary font-medium py-2.5 rounded-lg transition";
 
   const label = knownEmail ? t.auth.resendVerification : t.auth.requestNewLink;
 
@@ -97,7 +99,7 @@ export function ResendVerification({ email: knownEmail, variant = "primary" }: R
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+            className={inputAuth}
             placeholder={t.auth.emailPlaceholder}
             required
           />

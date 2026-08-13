@@ -34,6 +34,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ReferralCard } from "@/components/ReferralCard";
 import { InstallAppCard } from "@/components/pwa/InstallAppCard";
 import { today } from "@/lib/date";
+import { labelTight } from "@/lib/styles";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -349,7 +350,7 @@ export default function SettingsPage() {
 
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.settings.companyName}
             </label>
             <input
@@ -362,7 +363,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.settings.address}
             </label>
             <textarea
@@ -376,7 +377,7 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.settings.email}
               </label>
               <input
@@ -388,7 +389,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.settings.phone}
               </label>
               <input
@@ -402,7 +403,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.settings.taxNote}
             </label>
             <input
@@ -429,7 +430,7 @@ export default function SettingsPage() {
           </label>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {language === "de" ? "Zusätzlicher Steuerhinweis" : "Additional tax note"}
             </label>
             <input
@@ -442,7 +443,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-secondary">
+            <label className={labelTight}>
               {t.settings.defaultShippingCost}
             </label>
             <input

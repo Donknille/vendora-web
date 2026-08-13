@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ScrollText } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { formatDate } from "@/lib/formatCurrency";
+import { pagerButton } from "@/lib/styles";
 
 type AuditEntry = {
   id: string;
@@ -118,7 +119,7 @@ export default function AdminAuditPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg border border-line text-primary disabled:opacity-40"
+              className={pagerButton}
             >
               Zurück
             </button>
@@ -126,7 +127,7 @@ export default function AdminAuditPage() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg border border-line text-primary disabled:opacity-40"
+              className={pagerButton}
             >
               Weiter
             </button>

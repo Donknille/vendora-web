@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { iconButton } from "@/lib/styles";
 
 const releases = [
   {
@@ -101,7 +102,7 @@ export default function ChangelogPage() {
       <div className="flex items-center gap-3">
         <Link
           href="javascript:void(0)" onClick={() => window.history.back()}
-          className="rounded-lg p-2 text-faint hover:text-primary hover:bg-elevated transition-colors"
+          className={iconButton}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>

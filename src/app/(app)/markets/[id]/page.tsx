@@ -35,6 +35,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { TseNotice } from "@/components/markets/TseNotice";
+import { iconButtonMuted } from "@/lib/styles";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
@@ -231,7 +232,7 @@ export default function MarketDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/markets"
-            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+            className={iconButtonMuted}
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -242,7 +243,7 @@ export default function MarketDetailPage() {
         <div className="flex items-center gap-2">
           <Link
             href={`/markets/${marketId}/edit`}
-            className="rounded-lg p-2 text-faint hover:bg-elevated hover:text-secondary transition-colors"
+            className={iconButtonMuted}
           >
             <Pencil className="h-5 w-5" />
           </Link>

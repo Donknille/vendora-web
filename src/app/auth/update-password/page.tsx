@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { authSubmit, errorBox, inputAuth } from "@/lib/styles";
 
 function UpdatePasswordForm() {
   const { t } = useLanguage();
@@ -77,7 +78,7 @@ function UpdatePasswordForm() {
 
         <form onSubmit={handleUpdate} className="space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">
+            <div className={errorBox}>
               {error}
             </div>
           )}
@@ -88,7 +89,7 @@ function UpdatePasswordForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+              className={inputAuth}
               placeholder={t.auth.passwordMinPlaceholder}
               required
             />
@@ -100,7 +101,7 @@ function UpdatePasswordForm() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+              className={inputAuth}
               placeholder={t.auth.confirmPasswordPlaceholder}
               required
             />
@@ -109,7 +110,7 @@ function UpdatePasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
+            className={authSubmit}
           >
             {loading ? t.common.loading : t.auth.changePassword}
           </button>

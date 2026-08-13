@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { today, isoDay } from "@/lib/date";
+import { labelTight } from "@/lib/styles";
 
 const categoryColors: Record<EuerCategory, string> = {
   wareneinkauf_material: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -196,7 +197,7 @@ export default function ExpensesPage() {
             </h2>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.expenses.description} *
               </label>
               <input
@@ -211,7 +212,7 @@ export default function ExpensesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-secondary">
+                <label className={labelTight}>
                   {t.expenses.amount} *
                 </label>
                 <input
@@ -226,7 +227,7 @@ export default function ExpensesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-secondary">
+                <label className={labelTight}>
                   {t.expenses.expenseDate}
                 </label>
                 <input
@@ -239,7 +240,7 @@ export default function ExpensesPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary">
+              <label className={labelTight}>
                 {t.expenses.category}
               </label>
               <select
