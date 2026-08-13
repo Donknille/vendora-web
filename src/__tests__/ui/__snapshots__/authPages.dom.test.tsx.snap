@@ -169,8 +169,54 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
           value=""
         />
       </div>
+      <label
+        class="flex items-start gap-3 text-sm text-faint leading-relaxed"
+      >
+        <input
+          class="mt-0.5 h-4 w-4 shrink-0 accent-brand-primary"
+          required=""
+          type="checkbox"
+        />
+        <span>
+          Ich akzeptiere die
+           
+          <a
+            class="text-brand-primary hover:text-brand-primary/80"
+            href="/legal/agb"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            AGB
+          </a>
+           
+          und die
+           
+          <a
+            class="text-brand-primary hover:text-brand-primary/80"
+            href="/legal/datenschutz"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Datenschutzerklärung
+          </a>
+           
+          und schließe den
+           
+          <a
+            class="text-brand-primary hover:text-brand-primary/80"
+            href="/legal/avv"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Auftragsverarbeitungsvertrag
+          </a>
+           
+          für die Daten meiner Kundinnen und Kunden.
+        </span>
+      </label>
       <button
         class="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
+        disabled=""
         type="submit"
       >
         Konto erstellen

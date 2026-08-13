@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderWithProviders, stubFetch } from "@/test-utils/renderWithProviders";
 import LoginPage from "@/app/auth/login/page";
 import RegisterPage from "@/app/auth/register/page";
@@ -74,6 +75,41 @@ describe("auth-Seiten — die Felder, um die es in 1.3 geht", () => {
   it("register traegt drei Eingabefelder", async () => {
     const { container } = renderWithProviders(<RegisterPage />, { route: "/auth/register" });
     await screen.findByRole("button", { name: /registrieren|konto/i });
-    expect(container.querySelectorAll("input").length).toBeGreaterThanOrEqual(3);
+    expect(container.querySelectorAll('input:not([type="checkbox"])').length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * Die Registrierung ist der Zeitpunkt des Vertragsschlusses: AGB,
+ * Datenschutzerklaerung und der Auftragsverarbeitungsvertrag nach Art. 28 DSGVO
+ * kommen hier zustande, sonst an keiner Stelle. Vorher verlinkte die Seite
+ * keines der drei Dokumente -- die AGB behaupteten die Zustimmung, das Formular
+ * holte sie nie ein.
+ */
+describe("register — Einwilligung in AGB, Datenschutz und AVV", () => {
+  it("sperrt das Absenden, solange die Einwilligung fehlt", async () => {
+    renderWithProviders(<RegisterPage />, { route: "/auth/register" });
+
+    const submit = await screen.findByRole("button", { name: /registrieren|konto/i });
+    expect(submit).toBeDisabled();
+
+    const consent = screen.getByRole("checkbox");
+    expect(consent).toBeRequired();
+
+    await userEvent.click(consent);
+    expect(submit).toBeEnabled();
+  });
+
+  it("verlinkt alle drei Dokumente, und zwar in einem neuen Tab", async () => {
+    const { container } = renderWithProviders(<RegisterPage />, { route: "/auth/register" });
+    await screen.findByRole("button", { name: /registrieren|konto/i });
+
+    for (const href of ["/legal/agb", "/legal/datenschutz", "/legal/avv"]) {
+      const link = container.querySelector(`a[href="${href}"]`);
+      expect(link, `Link auf ${href} fehlt`).not.toBeNull();
+      // Im selben Tab geoeffnet, kaeme die Nutzerin mit leerem Formular zurueck.
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+    }
   });
 });

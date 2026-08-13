@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { iconButton } from "@/lib/styles";
+import { BackLink } from "@/components/legal/BackLink";
 
 const releases = [
   {
@@ -100,12 +98,7 @@ export default function ChangelogPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link
-          href="javascript:void(0)" onClick={() => window.history.back()}
-          className={iconButton}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
+        <BackLink />
         <h1 className="text-2xl font-bold text-primary">Changelog</h1>
       </div>
 

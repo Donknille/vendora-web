@@ -45,6 +45,27 @@ const envSchema = z.object({
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 }).superRefine((value, ctx) => {
+  // In Produktion ist BETTER_AUTH_URL keine Kür. Aus ihr werden die Links in
+  // den Bestaetigungs- und Reset-Mails gebaut. Fehlt der Wert, raet Better Auth
+  // die Adresse aus den Request-Headern -- was auf Vercel die jeweilige
+  // Deployment-URL ist und nicht die, unter der die Anwendung erreichbar sein
+  // soll. Ergebnis: verschickte Links zeigen ins Leere, niemand kann sein Konto
+  // bestaetigen, und im Log steht nichts. Genau die Sorte Fehler, die man erst
+  // an ausbleibenden Registrierungen bemerkt.
+  //
+  // Lokal bleibt der Wert optional (dort ist die Deployment-URL localhost und
+  // damit richtig geraten).
+  if (value.NODE_ENV === "production" && !value.BETTER_AUTH_URL) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["BETTER_AUTH_URL"],
+      message:
+        "BETTER_AUTH_URL is required in production — it builds the links in " +
+        "verification and password-reset emails. Set it to the public base URL " +
+        "without a trailing slash.",
+    });
+  }
+
   // Halb konfiguriertes SMTP ist der Zustand, der still scheitert. Ein
   // fehlendes Passwort faellt sonst erst beim ersten echten Versand auf --
   // also mitten in einer Registrierung, deren Fehler Better Auth verschluckt

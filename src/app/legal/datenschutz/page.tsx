@@ -1,20 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { iconButton } from "@/lib/styles";
+import { BackLink } from "@/components/legal/BackLink";
 
 export default function DatenschutzPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link
-          href="javascript:void(0)" onClick={() => window.history.back()}
-          className={iconButton}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
+        <BackLink />
         <h1 className="text-2xl font-bold text-primary">Datenschutzerklärung</h1>
       </div>
 
@@ -54,7 +48,27 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">3. Rechtsgrundlagen</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">3. Daten Ihrer Kundinnen und Kunden</h2>
+        <div className="space-y-2 text-sm text-secondary leading-relaxed">
+          <p>
+            Diese Erklärung betrifft <strong className="text-primary">Ihre eigenen</strong> Daten als
+            Nutzer:in von Vendora. Für die Daten, die Sie über Ihre Kundschaft eingeben — Namen und
+            Anschriften auf Aufträgen und Rechnungen —, sind <strong className="text-primary">Sie</strong>{" "}
+            der Verantwortliche; Vendora verarbeitet sie nur in Ihrem Auftrag.
+          </p>
+          <p>
+            Dafür gilt der{" "}
+            <Link href="/legal/avv" className="text-brand-primary hover:text-brand-primary/80">
+              Auftragsverarbeitungsvertrag nach Art. 28 DSGVO
+            </Link>
+            . Er wird mit der Registrierung geschlossen und enthält die technischen und
+            organisatorischen Maßnahmen sowie die Liste der Unterauftragsverarbeiter.
+          </p>
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold text-primary mb-3">4. Rechtsgrundlagen</h2>
         <ul className="space-y-2 text-sm text-secondary">
           <li><strong className="text-primary">Art. 6 Abs. 1 lit. b DSGVO</strong> — Verarbeitung zur Vertragserfüllung (Bereitstellung des SaaS-Dienstes)</li>
           <li><strong className="text-primary">Art. 6 Abs. 1 lit. a DSGVO</strong> — Einwilligung (bei optionalen Funktionen wie E-Mail-Bestätigung)</li>
@@ -63,7 +77,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">4. Externe Dienste</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">5. Externe Dienste</h2>
 
         <div className="space-y-4">
           <div>
@@ -128,7 +142,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">5. Datensicherheit</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">6. Datensicherheit</h2>
         <ul className="space-y-1 text-sm text-secondary list-disc list-inside">
           <li>Verschlüsselte Übertragung aller Daten via HTTPS/TLS</li>
           <li>Passwörter werden mit einem sicheren, langsamen Hash-Verfahren (scrypt) gespeichert (nie im Klartext)</li>
@@ -141,7 +155,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">6. Ihre Rechte</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">7. Ihre Rechte</h2>
         <p className="text-sm text-secondary mb-3">
           Sie haben gemäß DSGVO folgende Rechte bezüglich Ihrer personenbezogenen Daten:
         </p>
@@ -156,7 +170,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">7. Speicherdauer</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">8. Speicherdauer</h2>
         <p className="text-sm text-secondary">
           Ihre Daten werden gespeichert, solange Ihr Konto aktiv ist. Nach Löschung des Kontos werden alle personenbezogenen Daten
           und Geschäftsdaten gelöscht; auch Ihr Konto selbst wird entfernt, sodass dieselbe E-Mail-Adresse später wieder
@@ -173,7 +187,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">8. Kontakt für Datenschutzanfragen</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">9. Kontakt für Datenschutzanfragen</h2>
         <p className="text-sm text-secondary">
           Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte wenden Sie sich bitte an:
         </p>
@@ -185,7 +199,7 @@ export default function DatenschutzPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-primary mb-3">9. Änderungen</h2>
+        <h2 className="text-lg font-semibold text-primary mb-3">10. Änderungen</h2>
         <p className="text-sm text-secondary">
           Diese Datenschutzerklärung kann bei Bedarf aktualisiert werden, z.B. bei Änderungen der genutzten Dienste
           oder rechtlichen Anforderungen. Die aktuelle Version ist stets unter dieser Adresse abrufbar.

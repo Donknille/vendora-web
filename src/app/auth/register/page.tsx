@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -33,6 +34,15 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       setError(t.auth.passwordMismatch);
+      return;
+    }
+
+    // Das `required` am Feld faengt den Normalfall bereits im Browser ab. Diese
+    // Pruefung steht daneben, weil die Registrierung der Zeitpunkt des
+    // Vertragsschlusses ist: AGB, Datenschutzerklaerung und der AVV nach
+    // Art. 28 DSGVO kommen hier zustande, sonst nirgends.
+    if (!consent) {
+      setError(t.auth.consentRequired);
       return;
     }
 
@@ -158,9 +168,51 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Die Rechtstexte oeffnen in einem neuen Tab: wer sie im selben
+              Tab aufschlaegt, kommt mit leerem Formular zurueck. */}
+          <label className="flex items-start gap-3 text-sm text-faint leading-relaxed">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand-primary"
+              required
+            />
+            <span>
+              {t.auth.consentPrefix}{" "}
+              <Link
+                href="/legal/agb"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-primary hover:text-brand-primary/80"
+              >
+                {t.auth.consentAgb}
+              </Link>{" "}
+              {t.auth.consentSep}{" "}
+              <Link
+                href="/legal/datenschutz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-primary hover:text-brand-primary/80"
+              >
+                {t.auth.consentPrivacy}
+              </Link>{" "}
+              {t.auth.consentAvvPrefix}{" "}
+              <Link
+                href="/legal/avv"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-primary hover:text-brand-primary/80"
+              >
+                {t.auth.consentAvv}
+              </Link>{" "}
+              {t.auth.consentAvvSuffix}
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !consent}
             className={authSubmit}
           >
             {loading ? t.common.loading : t.auth.createAccount}
