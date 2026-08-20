@@ -1,4 +1,4 @@
-# Vendora
+# Bilanz-Buddy
 
 Multi-Tenant-SaaS für Markthändler:innen: Auftrags- & Rechnungsverwaltung, Marktmodus
 (Kassen-light für Marktstände), Ausgabenerfassung und EÜR-/Finanzdashboard – mit Backup/Restore

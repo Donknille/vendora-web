@@ -29,7 +29,10 @@ import { BackLink } from "@/components/legal/BackLink";
  * sauberere Nachweis, braucht aber eine Migration.
  */
 
-export const AVV_VERSION = "1.0";
+// 1.1: nur der Name des Dienstes hat gewechselt (Vendora -> Bilanz-Buddy).
+// Verarbeitungszwecke, Datenkategorien und die Unterauftragnehmer sind
+// unveraendert, deshalb kein erneutes Einholen der Zustimmung.
+export const AVV_VERSION = "1.1";
 export const AVV_STAND = "August 2026";
 
 export const metadata: Metadata = {

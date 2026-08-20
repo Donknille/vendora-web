@@ -84,6 +84,9 @@ async function main(): Promise<void> {
     await writeJson(path.join(WORK_DIR, "manifest.json"), {
       // Der JSON-Export ist der Notausgang, falls das Binaerformat des Dumps
       // beschaedigt ist. Er muss deshalb sagen, was er NICHT enthaelt.
+      // Traegt weiter den alten Namen, wie die ganze Pipeline: Archive,
+      // Dump-Datei und Drive-Ordner heissen seit jeher vendora-*, und
+      // bestehende Staende muessen lesbar bleiben.
       generatedBy: "vendora backup pipeline",
       runUrl: process.env.BACKUP_RUN_URL ?? null,
       jsonTables: tables,

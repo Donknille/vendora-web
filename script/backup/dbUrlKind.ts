@@ -6,7 +6,7 @@
  * testbar sein (src/__tests__/backupGuards.test.ts).
  *
  * Die Regel ist absichtlich grob: **alles ausser localhost gilt als
- * Produktion.** Vendora hat kein Staging, und die einzige sichere
+ * Produktion.** Bilanz-Buddy hat kein Staging, und die einzige sichere
  * Fehlerrichtung ist "Nachweis verlangen". Eine Heuristik, die Neon-Branches
  * nach Namen zu unterscheiden versucht, waere genau die Art von Klugheit, die
  * einmal danebengreift — und dann gegen die Produktionsdatenbank.

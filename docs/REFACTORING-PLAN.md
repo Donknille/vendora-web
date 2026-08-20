@@ -1,4 +1,4 @@
-# Vendora — Refactoring-Plan (verhaltensneutral)
+# Bilanz-Buddy — Refactoring-Plan (verhaltensneutral)
 
 > **Zweck:** Vollständiger Arbeitsauftrag für ein ausführliches Refactoring des Bestandscodes.
 > **Harte Randbedingung:** Keine einzige Funktion, kein Statuscode, kein Text, kein Pixel ändert sich.

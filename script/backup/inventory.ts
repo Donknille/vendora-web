@@ -97,7 +97,7 @@ async function main(): Promise<void> {
     );
 
     // --- 4. Zweiter Datenspeicher ------------------------------------------
-    // Vendora legt keine Dateien ab: Rechnungs-PDFs entstehen on demand
+    // Bilanz-Buddy legt keine Dateien ab: Rechnungs-PDFs entstehen on demand
     // (src/lib/server/invoicePdf.ts), invoices.pdf_url ist reserviert und leer.
     // Sobald dort etwas steht, gibt es Objekte ausserhalb der Datenbank — ein
     // reiner DB-Restore stellte dann Metadaten wieder her, die ins Leere zeigen.

@@ -1,6 +1,6 @@
 # E-Rechnung – Readiness & Ausbauplan (Phase 2.5)
 
-> **Status: vorbereitet, nicht gebaut.** Vendora erzeugt heute PDF-Rechnungen.
+> **Status: vorbereitet, nicht gebaut.** Bilanz-Buddy erzeugt heute PDF-Rechnungen.
 > Ein strukturiertes E-Rechnungsformat (ZUGFeRD/XRechnung) ist **nicht**
 > implementiert. Dieses Dokument hält fest, was das Datenmodell bereits abdeckt
 > und was für eine spätere Umsetzung ergänzt werden muss.
@@ -8,10 +8,10 @@
 ## Rechtlicher Rahmen (Kurzfassung, ohne Gewähr)
 
 - **Empfang:** B2B-Unternehmen müssen strukturierte E-Rechnungen empfangen können
-  (seit 2025). Betrifft Vendora nur als Empfänger-Thema, nicht die Ausstellung.
+  (seit 2025). Betrifft Bilanz-Buddy nur als Empfänger-Thema, nicht die Ausstellung.
 - **Ausstellungspflicht:** wird stufenweise wirksam (2027/2028, umsatzabhängig).
 - **Kleinunternehmer (§ 19 UStG):** von der **Ausstellungspflicht** dauerhaft
-  befreit; dürfen weiter einfache Rechnungen (auch PDF) ausstellen. Da Vendoras
+  befreit; dürfen weiter einfache Rechnungen (auch PDF) ausstellen. Da Bilanz-Buddys
   Zielgruppe überwiegend Kleinunternehmer sind, ist E-Rechnung eine **Ausbaustufe**,
   kein akuter Zwang.
 

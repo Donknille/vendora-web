@@ -4,14 +4,14 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Vendora – Shared Agent Rules
+# Bilanz-Buddy – Shared Agent Rules
 
 > Diese Datei wird von Antigravity, Cursor und Claude Code gleichermaßen gelesen.
 > Tool-spezifische Details: siehe CLAUDE.md
 
 ## Projekt
 
-Vendora ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler.
+Bilanz-Buddy ist eine Multi-Tenant SaaS-Plattform für Marktplatz-Händler.
 Stack: Next.js 16, Better Auth, Neon Postgres, Drizzle ORM, Stripe, Vercel.
 
 ## Unveränderliche Regeln

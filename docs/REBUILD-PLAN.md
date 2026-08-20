@@ -1,6 +1,6 @@
-# Vendora 2.0 — Überarbeitungsplan (Umsetzungsauftrag für KI-Agenten)
+# Bilanz-Buddy 2.0 — Überarbeitungsplan (Umsetzungsauftrag für KI-Agenten)
 
-> **Zweck dieses Dokuments:** Vollständiger, eigenständiger Arbeitsauftrag für die komplette Überarbeitung von Vendora.
+> **Zweck dieses Dokuments:** Vollständiger, eigenständiger Arbeitsauftrag für die komplette Überarbeitung von Bilanz-Buddy.
 > Es enthält (1) den Ist-Zustand mit allen relevanten Fakten und Dateipfaden, (2) alle bekannten Fehler und Schulden,
 > (3) das Zielbild und (4) einen phasenweisen Umsetzungsplan mit Abnahmekriterien.
 > Erstellt am 2026-07-18 auf Basis einer Komplettanalyse von Code, Security-Audits und zwei Strategiedokumenten
@@ -26,7 +26,7 @@
 
 ## 1. Produktkontext & Positionierung
 
-Vendora ist eine Multi-Tenant-SaaS für **kreative Markthändler:innen in Deutschland** (Kunsthandwerk auf Wochen-, Kunsthandwerker- und Weihnachtsmärkten). Erkenntnisse aus der Marktanalyse (Juli 2026):
+Bilanz-Buddy ist eine Multi-Tenant-SaaS für **kreative Markthändler:innen in Deutschland** (Kunsthandwerk auf Wochen-, Kunsthandwerker- und Weihnachtsmärkten). Erkenntnisse aus der Marktanalyse (Juli 2026):
 
 - **Echter Whitespace:** Kein deutscher Direktwettbewerber für die Händlerseite. Hauptgegner sind Excel/Papier und niedrige Zahlungsbereitschaft.
 - **Personas:**
@@ -98,7 +98,7 @@ Tabellen in `src/lib/server/schema.ts`: `users` (App-Profil, `id` = Better-Auth-
 
 ## 3. Zielbild
 
-Vendora wird das **offline-fähige, mobile „Betriebssystem für Markthändler"**: Marktkalender + Kassen-light-Marktmodus + GoBD-feste Rechnungen + echte EÜR mit Steuer-Export — monetarisiert ohne Abo-Zwang (Free-Basis, Pay-per-Use, Einmalkäufe, Referrals, später Veranstalter-Modul). Die vier Säulen ruhen auf einem korrigierten Fundament (Cents, echte Datumstypen, versionierte Migrationen, GoBD-konforme Persistenz).
+Bilanz-Buddy wird das **offline-fähige, mobile „Betriebssystem für Markthändler"**: Marktkalender + Kassen-light-Marktmodus + GoBD-feste Rechnungen + echte EÜR mit Steuer-Export — monetarisiert ohne Abo-Zwang (Free-Basis, Pay-per-Use, Einmalkäufe, Referrals, später Veranstalter-Modul). Die vier Säulen ruhen auf einem korrigierten Fundament (Cents, echte Datumstypen, versionierte Migrationen, GoBD-konforme Persistenz).
 
 ---
 
@@ -172,7 +172,7 @@ Vorab: Branch `claude/pwa-offline-marktmodus-of3xb2` sichten; Verwertbares über
 
 **3.2 Offline-Verkaufserfassung:** Marktmodus-Seite schreibt Sales in lokale Queue (IndexedDB); Sync-Worker pusht bei Konnektivität an `api/markets/[id]/sales` (idempotent via Client-generierter Sale-UUID — Server akzeptiert `id` und dedupliziert). UI zeigt Sync-Status (n ausstehend / synchronisiert). Konflikte sind unkritisch (append-only Verkäufe).
 
-**3.3 Kassen-UX:** Vollbild-Marktmodus: große Touch-Buttons (quickItems), Bar/Karte-Toggle je Verkauf (`market_sales.paymentMethod`), Mengen-Steps, Undo für Fehleingaben, **Tagesabschluss-Ansicht** (Umsatz gesamt/bar/Karte, Verkäufe-Liste, Gewinn nach Kosten). Klarstellung im UI: Vendora ist keine Registrierkasse (keine TSE) — Hinweis + SumUp-Empfehlung (Referral-Link-Slot, s. Phase 4).
+**3.3 Kassen-UX:** Vollbild-Marktmodus: große Touch-Buttons (quickItems), Bar/Karte-Toggle je Verkauf (`market_sales.paymentMethod`), Mengen-Steps, Undo für Fehleingaben, **Tagesabschluss-Ansicht** (Umsatz gesamt/bar/Karte, Verkäufe-Liste, Gewinn nach Kosten). Klarstellung im UI: Bilanz-Buddy ist keine Registrierkasse (keine TSE) — Hinweis + SumUp-Empfehlung (Referral-Link-Slot, s. Phase 4).
 
 **3.4 Marktkalender:** `market_events` erweitern: `applicationDeadline` (`date`), Status erweitern um `applied`/`confirmed` (bestehende: `open`/`completed`/`cancelled`); Kalender-/Listenansicht mit Fristen; „Markt kopieren" zu Serien-Konzept ausbauen (Vorjahres-Vergleich je Markt: gleicher Name → Jahresvergleich Umsatz/Gewinn).
 
@@ -181,7 +181,7 @@ Vorab: Branch `claude/pwa-offline-marktmodus-of3xb2` sichten; Verwertbares über
 ### Phase 4 — Monetarisierungs-Umbau
 
 > **⚠ Bei der Umsetzung geändert (Inhaber-Entscheidung, ersetzt die Vorschläge unten):**
-> **Ein Preis – Vendora Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff)
+> **Ein Preis – Bilanz-Buddy Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff)
 > für neue Nutzer. Nach Trial ohne Zahlung: **Free = Nur-Lese** – ansehen und
 > **bestehende Belege (Rechnungs-PDFs) + DSGVO-Datenexport herunterladen** immer möglich,
 > aber **nichts Neues anlegen** (Create-Endpoints → 403 `PRO_REQUIRED`); das schließt die
