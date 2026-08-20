@@ -28,7 +28,7 @@ const invoice = (o: Partial<InvoicePdfInput> = {}): InvoicePdfInput => ({
   invoiceNumber: "26-001",
   issueDate: "2026-07-19",
   serviceDate: "2026-07-10",
-  sellerName: "Vendora Test",
+  sellerName: "Bilanz-Buddy Test",
   sellerAddress: "Standstr. 5\n12345 Musterstadt",
   sellerEmail: "seller@example.com",
   sellerPhone: "0123456789",
