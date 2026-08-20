@@ -6,8 +6,10 @@
 // BEWUSST OHNE `server-only`: `emailTemplates.ts` verzichtet ebenfalls darauf,
 // damit die Vorlagen testbar bleiben, und importiert von hier.
 
-// Immer mit Bindestrich. Laut Markenbuch sind "BilanzBuddy", "Bilanz Buddy"
-// und "BB" als Absender falsch — der Guard dagegen ist ein grep im Review.
+// Immer mit Bindestrich. Das Markenbuch laesst weder die zusammengeschriebene
+// noch die getrennte Form zu, und "BB" ist als Absender ausgeschlossen. Welche
+// Schreibweisen genau verboten sind, zaehlt brandGuards.test.ts auf — dort
+// steht auch der Guard, der sie im Quelltext sucht.
 export const APP_NAME = "Bilanz-Buddy";
 export const APP_NAME_PRO = `${APP_NAME} Pro`;
 export const APP_CLAIM = "Dein Buddy für die Zahlen.";

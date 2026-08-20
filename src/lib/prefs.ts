@@ -13,10 +13,10 @@
 export type Theme = "light" | "dark" | "system";
 export type Language = "de" | "en";
 
-export const THEME_COOKIE = "vendora_theme";
+export const THEME_COOKIE = "bilanz-buddy-theme";
 /** Resolved darkness — "system" cannot be evaluated on the server. */
-export const DARK_COOKIE = "vendora_dark";
-export const LANGUAGE_COOKIE = "vendora_language";
+export const DARK_COOKIE = "bilanz-buddy-dark";
+export const LANGUAGE_COOKIE = "bilanz-buddy-language";
 
 /** One year; these are functional settings, not tracking. */
 export const PREF_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;

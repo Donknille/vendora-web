@@ -42,7 +42,7 @@ export const POST = withAuth(
     const customer = await getStripe().customers.create(
       {
         email: user.email,
-        metadata: { vendora_user_id: userId },
+        metadata: { bilanz_buddy_user_id: userId },
       },
       { idempotencyKey: `customer-create-${userId}` },
     );
@@ -90,7 +90,7 @@ export const POST = withAuth(
     success_url: `${origin}/settings?subscription=success`,
     cancel_url: `${origin}/settings?subscription=cancelled`,
     metadata: {
-      vendora_user_id: userId,
+      bilanz_buddy_user_id: userId,
     },
   });
 

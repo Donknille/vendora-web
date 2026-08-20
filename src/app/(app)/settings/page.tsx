@@ -156,7 +156,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `vendora-backup-${today()}.json`;
+      a.download = `bilanz-buddy-backup-${today()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

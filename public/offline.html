@@ -59,7 +59,7 @@
       // im Standalone-Modus gibt es nicht einmal eine Adressleiste. Die Kasse
       // hinterlegt ihre Adresse, sobald sie einmal offen war.
       try {
-        var last = localStorage.getItem("vendora-last-register");
+        var last = localStorage.getItem("bilanz-buddy-last-register");
         if (last) {
           var link = document.getElementById("register-link");
           link.setAttribute("href", last);

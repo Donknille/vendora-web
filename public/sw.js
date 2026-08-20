@@ -22,8 +22,12 @@
 // samt der gerenderten Seiten frueherer Nutzer, und genau dagegen ist die
 // Aenderung gebaut. activate raeumt jeden Cache, der nicht v2 ist.
 const VERSION = "v2";
-const PRECACHE = `vendora-precache-${VERSION}`;
-const RUNTIME = `vendora-runtime-${VERSION}`;
+// Das Praefix ist an APP_SLUG in src/lib/brand.ts gebunden und wird in
+// clearLocalData.ts noch einmal genannt (dort bleibt der Precache beim Logout
+// stehen). Diese Datei liegt in public/ und kennt keine Imports -- der Guard
+// gegen Auseinanderlaufen ist brandGuards.test.ts.
+const PRECACHE = `bilanz-buddy-precache-${VERSION}`;
+const RUNTIME = `bilanz-buddy-runtime-${VERSION}`;
 
 // Upper bound for the runtime cache. Every deploy ships new content-hashed
 // chunks under a new URL, so without a limit the cache would grow with every

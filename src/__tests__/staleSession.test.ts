@@ -24,7 +24,7 @@ describe("/api/session/expired", () => {
     cookieStore.entries = [
       { name: "better-auth.session_token", value: "abgelaufen" },
       { name: "better-auth.session_data", value: "zwischengespeichert" },
-      { name: "vendora_language", value: "de" },
+      { name: "bilanz-buddy-language", value: "de" },
     ];
 
     const { GET } = await import("@/app/api/session/expired/route");
@@ -41,7 +41,7 @@ describe("/api/session/expired", () => {
     for (const c of gesetzt) expect(c).toMatch(/Max-Age=0/i);
     // Fremde Cookies bleiben unangetastet: Sprache und Thema haben mit der
     // Anmeldung nichts zu tun.
-    expect(gesetzt.some((c) => c.startsWith("vendora_language="))).toBe(false);
+    expect(gesetzt.some((c) => c.startsWith("bilanz-buddy-language="))).toBe(false);
   });
 
   it("trifft auch die __Secure-Variante aus der Produktion", async () => {
