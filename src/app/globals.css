@@ -2,11 +2,17 @@
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
+/* Nur fuer die Wortmarke in <Logo>. Die App selbst bleibt Inter. */
+@import "@fontsource/manrope/800.css";
 
 /* ── Class-based dark mode for Tailwind v4 ── */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ── Light mode (Vapor + Gold) ── */
+/* Das Gold und das Obsidian stehen fuehrend in src/lib/brand.ts. Hier ein
+   zweites Mal, weil CSS kein TypeScript importieren kann — wer den Ton
+   aendert, aendert beide Stellen (und public/offline.html, das ohne Build
+   ausgeliefert wird). */
 :root {
   --color-brand-primary: #D4AF37;
   --color-brand-primaryLt: rgba(212, 175, 55, 0.1);
@@ -26,6 +32,11 @@
   --color-muted: rgba(0, 0, 0, 0.4);
   --color-faint: rgba(0, 0, 0, 0.3);
   --color-holder: rgba(0, 0, 0, 0.25);
+
+  /* "Plus" aus dem Markenbuch. Noch ungenutzt: Gruen liegt heute ad hoc
+     verteilt (green-* und #16a34a in den Charts). Das aufzuraeumen ist eine
+     sichtbare Aenderung und gehoerte nicht in die Umbenennung. */
+  --color-plus: #6EE7A2;
 
   --color-scrollbar: #D0D0D0;
   --color-autofill-bg: #FAFAFA;
@@ -53,6 +64,8 @@
   --color-faint: rgba(255, 255, 255, 0.3);
   --color-holder: rgba(255, 255, 255, 0.25);
 
+  --color-plus: #6EE7A2;
+
   --color-scrollbar: #444444;
   --color-autofill-bg: #1E1E1E;
   --color-autofill-text: #FFFFFF;
@@ -62,6 +75,7 @@
 @theme {
   --font-display: "Inter", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
+  --font-brand: "Manrope", "Inter", system-ui, sans-serif;
 
   --color-brand-primary: var(--color-brand-primary);
   --color-brand-primaryLt: var(--color-brand-primaryLt);
@@ -81,10 +95,12 @@
   --color-muted: var(--color-muted);
   --color-faint: var(--color-faint);
   --color-holder: var(--color-holder);
+  --color-plus: var(--color-plus);
 }
 
 /* Force font-display: swap */
 @font-face { font-family: "Inter"; font-display: swap; }
+@font-face { font-family: "Manrope"; font-display: swap; }
 
 body {
   font-family: "Inter", system-ui, sans-serif;

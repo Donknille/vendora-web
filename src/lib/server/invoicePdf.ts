@@ -1,4 +1,5 @@
 import "server-only";
+import { APP_NAME } from "@/lib/brand";
 import { createA4Canvas, PdfCanvas, PDF_COLORS } from "./pdf";
 import { formatAmountInput } from "@/lib/formatCurrency";
 
@@ -54,7 +55,7 @@ export async function buildInvoicePdf(invoice: InvoicePdfInput): Promise<Uint8Ar
   const isCancellation = invoice.type === "cancellation";
 
   // ── Header: seller (left) + document meta (right) ──
-  c.text(invoice.sellerName || "Vendora", c.left, 20, { bold: true, color: PDF_COLORS.brand });
+  c.text(invoice.sellerName || APP_NAME, c.left, 20, { bold: true, color: PDF_COLORS.brand });
   c.textRight(isCancellation ? "STORNORECHNUNG" : "RECHNUNG", c.right, 20, { bold: true });
   c.down(22);
 

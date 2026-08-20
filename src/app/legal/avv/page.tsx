@@ -6,12 +6,12 @@ import { BackLink } from "@/components/legal/BackLink";
 /**
  * Auftragsverarbeitungsvertrag nach Art. 28 DSGVO.
  *
- * WARUM ES IHN GIBT: Vendora speichert nicht nur die Daten der Kontoinhaber:innen,
+ * WARUM ES IHN GIBT: Bilanz-Buddy speichert nicht nur die Daten der Kontoinhaber:innen,
  * sondern auch die Daten von deren Kundschaft — Name, Anschrift und E-Mail stehen
  * auf jedem Auftrag und jeder Rechnung. Für diese Daten ist die Händlerin
- * Verantwortliche und Vendora Auftragsverarbeiter. Art. 28 Abs. 3 DSGVO verlangt
+ * Verantwortliche und Bilanz-Buddy Auftragsverarbeiter. Art. 28 Abs. 3 DSGVO verlangt
  * dafür einen Vertrag; ohne ihn verstößt jede gewerbliche Nutzerin gegen die
- * DSGVO, und Vendora gleich mit.
+ * DSGVO, und Bilanz-Buddy gleich mit.
  *
  * ZWEI DINGE, DIE VOR DEM LAUNCH STIMMEN MÜSSEN:
  *
@@ -33,7 +33,7 @@ export const AVV_VERSION = "1.0";
 export const AVV_STAND = "August 2026";
 
 export const metadata: Metadata = {
-  title: "Auftragsverarbeitungsvertrag — Vendora",
+  title: "Auftragsverarbeitungsvertrag — Bilanz-Buddy",
 };
 
 const DATA_CATEGORIES = [
@@ -142,9 +142,9 @@ export default function AvvPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">Worum es hier geht</h2>
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
           <p>
-            Wer Vendora nutzt, gibt Daten der eigenen Kundschaft ein — Namen, Anschriften,
+            Wer Bilanz-Buddy nutzt, gibt Daten der eigenen Kundschaft ein — Namen, Anschriften,
             E-Mail-Adressen auf Aufträgen und Rechnungen. Für diese Daten sind{" "}
-            <strong className="text-primary">Sie</strong> verantwortlich; Vendora verarbeitet sie
+            <strong className="text-primary">Sie</strong> verantwortlich; Bilanz-Buddy verarbeitet sie
             nur in Ihrem Auftrag. Genau dafür verlangt Art. 28 Abs. 3 DSGVO einen Vertrag — diesen.
           </p>
           <p>
@@ -167,7 +167,7 @@ export default function AvvPage() {
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
           <p>
             (1) <strong className="text-primary">Verantwortlicher</strong> im Sinne des Art. 4 Nr. 7
-            DSGVO ist die Inhaberin oder der Inhaber des Vendora-Kontos.
+            DSGVO ist die Inhaberin oder der Inhaber des Bilanz-Buddy-Kontos.
           </p>
           <p>
             (2) <strong className="text-primary">Auftragsverarbeiter</strong> im Sinne des Art. 4
@@ -176,7 +176,7 @@ export default function AvvPage() {
           </p>
           <p>
             (3) Gegenstand ist die Verarbeitung personenbezogener Daten, die der Verantwortliche im
-            Rahmen der Nutzung von Vendora eingibt oder importiert.
+            Rahmen der Nutzung von Bilanz-Buddy eingibt oder importiert.
           </p>
           <p>
             (4) Der Vertrag beginnt mit der Registrierung und endet mit der Löschung des Kontos.
@@ -191,7 +191,7 @@ export default function AvvPage() {
         <div className="space-y-3 text-sm text-secondary leading-relaxed">
           <p>
             (1) <strong className="text-primary">Zweck:</strong> Bereitstellung der Funktionen von
-            Vendora — Verwaltung von Aufträgen, Erstellung von Rechnungen, Erfassung von
+            Bilanz-Buddy — Verwaltung von Aufträgen, Erstellung von Rechnungen, Erfassung von
             Marktverkäufen und Ausgaben, Auswertung für die Einnahmen-Überschuss-Rechnung sowie
             Export und Import der Daten.
           </p>

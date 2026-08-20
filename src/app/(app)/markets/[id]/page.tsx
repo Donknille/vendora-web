@@ -144,8 +144,8 @@ export default function MarketDetailPage() {
 
   const readOnlyMsg =
     language === "de"
-      ? "Nur-Lese-Modus – für neue Verkäufe wird Vendora Pro benötigt."
-      : "Read-only – Vendora Pro is required to record sales.";
+      ? "Nur-Lese-Modus – für neue Verkäufe wird Bilanz-Buddy Pro benötigt."
+      : "Read-only – Bilanz-Buddy Pro is required to record sales.";
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");

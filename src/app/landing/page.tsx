@@ -52,7 +52,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="mx-auto max-w-5xl px-6 py-8 border-t border-line">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted">
-          <span>© {new Date().getFullYear()} Vendora — DigitalFlowSolutions</span>
+          <span>© {new Date().getFullYear()} Bilanz-Buddy — DigitalFlowSolutions</span>
           <div className="flex gap-4">
             <Link href="/legal/impressum" className="hover:text-primary transition-colors">Impressum</Link>
             <Link href="/legal/datenschutz" className="hover:text-primary transition-colors">Datenschutz</Link>

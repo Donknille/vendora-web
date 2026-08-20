@@ -710,7 +710,7 @@ exports[`markets/[id] — Marktdetail > rendert die Detailseite unveraendert 1`]
         />
       </svg>
       <p>
-        Vendora ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
+        Bilanz-Buddy ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
       </p>
     </div>
     <a
@@ -1144,7 +1144,7 @@ exports[`markets/[id]/kasse — Kassenmodus > rendert die Kasse unveraendert 1`]
           />
         </svg>
         <p>
-          Vendora ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
+          Bilanz-Buddy ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse.
         </p>
       </div>
       <a
@@ -1908,12 +1908,12 @@ exports[`settings — Einstellungen > rendert alle Abschnitte unveraendert 1`] =
     <p
       class="mb-4 text-sm leading-relaxed text-faint"
     >
-      Vendora kann auf dem Startbildschirm liegen: eigenes Symbol, Vollbild ohne Adressleiste, ein Tipp statt Browser und Lesezeichen. Bricht am Stand das Netz weg, läuft die bereits geöffnete Kasse weiter und reicht die Verkäufe später nach.
+      Bilanz-Buddy kann auf dem Startbildschirm liegen: eigenes Symbol, Vollbild ohne Adressleiste, ein Tipp statt Browser und Lesezeichen. Bricht am Stand das Netz weg, läuft die bereits geöffnete Kasse weiter und reicht die Verkäufe später nach.
     </p>
     <p
       class="text-sm text-muted"
     >
-      Dein Browser bietet keine direkte Installation an. Über das Browsermenü lässt sich Vendora meist trotzdem als App speichern — und im normalen Browser-Tab funktioniert ohnehin alles.
+      Dein Browser bietet keine direkte Installation an. Über das Browsermenü lässt sich Bilanz-Buddy meist trotzdem als App speichern — und im normalen Browser-Tab funktioniert ohnehin alles.
     </p>
   </div>
   <div
@@ -2052,7 +2052,7 @@ exports[`settings — Einstellungen > rendert alle Abschnitte unveraendert 1`] =
     <p
       class="text-sm text-faint leading-relaxed mb-4"
     >
-      Vendora speichert deine Daten sicher in der Cloud, geschützt durch dein Konto. Kein Tracking, keine Analysen. Du besitzt 100% deiner Daten.
+      Bilanz-Buddy speichert deine Daten sicher in der Cloud, geschützt durch dein Konto. Kein Tracking, keine Analysen. Du besitzt 100% deiner Daten.
     </p>
     <div
       class="flex flex-wrap gap-3"

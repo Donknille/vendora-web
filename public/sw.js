@@ -1,5 +1,5 @@
 /*
- * Vendora service worker (Phase 3.1).
+ * Bilanz-Buddy service worker (Phase 3.1).
  *
  * Hand-written on purpose: the recommended offline plugin (Serwist) currently
  * needs a webpack config, but Next.js 16 builds with Turbopack. A small SW keeps

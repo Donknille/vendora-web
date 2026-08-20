@@ -15,7 +15,7 @@ export default function AGBPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">§ 1 Geltungsbereich</h2>
         <p className="text-sm text-secondary leading-relaxed">
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Web-Anwendung &bdquo;Vendora&ldquo;
+          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Web-Anwendung &bdquo;Bilanz-Buddy&ldquo;
           (nachfolgend &bdquo;Dienst&ldquo;), betrieben von Sebastian Grüber, DigitalFlowSolutions,
           Falkenweg 6, 38820 Halberstadt (nachfolgend &bdquo;Anbieter&ldquo;). Mit der Registrierung
           akzeptiert der Nutzer diese AGB.
@@ -25,7 +25,7 @@ export default function AGBPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">§ 2 Leistungsbeschreibung</h2>
         <p className="text-sm text-secondary leading-relaxed mb-2">
-          Vendora ist ein webbasiertes Business-Management-Tool für Kleinunternehmer. Der Dienst umfasst:
+          Bilanz-Buddy ist ein webbasiertes Business-Management-Tool für Kleinunternehmer. Der Dienst umfasst:
         </p>
         <ul className="space-y-1 text-sm text-secondary list-disc list-inside">
           <li>Verwaltung von Aufträgen und Rechnungen</li>
@@ -49,7 +49,7 @@ export default function AGBPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">§ 4 Kostenlose Testphase und Abonnement</h2>
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
           <p>(1) Nach der Registrierung erhält der Nutzer eine kostenlose Testphase von 42 Tagen (6 Wochen) mit vollem Funktionsumfang.</p>
-          <p>(2) Nach Ablauf der Testphase ist das kostenpflichtige Abonnement &bdquo;Vendora Pro&ldquo; (19,90 €/Monat) erforderlich, um neue Einträge anzulegen (insbesondere Aufträge, Rechnungen, Märkte, Verkäufe und Ausgaben) sowie um eine GuV-/EÜR-Jahresübersicht zu erstellen und Daten zu importieren.</p>
+          <p>(2) Nach Ablauf der Testphase ist das kostenpflichtige Abonnement &bdquo;Bilanz-Buddy Pro&ldquo; (19,90 €/Monat) erforderlich, um neue Einträge anzulegen (insbesondere Aufträge, Rechnungen, Märkte, Verkäufe und Ausgaben) sowie um eine GuV-/EÜR-Jahresübersicht zu erstellen und Daten zu importieren.</p>
           <p>(3) Ohne aktives Abonnement wird das Konto in den Nur-Lese-Modus versetzt. Bestehende Daten bleiben unbegrenzt einsehbar; bereits ausgestellte Rechnungen können weiterhin als PDF heruntergeladen und der vollständige Datenexport (Art. 20 DSGVO) kann jederzeit abgerufen werden.</p>
           <p>(4) Eine GuV-/EÜR-Jahresübersicht, die während der Testphase oder eines aktiven Abonnements bereits erstellt wurde, bleibt auch im Nur-Lese-Modus abrufbar. Für bislang nicht erstellte Jahre ist ein aktives Abonnement erforderlich.</p>
           <p>(5) Das Abonnement verlängert sich automatisch um jeweils einen Monat, sofern es nicht vor Ablauf gekündigt wird.</p>

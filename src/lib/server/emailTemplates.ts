@@ -13,8 +13,16 @@
  * dort ist Zugabe, keine Voraussetzung.
  */
 
-/** Markenwerte aus globals.css, als Hex statt rgba (rgba ist in aelteren Clients unzuverlaessig). */
-const BRAND = "#D4AF37";
+import {
+  APP_NAME,
+  APP_NAME_HEAD,
+  APP_NAME_TAIL,
+  BRAND_GOLD,
+  BRAND_GOLD_ON_LIGHT,
+} from "@/lib/brand";
+
+/** Markenwerte aus brand.ts, als Hex statt rgba (rgba ist in aelteren Clients unzuverlaessig). */
+const BRAND = BRAND_GOLD;
 const LIGHT = {
   page: "#FAFAFA",
   surface: "#FFFFFF",
@@ -78,19 +86,22 @@ const EXPIRY_HTML = "Der Link ist <strong>1 Stunde</strong> gültig.";
 const EXPIRY_TEXT = "Der Link ist 1 Stunde gültig.";
 
 function header(baseUrl: string | undefined): string {
-  // Ohne baseUrl kein Remote-Bild: ein Logo von einer falschen Domain zeigt im
-  // besten Fall nichts und im schlechtesten ein fremdes Bild.
+  // Die Wortmarke ist HTML-Text, kein Bild. Outlook und Gmail blockieren
+  // Remote-Bilder beim Erstkontakt standardmaessig -- als Text steht der Name
+  // immer da, in beiden Faellen gleich. Manrope laesst sich in Mail-Clients
+  // ohnehin nicht laden, also erbt sie die Systemschrift aus FONT.
+  const wordmark = `<span class="v-heading" style="font-family:${FONT};font-size:24px;font-weight:800;letter-spacing:-0.5px;color:${LIGHT.text};vertical-align:middle;">${APP_NAME_HEAD}<span class="v-mark" style="color:${BRAND_GOLD_ON_LIGHT};">${APP_NAME_TAIL}</span></span>`;
+
+  // Ohne baseUrl kein Remote-Bild: ein Zeichen von einer falschen Domain zeigt
+  // im besten Fall nichts und im schlechtesten ein fremdes Bild.
   if (!baseUrl) {
-    return `<span style="font-family:${FONT};font-size:22px;font-weight:700;letter-spacing:3px;color:${BRAND};">VENDORA</span>`;
+    return wordmark;
   }
 
-  const src = escapeHtml(`${baseUrl.replace(/\/+$/, "")}/vendora_logo_v1_transparent.png`);
+  const src = escapeHtml(`${baseUrl.replace(/\/+$/, "")}/apple-touch-icon.png`);
 
-  // Der alt-Text ist als Wortmarke gestylt: Outlook und Gmail blockieren
-  // Remote-Bilder beim Erstkontakt standardmaessig, und dann steht hier statt
-  // eines leeren Kastens weiterhin "VENDORA" in Gold.
-  return `<img src="${src}" width="107" height="40" alt="VENDORA"
-        style="display:block;border:0;outline:none;text-decoration:none;height:40px;width:107px;font-family:${FONT};font-size:22px;font-weight:700;letter-spacing:3px;color:${BRAND};">`;
+  return `<img src="${src}" width="36" height="36" alt=""
+        style="border:0;outline:none;text-decoration:none;height:36px;width:36px;border-radius:9px;vertical-align:middle;margin-right:10px;">${wordmark}`;
 }
 
 function renderHtml({ preheader, heading, intro, cta, url, ignoreHint, baseUrl }: TemplateInput): string {
@@ -118,6 +129,7 @@ function renderHtml({ preheader, heading, intro, cta, url, ignoreHint, baseUrl }
     .v-body      { background-color: ${DARK.page} !important; }
     .v-card      { background-color: ${DARK.surface} !important; border-color: ${DARK.line} !important; }
     .v-heading   { color: ${DARK.text} !important; }
+    .v-mark      { color: ${BRAND_GOLD} !important; }
     .v-text      { color: ${DARK.secondary} !important; }
     .v-divider   { border-color: ${DARK.line} !important; }
     .v-footer,
@@ -237,33 +249,33 @@ function render(input: TemplateInput, subject: string): EmailContent {
 export function verificationEmail(opts: { url: string; baseUrl?: string }): EmailContent {
   return render(
     {
-      preheader: "Noch ein Klick, dann ist dein Vendora-Konto aktiv.",
+      preheader: "Noch ein Klick, dann ist dein Bilanz-Buddy-Konto aktiv.",
       heading: "Bestätige deine E-Mail-Adresse",
       intro:
-        "Willkommen bei Vendora. Klicke auf den Button, um dein Konto zu aktivieren und mit der Einrichtung zu starten.",
+        "Willkommen bei Bilanz-Buddy. Klicke auf den Button, um dein Konto zu aktivieren und mit der Einrichtung zu starten.",
       cta: "E-Mail bestätigen",
       url: opts.url,
       ignoreHint:
-        "Wenn du dich nicht bei Vendora registriert hast, kannst du diese E-Mail ignorieren. Ohne Bestätigung wird kein Konto aktiviert.",
+        "Wenn du dich nicht bei Bilanz-Buddy registriert hast, kannst du diese E-Mail ignorieren. Ohne Bestätigung wird kein Konto aktiviert.",
       baseUrl: opts.baseUrl,
     },
-    "Bestätige deine E-Mail-Adresse – Vendora"
+    `Bestätige deine E-Mail-Adresse – ${APP_NAME}`
   );
 }
 
 export function passwordResetEmail(opts: { url: string; baseUrl?: string }): EmailContent {
   return render(
     {
-      preheader: "Setze dein Vendora-Passwort zurück.",
+      preheader: "Setze dein Bilanz-Buddy-Passwort zurück.",
       heading: "Passwort zurücksetzen",
       intro:
-        "Klicke auf den Button, um ein neues Passwort für dein Vendora-Konto zu wählen.",
+        "Klicke auf den Button, um ein neues Passwort für dein Bilanz-Buddy-Konto zu wählen.",
       cta: "Passwort zurücksetzen",
       url: opts.url,
       ignoreHint:
         "Wenn du das nicht angefordert hast, kannst du diese E-Mail ignorieren. Dein Passwort bleibt dann unverändert.",
       baseUrl: opts.baseUrl,
     },
-    "Passwort zurücksetzen – Vendora"
+    `Passwort zurücksetzen – ${APP_NAME}`
   );
 }

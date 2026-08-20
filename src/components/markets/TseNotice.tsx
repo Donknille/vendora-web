@@ -9,7 +9,7 @@ const SUMUP_URL =
   process.env.NEXT_PUBLIC_SUMUP_REFERRAL_URL || "https://www.sumup.com/de-de/";
 
 /**
- * Clarifies that Vendora is NOT a cash register with a TSE (§146a AO) and points
+ * Clarifies that Bilanz-Buddy is NOT a cash register with a TSE (§146a AO) and points
  * to a card-reader partner. The partner link is marked "Anzeige" (UWG). No user
  * data is sent to the partner.
  */
@@ -23,8 +23,8 @@ export function TseNotice() {
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
         <p>
           {de
-            ? "Vendora ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse."
-            : "Vendora is not a certified cash register (TSE). Market mode records your sales for the income statement – for TSE-compliant cash handling use a certified register."}
+            ? "Bilanz-Buddy ist keine TSE-Registrierkasse (§ 146a AO). Der Marktmodus erfasst deine Verkäufe für die EÜR – für kassensturzpflichtige Bargeschäfte mit TSE nutze eine zertifizierte Kasse."
+            : "Bilanz-Buddy is not a certified cash register (TSE). Market mode records your sales for the income statement – for TSE-compliant cash handling use a certified register."}
         </p>
       </div>
       <a

@@ -34,7 +34,7 @@ export default function GlobalError({
   return (
     <html lang="de">
       <body>
-        <title>Fehler — Vendora</title>
+        <title>Fehler — Bilanz-Buddy</title>
         <style>{`
           :root { color-scheme: light dark; }
           body {

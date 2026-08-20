@@ -198,8 +198,8 @@ export default function SettingsPage() {
         if (body.code === "PRO_REQUIRED") {
           throw new Error(
             language === "de"
-              ? "Der Import eines Backups ist Vendora Pro vorbehalten."
-              : "Restoring a backup requires Vendora Pro.",
+              ? "Der Import eines Backups ist Bilanz-Buddy Pro vorbehalten."
+              : "Restoring a backup requires Bilanz-Buddy Pro.",
           );
         }
         throw new Error(
@@ -213,8 +213,8 @@ export default function SettingsPage() {
       setImportError(
         message ||
           (language === "de"
-            ? "Die Datei konnte nicht gelesen werden. Ist es ein Vendora-Backup?"
-            : "The file could not be read. Is it a Vendora backup?"),
+            ? "Die Datei konnte nicht gelesen werden. Ist es ein Bilanz-Buddy-Backup?"
+            : "The file could not be read. Is it a Bilanz-Buddy backup?"),
       );
       setImportStatus("error");
     }
@@ -614,8 +614,8 @@ export default function SettingsPage() {
         {!importAllowed && (
           <p className="mt-3 text-sm text-muted">
             {language === "de"
-              ? "Der Import eines Backups ist Vendora Pro vorbehalten. Der Export bleibt jederzeit möglich."
-              : "Restoring a backup requires Vendora Pro. Exporting stays available at all times."}
+              ? "Der Import eines Backups ist Bilanz-Buddy Pro vorbehalten. Der Export bleibt jederzeit möglich."
+              : "Restoring a backup requires Bilanz-Buddy Pro. Exporting stays available at all times."}
           </p>
         )}
 

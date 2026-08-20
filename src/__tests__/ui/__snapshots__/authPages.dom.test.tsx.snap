@@ -13,16 +13,59 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > login 1`] 
       <div
         class="flex justify-center"
       >
-        <img
-          alt="Vendora"
-          class="h-12 w-auto block dark:hidden"
-          src="/vendora_logo_v1_transparent.png"
-        />
-        <img
-          alt="Vendora"
-          class="h-12 w-auto hidden dark:block"
-          src="/vendora_logo_v2_transparent.png"
-        />
+        <svg
+          aria-label="Bilanz-Buddy"
+          class="h-12 w-auto"
+          focusable="false"
+          role="img"
+          viewBox="0 0 520 96"
+        >
+          <g
+            transform="translate(0 12) scale(1.125)"
+          >
+            <rect
+              class="stroke-[#0F1522] dark:stroke-white/35"
+              fill="none"
+              height="61"
+              rx="19"
+              stroke-width="3"
+              width="61"
+              x="1.5"
+              y="1.5"
+            />
+            <rect
+              class="fill-[#0F1522] dark:fill-white"
+              height="7"
+              rx="3.5"
+              width="34"
+              x="15"
+              y="21"
+            />
+            <rect
+              class="fill-[#D4AF37]"
+              height="7"
+              rx="3.5"
+              width="34"
+              x="15"
+              y="36"
+            />
+          </g>
+          <text
+            class="font-brand fill-[#0F1522] dark:fill-white"
+            font-size="48"
+            font-weight="800"
+            letter-spacing="-1.4"
+            x="96"
+            y="62"
+          >
+            Bilanz
+            <tspan
+              class="fill-[#B8952F] dark:fill-[#D4AF37]"
+            >
+              -Buddy
+            </tspan>
+          </text>
+        </svg>
       </div>
       <p
         class="text-faint mt-2"
@@ -107,16 +150,59 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
       <div
         class="flex justify-center"
       >
-        <img
-          alt="Vendora"
-          class="h-12 w-auto block dark:hidden"
-          src="/vendora_logo_v1_transparent.png"
-        />
-        <img
-          alt="Vendora"
-          class="h-12 w-auto hidden dark:block"
-          src="/vendora_logo_v2_transparent.png"
-        />
+        <svg
+          aria-label="Bilanz-Buddy"
+          class="h-12 w-auto"
+          focusable="false"
+          role="img"
+          viewBox="0 0 520 96"
+        >
+          <g
+            transform="translate(0 12) scale(1.125)"
+          >
+            <rect
+              class="stroke-[#0F1522] dark:stroke-white/35"
+              fill="none"
+              height="61"
+              rx="19"
+              stroke-width="3"
+              width="61"
+              x="1.5"
+              y="1.5"
+            />
+            <rect
+              class="fill-[#0F1522] dark:fill-white"
+              height="7"
+              rx="3.5"
+              width="34"
+              x="15"
+              y="21"
+            />
+            <rect
+              class="fill-[#D4AF37]"
+              height="7"
+              rx="3.5"
+              width="34"
+              x="15"
+              y="36"
+            />
+          </g>
+          <text
+            class="font-brand fill-[#0F1522] dark:fill-white"
+            font-size="48"
+            font-weight="800"
+            letter-spacing="-1.4"
+            x="96"
+            y="62"
+          >
+            Bilanz
+            <tspan
+              class="fill-[#B8952F] dark:fill-[#D4AF37]"
+            >
+              -Buddy
+            </tspan>
+          </text>
+        </svg>
       </div>
       <p
         class="text-faint mt-2"

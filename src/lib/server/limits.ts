@@ -1,4 +1,5 @@
 import "server-only";
+import { APP_NAME_PRO } from "@/lib/brand";
 import { NextResponse } from "next/server";
 import { getEffectivePlan, canCreate } from "@/lib/plan";
 import * as storage from "./storage";
@@ -17,7 +18,7 @@ export async function requireWriteAccess(userId: string): Promise<NextResponse |
 
   return NextResponse.json(
     {
-      message: "Zum Anlegen neuer Einträge wird Vendora Pro benötigt.",
+      message: `Zum Anlegen neuer Einträge wird ${APP_NAME_PRO} benötigt.`,
       code: "PRO_REQUIRED",
     },
     { status: 403 }

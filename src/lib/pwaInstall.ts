@@ -1,4 +1,4 @@
-// Wie Vendora auf den Startbildschirm kommt — die Entscheidung, was angeboten
+// Wie Bilanz-Buddy auf den Startbildschirm kommt — die Entscheidung, was angeboten
 // wird, als reine Funktionen ohne Browser-APIs, damit sie unter Vitest laufen.
 //
 // Manifest, Service Worker und Icons existieren längst; was fehlte, war der
