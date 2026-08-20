@@ -26,8 +26,8 @@ export function SubscriptionBanner() {
       ? `Testphase: noch ${sub.trialDaysLeft ?? 0} Tag(e) mit vollem Zugriff.`
       : `Trial: ${sub.trialDaysLeft ?? 0} day(s) of full access left.`
     : de
-      ? "Nur-Lese-Modus: Zum Anlegen und für die GuV Vendora Pro (19,90 €/Monat). Belege bleiben herunterladbar."
-      : "Read-only: Vendora Pro (€19.90/month) is required to create entries and the P&L. Existing documents stay downloadable.";
+      ? "Nur-Lese-Modus: Zum Anlegen und für die GuV Bilanz-Buddy Pro (19,90 €/Monat). Belege bleiben herunterladbar."
+      : "Read-only: Bilanz-Buddy Pro (€19.90/month) is required to create entries and the P&L. Existing documents stay downloadable.";
 
   return (
     <div className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 ${wrapClass}`}>

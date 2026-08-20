@@ -1,6 +1,7 @@
 "use client";
 
 import type { Language } from "@/lib/prefs";
+import { APP_NAME_PRO } from "@/lib/brand";
 
 /**
  * Übersetzt eine fehlgeschlagene API-Antwort in einen Satz, der der Nutzerin
@@ -12,7 +13,7 @@ import type { Language } from "@/lib/prefs";
  * „Billing is not configured" in die Oberfläche durchzureichen: englisch,
  * nichtssagend und teilweise interne Information.
  *
- * Der Anlass: ein 403 „Vendora Pro nötig" erschien beim Bearbeiten eines
+ * Der Anlass: ein 403 „Bilanz-Buddy Pro nötig" erschien beim Bearbeiten eines
  * Auftrags als „Fehlende Angaben" — man suchte ein Pflichtfeld, das es nicht
  * gab.
  */
@@ -31,8 +32,8 @@ export function apiErrorMessage(
   switch (code) {
     case "PRO_REQUIRED":
       return de
-        ? "Dafür wird Vendora Pro benötigt. Ansehen und Herunterladen bleibt möglich."
-        : "This requires Vendora Pro. Viewing and downloading stay available.";
+        ? `Dafür wird ${APP_NAME_PRO} benötigt. Ansehen und Herunterladen bleibt möglich.`
+        : `This requires ${APP_NAME_PRO}. Viewing and downloading stay available.`;
     case "ALREADY_PRO":
       return de
         ? "Dieses Konto hat bereits ein aktives Abo."

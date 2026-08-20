@@ -11,6 +11,7 @@ import {
   requestVerificationEmail,
 } from "@/components/auth/ResendVerification";
 import { authSubmit, errorBox, inputAuth } from "@/lib/styles";
+import { Logo } from "@/components/Logo";
 
 export default function RegisterPage() {
   const { t } = useLanguage();
@@ -119,8 +120,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center">
-            <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-12 w-auto block dark:hidden" />
-            <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-12 w-auto hidden dark:block" />
+            <Logo className="h-12 w-auto" />
           </div>
           <p className="text-faint mt-2">{t.auth.registerSubtitle}</p>
         </div>

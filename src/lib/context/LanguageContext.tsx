@@ -32,7 +32,7 @@ export function LanguageProvider({
   // setState here — see ThemeContext.
   useEffect(() => {
     if (document.cookie.includes(`${LANGUAGE_COOKIE}=`)) return;
-    const saved = localStorage.getItem("vendora_language");
+    const saved = localStorage.getItem("bilanz-buddy-language");
     document.cookie = prefCookie(LANGUAGE_COOKIE, isLanguage(saved) ? saved : initialLanguage);
   }, [initialLanguage]);
 

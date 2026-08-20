@@ -71,7 +71,14 @@ export async function POST(request: Request) {
 
     switch (event.type) {
       case "checkout.session.completed": {
-        const userId = (obj.metadata as Record<string, string>)?.vendora_user_id;
+        // `vendora_user_id` ist die Bruecke ueber die Umbenennung im August
+        // 2026: Stripe-Objekte, die vorher angelegt wurden, tragen noch den
+        // alten Schluessel. Faellt er weg, findet der Webhook die User-ID
+        // nicht mehr -- und das faellt erst auf, wenn ein Abo-Status still
+        // falsch steht. Entfernen, sobald keine Customer mit dem alten
+        // Schluessel mehr existieren.
+        const metadata = obj.metadata as Record<string, string> | undefined;
+        const userId = metadata?.bilanz_buddy_user_id ?? metadata?.vendora_user_id;
         const subscriptionId = obj.subscription as string | undefined;
 
         if (userId && subscriptionId) {

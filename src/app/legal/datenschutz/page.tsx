@@ -26,7 +26,7 @@ export default function DatenschutzPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">2. Übersicht der Verarbeitungen</h2>
         <p className="text-sm text-secondary mb-3">
-          Vendora verarbeitet personenbezogene Daten ausschließlich zur Bereitstellung des Dienstes.
+          Bilanz-Buddy verarbeitet personenbezogene Daten ausschließlich zur Bereitstellung des Dienstes.
           Es findet <strong className="text-primary">kein Tracking, keine Werbung und keine Weitergabe an Dritte</strong> zu Marketingzwecken statt.
         </p>
         <h3 className="text-sm font-medium text-primary mb-2">Verarbeitete Datenarten:</h3>
@@ -41,7 +41,7 @@ export default function DatenschutzPage() {
           <li>Protokoll administrativer Eingriffe (z.&nbsp;B. Sperrung eines Kontos) mit der betroffenen E-Mail-Adresse, zum Nachweis solcher Eingriffe</li>
         </ul>
         <p className="text-sm text-secondary mt-3">
-          <strong className="text-primary">Cookies:</strong> Vendora setzt ausschließlich technisch notwendige Cookies —
+          <strong className="text-primary">Cookies:</strong> Bilanz-Buddy setzt ausschließlich technisch notwendige Cookies —
           das Sitzungscookie der Anmeldung sowie die drei Einstellungscookies für Theme, Dunkelmodus und Sprache.
           Es gibt keine Analyse-, Werbe- oder Drittanbieter-Cookies und deshalb auch kein Einwilligungsbanner.
         </p>
@@ -52,9 +52,9 @@ export default function DatenschutzPage() {
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
           <p>
             Diese Erklärung betrifft <strong className="text-primary">Ihre eigenen</strong> Daten als
-            Nutzer:in von Vendora. Für die Daten, die Sie über Ihre Kundschaft eingeben — Namen und
+            Nutzer:in von Bilanz-Buddy. Für die Daten, die Sie über Ihre Kundschaft eingeben — Namen und
             Anschriften auf Aufträgen und Rechnungen —, sind <strong className="text-primary">Sie</strong>{" "}
-            der Verantwortliche; Vendora verarbeitet sie nur in Ihrem Auftrag.
+            der Verantwortliche; Bilanz-Buddy verarbeitet sie nur in Ihrem Auftrag.
           </p>
           <p>
             Dafür gilt der{" "}

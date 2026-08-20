@@ -34,7 +34,7 @@ export function ThemeProvider({
   // for a transitional case that resolves itself on the next page load.
   useEffect(() => {
     if (document.cookie.includes(`${THEME_COOKIE}=`)) return;
-    const saved = localStorage.getItem("vendora_theme");
+    const saved = localStorage.getItem("bilanz-buddy-theme");
     if (isTheme(saved)) document.cookie = prefCookie(THEME_COOKIE, saved);
   }, []);
 

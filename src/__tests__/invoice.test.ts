@@ -30,7 +30,7 @@ const order = (o: Partial<InvoiceOrderInput> = {}): InvoiceOrderInput => ({
 });
 
 const profile = (p: Partial<InvoiceProfileInput> = {}): InvoiceProfileInput => ({
-  name: "Vendora Test",
+  name: "Bilanz-Buddy Test",
   address: "Standstr. 5\n12345 Musterstadt",
   email: "seller@example.com",
   phone: "0123456789",
@@ -117,7 +117,7 @@ describe("buildInvoiceSnapshot", () => {
     expect(snap.issueDate).toBe("2026-07-19");
     expect(snap.serviceDate).toBe("2026-07-10");
     expect(snap.cancelsInvoiceId).toBeNull();
-    expect(snap.seller.name).toBe("Vendora Test");
+    expect(snap.seller.name).toBe("Bilanz-Buddy Test");
     expect(snap.customer.name).toBe("Erika Mustermann");
     expect(snap.customer.city).toBe("Berlin");
     expect(snap.items).toEqual(items);
@@ -195,7 +195,7 @@ describe("buildCancellationSnapshot", () => {
     expect(storno.items.map((i) => i.price)).toEqual([-500, -250]);
     expect(storno.items.map((i) => i.quantity)).toEqual([3, 2]);
     expect(storno.customer.name).toBe("Erika Mustermann");
-    expect(storno.seller.name).toBe("Vendora Test");
+    expect(storno.seller.name).toBe("Bilanz-Buddy Test");
   });
 
   it("references the original number in the notes", () => {

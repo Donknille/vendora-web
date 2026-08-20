@@ -1,8 +1,8 @@
 @AGENTS.md
 
-# Vendora – Marktplatz-SaaS für Händler
+# Bilanz-Buddy – Marktplatz-SaaS für Händler
 
-Vendora ist eine Multi-Tenant SaaS-Plattform für Markthändler:innen (Auftrags- & Rechnungsverwaltung, Marktmodus, EÜR-/Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase. Die geplante Neuausrichtung ist in `docs/REBUILD-PLAN.md` dokumentiert.
+Bilanz-Buddy ist eine Multi-Tenant SaaS-Plattform für Markthändler:innen (Auftrags- & Rechnungsverwaltung, Marktmodus, EÜR-/Finanzdashboard, Backup/Restore). Subscription-basiert mit Stripe Billing und kostenloser 42-Tage-Testphase. Die geplante Neuausrichtung ist in `docs/REBUILD-PLAN.md` dokumentiert.
 
 ## Stack
 
@@ -42,6 +42,7 @@ src/
 │   └── legal/          # Impressum, Datenschutz, AGB, Changelog
 ├── components/         # Shared React Components
 └── lib/
+    ├── brand.ts            # Name, Claim, Domain, Slug, Markenfarben (führende Quelle)
     ├── api-client.ts       # React Query Client + Query-Keys
     ├── formatCurrency.ts   # Cent<->Euro-Konvertierung (Anzeige/Eingabe)
     ├── euer.ts             # EÜR-Kategorien (Labels, SKR03-Vorbereitung)
@@ -124,6 +125,29 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
 - Bei signOut/signIn/Account-Löschung: `queryClient.clear()`
 - User-spezifische Seiten: `export const dynamic = 'force-dynamic'`
 
+## Marke (Markenbuch, Stand 20.08.2026)
+
+- Der Name ist **Bilanz-Buddy**, immer mit Bindestrich. Zusammengeschrieben,
+  getrennt oder als „BB" abgekürzt ist er falsch — `brandGuards.test.ts` sucht
+  die falschen Formen im Quelltext.
+- Social-Handles sind `@bilanzbuddy` (ohne Bindestrich, Plattformregel), der
+  Anzeigename trägt ihn.
+- **`src/lib/brand.ts` ist die führende Quelle** für Name, Claim, Domain,
+  Persistenz-Präfix (`APP_SLUG`) und die Markenfarben. Neue Stellen, die den
+  Namen oder das Gold brauchen, importieren von dort statt zu tippen.
+- Drei Kopien sind unvermeidbar und deshalb bewacht: `globals.css` (CSS kann
+  kein TS importieren), `public/sw.js` und `public/offline.html` (liegen ohne
+  Build in `public/`). Ändert sich der Slug oder die Farbe, müssen sie mit —
+  `brandGuards.test.ts` hält die Paare zusammen.
+- Zeichen und Wortmarke rendert `src/components/Logo.tsx` als **Inline-SVG**.
+  Nicht auf ein `<img src="*.svg">` umstellen: ein SVG im `<img>` ist vom
+  Dokument isoliert und kann Manrope nicht laden, die Wortmarke fiele auf Arial
+  zurück. Manrope ist ausschließlich für die Wortmarke da; die App bleibt Inter.
+- Icons und OG-Bild sind generiert, nicht gemalt:
+  `node scripts/generate-pwa-icons.mjs` (aus `public/bb-mark-solid.svg`) und
+  `node scripts/generate-og-image.mjs`. Nach jeder Änderung an Zeichen, Name
+  oder Farbe neu laufen lassen und die PNGs mitcommitten.
+
 ## Code-Konventionen
 
 - TypeScript strict mode, keine `any` Types
@@ -161,6 +185,19 @@ Diese Regeln gelten ausnahmslos für jede Code-Änderung:
   - Skripte unter `script/backup/` importieren **nichts aus `src/lib/server/*`** außer `schema.ts` — im Runner gibt es weder `server-only` noch die validierte Env.
   - Das Repo ist **öffentlich**: Actions-Logs sind für jeden lesbar, Artifacts herunterladbar. Nur `*.age`/`*.sha256` dürfen ins Artifact (Guard im Workflow), und kein `set -x` in Schritten, die die DB-URL sehen.
   - Der Nachweis `backup_verified` in `backup_events` trägt zwei Wächter: den Guard vor `db:migrate`/`db:push` und `src/lib/server/backupWatchdog.ts` (36-h-Alarm, läuft im Vercel-Cron `/api/cron/retention` mit, weil Hobby nur zwei Crons erlaubt).
+
+- **Die Backup-Pipeline heißt weiter `vendora-*`.** Archive, Dump-Datei,
+  Artifact, CI-Wegwerf-DB und der Google-Drive-Ordner behielten bei der
+  Umbenennung im August 2026 ihre Namen: der Retention-Schritt in `backup.yml`
+  prüft den Drive-Pfad gegen ein festes Muster, bevor er löscht, und die
+  vorhandenen Stände liegen unter dem alten Namen. Nur Mail-Betreffe und Prosa
+  wurden umgestellt. Die kopierbaren Restore-Befehle in `docs/backup-runbook.md`
+  sind deshalb wörtlich richtig.
+- **Stripe-Metadaten tragen eine Brücke.** Der Webhook liest
+  `bilanz_buddy_user_id ?? vendora_user_id` — Customer aus der Zeit vor der
+  Umbenennung tragen den alten Schlüssel, und ein Webhook, der die User-ID nicht
+  findet, scheitert lautlos. Entfernen, wenn keine solchen Objekte mehr
+  existieren.
 
 ## Weiterführende Docs
 

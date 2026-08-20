@@ -11,7 +11,7 @@
 //    Serverantwort da ist, und auch dann, wenn gar kein Netz vorhanden ist.
 
 /** Versioniert: ein später überarbeiteter Tour-Inhalt kann so erneut laufen. */
-export const ONBOARDING_KEY = "vendora_onboarding_v1";
+export const ONBOARDING_KEY = "bilanz-buddy-onboarding-v1";
 
 /**
  * Reihenfolge der Slides. Nur Kennungen — die Texte stehen in i18n (`t.help.tour`),

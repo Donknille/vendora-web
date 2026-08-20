@@ -1,5 +1,8 @@
 # Vendora — Archiv: Security-Pentest Teil 2 + Landing Sprint 1
 
+> **Namenshinweis:** Dieses Dokument ist zum genannten Zeitpunkt entstanden und nennt das Produkt bei seinem damaligen Namen. Seit August 2026 heißt es **Bilanz-Buddy** (vormals Vendora). Der Text bleibt als Protokoll unverändert.
+
+
 > **⚠ ARCHIVDOKUMENT, Stand 2026-04-19. Nicht als Anleitung befolgen.**
 > Es beschreibt die **Supabase-Architektur**, die es nicht mehr gibt (Migration auf
 > Neon + Better Auth im Juli 2026, PR #10). Die frühere Deployment-Checkliste in

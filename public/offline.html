@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Offline · Vendora</title>
+    <title>Offline · Bilanz-Buddy</title>
     <style>
       :root { color-scheme: light dark; }
       * { box-sizing: border-box; }
@@ -41,7 +41,7 @@
     </style>
   </head>
   <body>
-    <img src="/icon-512.png" alt="Vendora" />
+    <img src="/icon-512.png" alt="Bilanz-Buddy" />
     <h1>Keine Internetverbindung</h1>
     <p>
       Diese Seite ist noch nicht offline verfügbar. Der Marktmodus funktioniert
@@ -59,7 +59,7 @@
       // im Standalone-Modus gibt es nicht einmal eine Adressleiste. Die Kasse
       // hinterlegt ihre Adresse, sobald sie einmal offen war.
       try {
-        var last = localStorage.getItem("vendora-last-register");
+        var last = localStorage.getItem("bilanz-buddy-last-register");
         if (last) {
           var link = document.getElementById("register-link");
           link.setAttribute("href", last);

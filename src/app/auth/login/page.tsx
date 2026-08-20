@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { ResendVerification } from "@/components/auth/ResendVerification";
+import { Logo } from "@/components/Logo";
 import { authSubmit, errorBox, inputAuth } from "@/lib/styles";
 
 export default function LoginPage() {
@@ -52,8 +53,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center">
-            <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-12 w-auto block dark:hidden" />
-            <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-12 w-auto hidden dark:block" />
+            <Logo className="h-12 w-auto" />
           </div>
           <p className="text-faint mt-2">{t.auth.loginSubtitle}</p>
         </div>

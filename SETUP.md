@@ -1,6 +1,6 @@
-# Vendora Web – Setup-Anleitung
+# Bilanz-Buddy Web – Setup-Anleitung
 
-Vendora ist eine Business-Management-Web-App für Markthändler:innen (Aufträge & Rechnungen,
+Bilanz-Buddy ist eine Business-Management-Web-App für Markthändler:innen (Aufträge & Rechnungen,
 Marktmodus/Marktverkäufe, Ausgaben, EÜR-/Finanzdashboard, Firmenprofil) mit Abo-Modell.
 Diese Anleitung beschreibt das lokale Setup und Deployment.
 
@@ -32,8 +32,8 @@ Diese Anleitung beschreibt das lokale Setup und Deployment.
 ## 2. Schnellstart
 
 ```bash
-git clone https://github.com/Donknille/vendora-web.git
-cd vendora-web
+git clone https://github.com/Donknille/bilanz-buddy-web.git
+cd bilanz-buddy-web
 npm install
 
 # Umgebungsvariablen anlegen und ausfüllen
@@ -67,7 +67,7 @@ bricht der Dev-Server/Runtime mit einer klaren Meldung ab (fail-fast).
 | `SMTP_PORT`             | ➖ (Default 465)                 | `465` = implizites TLS, `587` = STARTTLS                                                     |
 | `SMTP_USER`             | ⚠️ Prod-Pflicht, lokal optional | Volle E-Mail-Adresse des Postfachs                                                           |
 | `SMTP_PASSWORD`         | ⚠️ Prod-Pflicht, lokal optional | **Postfach**-Passwort (nicht das Strato-Kundenlogin)                                         |
-| `EMAIL_FROM`            | ⚠️ Prod-Pflicht, lokal optional | Absender, z. B. `Vendora <info@deine-domain.de>`. Muss dem authentifizierten Postfach entsprechen, sonst lehnt Strato mit 550 ab. |
+| `EMAIL_FROM`            | ⚠️ Prod-Pflicht, lokal optional | Absender, z. B. `Bilanz-Buddy <info@deine-domain.de>`. Muss dem authentifizierten Postfach entsprechen, sonst lehnt Strato mit 550 ab. |
 | `ARCJET_KEY`            | ⚠️ Prod-Pflicht, lokal optional | Arcjet-Dashboard → API-Key (`ajkey_...`). Siehe Abschnitt 6                                  |
 
 > **Hinweis zu `DATABASE_URL`:** Der DB-Client läuft mit `prepare: false` und

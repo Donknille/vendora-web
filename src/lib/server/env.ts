@@ -30,7 +30,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   // Muss bei Strato dem authentifizierten Postfach entsprechen, sonst lehnt der
-  // Server mit 550 ab. Format: `Vendora <info@digitalflowsolutions.de>`.
+  // Server mit 550 ab. Format: `Bilanz-Buddy <info@digitalflowsolutions.de>`.
   EMAIL_FROM: z.string().optional(),
 
   ADMIN_EMAILS: z.string().optional(),

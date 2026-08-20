@@ -1,5 +1,14 @@
 # Backup-Runbook — Betriebssicherung der Produktionsdatenbank
 
+> **Zu den Namen:** Archive, Dump-Datei, Google-Drive-Ordner und der
+> age-Schlüssel heißen weiterhin `vendora-*`. Die Umbenennung des Produkts auf
+> Bilanz-Buddy im August 2026 hat die Pipeline bewusst nicht angefasst: der
+> Retention-Schritt in `backup.yml` prüft den Drive-Pfad gegen ein festes
+> Muster, bevor er löscht, und die vorhandenen Stände (90 Tage täglich,
+> monatlich unbefristet) liegen unter dem alten Namen. Die Befehle unten sind
+> deshalb wörtlich richtig — auch für Archive, die nach der Umbenennung
+> entstanden sind.
+
 > **Nicht zu verwechseln** mit dem In-App-„Backup & Restore" (Einstellungen →
 > Backup, `/api/export` + `/api/migrate`). Das ist der Datenexport **für
 > Nutzer:innen**. Dieses Dokument beschreibt die **Betriebssicherung der
@@ -118,7 +127,7 @@ Erwartet: `vendora.dump`, `json/`, `counts-pre.json`, `counts-post.json`,
 ### 3.3 In eine Wegwerf-Datenbank einspielen — **nie über Produktion**
 
 In der Neon-Konsole ein **neues, leeres Projekt** anlegen (z. B.
-`vendora-restore-test`) und dessen **unpooled** Verbindungszeichenfolge nehmen.
+`bilanz-buddy-restore-test`) und dessen **unpooled** Verbindungszeichenfolge nehmen.
 Kein Branch des Produktionsprojekts: ein Tippfehler in der Zeichenfolge zielt
 dort auf die echten Daten.
 
@@ -268,7 +277,7 @@ die Sicherung — nicht die Warnung.
 
 (Das Supabase-Pendant wäre RLS gewesen: dort liefert `pg_dump` bei
 `FORCE ROW LEVEL SECURITY` ohne `BYPASSRLS` **0 Zeilen bei Exit-Code 0**.
-Vendora hat kein RLS, der Zugriffsschutz sitzt in der Anwendung. Der Detektor
+Bilanz-Buddy hat kein RLS, der Zugriffsschutz sitzt in der Anwendung. Der Detektor
 ist derselbe.)
 
 Zweiter Fallstrick, gleicher Ursprung: **der Neon-Pooler.** `pg_dump` braucht
@@ -367,4 +376,4 @@ nicht — der erste grüne Lauf zählt.**
 - [ ] `npm run db:migrate` gegen Produktion bricht ohne frisches Backup ab
       (einmal ausprobiert)
 - [ ] Erster manueller Restore-Test durchgeführt und in 9.1 protokolliert
-- [ ] Kalendereintrag „Vendora: Restore-Test + Alarm-Test", vierteljährlich
+- [ ] Kalendereintrag „Bilanz-Buddy: Restore-Test + Alarm-Test", vierteljährlich

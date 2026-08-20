@@ -10,7 +10,7 @@
  *
  * Der Wert wird NIE ausgegeben, auch nicht in Teilen. GitHub maskiert Secrets
  * zwar, darauf verlaesst sich dieses Skript bewusst nicht — und weil
- * Donknille/vendora-web ein oeffentliches Repo ist, sind die Logs fuer jeden
+ * Donknille/bilanz-buddy-web ein oeffentliches Repo ist, sind die Logs fuer jeden
  * lesbar. Deshalb ist auch der Host maskiert und die Passwortlaenge fehlt.
  */
 import { classifyDbUrl, maskHost } from "./dbUrlKind";

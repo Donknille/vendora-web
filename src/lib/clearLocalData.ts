@@ -24,7 +24,7 @@ export async function clearLocalData(
   // Kontowechsel sonst ueberleben.
   try {
     window.localStorage.removeItem(OFFLINE_CACHE_KEY);
-    window.localStorage.removeItem("vendora-last-register");
+    window.localStorage.removeItem("bilanz-buddy-last-register");
   } catch {
     // localStorage nicht verfuegbar (privater Modus) — nichts zu raeumen.
   }
@@ -36,7 +36,7 @@ export async function clearLocalData(
   // ausdruecklich zusagt, dass nichts verlorengeht.
   if (deleteSalesQueue && typeof indexedDB !== "undefined") {
     try {
-      indexedDB.deleteDatabase("vendora-offline");
+      indexedDB.deleteDatabase("bilanz-buddy-offline");
     } catch {
       // IndexedDB nicht verfuegbar — nichts zu raeumen.
     }
@@ -54,7 +54,7 @@ export async function clearLocalData(
       // Precache (Offline-Seite, Icons) bleibt: er wird nur beim install-Event
       // des Service Workers befuellt und waere sonst dauerhaft weg.
       await Promise.all(
-        keys.filter((key) => !key.startsWith("vendora-precache")).map((key) => caches.delete(key)),
+        keys.filter((key) => !key.startsWith("bilanz-buddy-precache")).map((key) => caches.delete(key)),
       );
     } catch {
       // Cache-API nicht verfügbar (privater Modus) — nichts zu räumen.

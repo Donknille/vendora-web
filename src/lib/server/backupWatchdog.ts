@@ -1,4 +1,5 @@
 import "server-only";
+import { APP_NAME } from "@/lib/brand";
 import { desc, eq } from "drizzle-orm";
 import { db } from "./db";
 import { backupEvents } from "./schema";
@@ -82,7 +83,7 @@ export async function checkBackupFreshness(): Promise<WatchdogResult> {
   try {
     await sendEmail({
       to,
-      subject: "Vendora: naechtliche Sicherung ausgeblieben",
+      subject: `${APP_NAME}: naechtliche Sicherung ausgeblieben`,
       text: lines.join("\n"),
       html: `<p>${lines.join("<br />")}</p>`,
     });

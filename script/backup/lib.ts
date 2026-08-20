@@ -28,7 +28,7 @@ export const MIGRATIONS_TABLE = { schema: "drizzle", name: "__drizzle_migrations
 /**
  * Schemata ausserhalb von DUMP_SCHEMAS, in denen Zeilen erlaubt sind.
  *
- * `neon_auth` ist eine ungenutzte Neon-Installation (Vendora authentifiziert
+ * `neon_auth` ist eine ungenutzte Neon-Installation (Bilanz-Buddy authentifiziert
  * ueber Better Auth in `public`); nur die von Neon selbst angelegte
  * Konfigurationszeile steht dort. Alles darueber hinaus waere ein Schema, das
  * jemand in Betrieb genommen hat, ohne das Backup anzupassen — die Inventur
@@ -54,7 +54,7 @@ export const DATA_EXCLUDED_TABLES = ["session", "verification"] as const;
  * Faengt den Fall "Quelle und Kopie sind beide leer, der Vergleich passt
  * formal". Bei Neon ist der realistische Ausloeser ein falscher Branch: der ist
  * schema-identisch und leer, ein Dump davon laeuft fehlerfrei durch.
- * Diese Liste enthaelt nur, was in einer lebenden Vendora-Datenbank
+ * Diese Liste enthaelt nur, was in einer lebenden Bilanz-Buddy-Datenbank
  * strukturell nicht leer sein KANN — keine Nutzer heisst keine App.
  * Nicht abschwaechen: wer die Grenzen aufweicht, entfernt die Sicherung.
  */

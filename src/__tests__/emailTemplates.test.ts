@@ -5,8 +5,8 @@ import {
   passwordResetEmail,
 } from "@/lib/server/emailTemplates";
 
-const URL = "https://vendora.example/api/auth/verify-email?token=abc123&callbackURL=%2Fauth%2Fverify-email";
-const BASE = "https://vendora.example";
+const URL = "https://bilanz-buddy.example/api/auth/verify-email?token=abc123&callbackURL=%2Fauth%2Fverify-email";
+const BASE = "https://bilanz-buddy.example";
 
 const templates = [
   { name: "verificationEmail", build: verificationEmail },
@@ -32,7 +32,7 @@ describe.each(templates)("$name", ({ build }) => {
   const mail = build({ url: URL, baseUrl: BASE });
 
   it("hat Betreff, HTML und Plain-Text", () => {
-    expect(mail.subject).toMatch(/Vendora/);
+    expect(mail.subject).toMatch(/Bilanz-Buddy/);
     expect(mail.html.length).toBeGreaterThan(0);
     // Eine reine HTML-Mail ohne Plain-Text-Teil ist einer der staerksten
     // Spam-Marker -- der Text darf nie leer sein.
@@ -83,13 +83,19 @@ describe.each(templates)("$name", ({ build }) => {
   it("fällt ohne baseUrl auf die Text-Wortmarke zurück statt auf ein totes Bild", () => {
     const noBase = build({ url: URL });
     expect(noBase.html).not.toContain("<img");
-    expect(noBase.html).toContain("VENDORA");
+    expect(noBase.html).toContain("Bilanz");
+    expect(noBase.html).toContain("-Buddy");
   });
 
-  it("nennt bei bekannter baseUrl das Logo und behält VENDORA als alt-Text", () => {
-    // Outlook und Gmail blockieren Remote-Bilder beim Erstkontakt; der
-    // alt-Text ist das, was dann tatsaechlich zu sehen ist.
-    expect(mail.html).toContain(`${BASE}/vendora_logo_v1_transparent.png`);
-    expect(mail.html).toContain('alt="VENDORA"');
+  it("setzt die Wortmarke als Text, das Zeichen nur als schmückendes Bild", () => {
+    // Outlook und Gmail blockieren Remote-Bilder beim Erstkontakt. Deshalb ist
+    // der Name HTML-Text und nicht Teil der Grafik -- er steht auch dann da,
+    // wenn das Zeichen nicht geladen wird. Das Bild ist entsprechend
+    // schmueckend und traegt einen leeren alt-Text.
+    expect(mail.html).toContain(`${BASE}/apple-touch-icon.png`);
+    expect(mail.html).toContain('alt=""');
+    expect(mail.html).toContain("Bilanz");
+    expect(mail.html).toContain("-Buddy");
+    expect(mail.html).not.toContain("VENDORA");
   });
 });

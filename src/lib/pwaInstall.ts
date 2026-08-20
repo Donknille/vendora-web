@@ -1,4 +1,4 @@
-// Wie Vendora auf den Startbildschirm kommt — die Entscheidung, was angeboten
+// Wie Bilanz-Buddy auf den Startbildschirm kommt — die Entscheidung, was angeboten
 // wird, als reine Funktionen ohne Browser-APIs, damit sie unter Vitest laufen.
 //
 // Manifest, Service Worker und Icons existieren längst; was fehlte, war der
@@ -27,7 +27,7 @@ export type InstallPlatform =
   /** Weder noch: Hinweis auf das Browsermenü. */
   | "unsupported";
 
-export const INSTALL_HINT_DISMISSED_KEY = "vendora_install_hint_v1";
+export const INSTALL_HINT_DISMISSED_KEY = "bilanz-buddy-install-hint-v1";
 
 export interface PlatformProbe {
   /** display-mode: standalone bzw. navigator.standalone. */

@@ -1,5 +1,8 @@
 # Vendora Web Security Audit Report
 
+> **Namenshinweis:** Dieses Dokument ist zum genannten Zeitpunkt entstanden und nennt das Produkt bei seinem damaligen Namen. Seit August 2026 heißt es **Bilanz-Buddy** (vormals Vendora). Der Text bleibt als Protokoll unverändert.
+
+
 **Datum:** 2026-04-19
 **Methode:** Statische Code-Analyse (kein Live-Traffic, keine API-Calls)
 **Auditor:** Claude Code (Opus 4.7)

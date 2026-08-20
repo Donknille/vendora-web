@@ -1,4 +1,4 @@
-# Vendora – Fortschritt & Handoff
+# Bilanz-Buddy – Fortschritt & Handoff
 
 > **Lebendes Status-/Übergabedokument.** Die vollständige Spezifikation aller Phasen steht in
 > [`docs/REBUILD-PLAN.md`](./REBUILD-PLAN.md). Diese Datei sagt nur: **was ist erledigt, was kommt
@@ -83,7 +83,7 @@ Vollständige Spec + Abnahmekriterien: `docs/REBUILD-PLAN.md` → „Phase 3". V
 
 ### ✅ Phase 4 – erledigt (Monetarisierungsmodell **geändert**)
 
-> **Modellwechsel ggü. `REBUILD-PLAN.md` (Entscheidung Inhaber:in):** Statt Freemium mit Feature-Kontingenten + Pay-per-Use/Credits gilt: **ein Preis – Vendora Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff) für neue Nutzer. Nach Trial ohne Zahlung ist das Konto **Free = Nur-Lese**: ansehen + **bestehende Belege (Rechnungs-PDFs) und DSGVO-Datenexport herunterladen** immer möglich; **nichts Neues anlegen** – dazu zählt auch die **GuV/Jahresübersicht (EÜR-Export)**. **Ausnahme:** ein Jahresreport, der während Trial/Pro schon **generiert** wurde, bleibt für Free **re-exportierbar** (nur *neue* Jahre sind gesperrt). **Gestrichen:** Credits/Pay-per-Use und der Jahresexport-Einmalkauf.
+> **Modellwechsel ggü. `REBUILD-PLAN.md` (Entscheidung Inhaber:in):** Statt Freemium mit Feature-Kontingenten + Pay-per-Use/Credits gilt: **ein Preis – Bilanz-Buddy Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff) für neue Nutzer. Nach Trial ohne Zahlung ist das Konto **Free = Nur-Lese**: ansehen + **bestehende Belege (Rechnungs-PDFs) und DSGVO-Datenexport herunterladen** immer möglich; **nichts Neues anlegen** – dazu zählt auch die **GuV/Jahresübersicht (EÜR-Export)**. **Ausnahme:** ein Jahresreport, der während Trial/Pro schon **generiert** wurde, bleibt für Free **re-exportierbar** (nur *neue* Jahre sind gesperrt). **Gestrichen:** Credits/Pay-per-Use und der Jahresexport-Einmalkauf.
 
 | Schritt | Commit |
 |---|---|

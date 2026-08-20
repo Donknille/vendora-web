@@ -17,7 +17,7 @@ export interface PendingSale {
   createdAt: string; // ISO — the moment the sale was recorded
 }
 
-const DB_NAME = "vendora-offline";
+const DB_NAME = "bilanz-buddy-offline";
 const DB_VERSION = 1;
 const STORE = "pending_sales";
 

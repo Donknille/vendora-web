@@ -1,4 +1,5 @@
 import "server-only";
+import { APP_NAME } from "@/lib/brand";
 import { createA4Canvas, PDF_COLORS } from "./pdf";
 import type { EuerReport } from "@/lib/euerReport";
 import { EUER_CATEGORY_META } from "@/lib/euer";
@@ -86,7 +87,7 @@ export async function buildEuerPdf(report: EuerReport, meta: EuerExportMeta): Pr
   const c = await createA4Canvas(800);
   const eur = (cents: number) => `${formatAmountInput(cents)} EUR`;
 
-  c.text(meta.companyName || "Vendora", c.left, 20, { bold: true });
+  c.text(meta.companyName || APP_NAME, c.left, 20, { bold: true });
   c.down(26);
   c.text("Einnahmen-Überschuss-Rechnung", c.left, 15, { bold: true });
   c.textRight(`Geschäftsjahr ${report.year}`, c.right, 12, { color: PDF_COLORS.muted });
@@ -131,7 +132,7 @@ export async function buildEuerPdf(report: EuerReport, meta: EuerExportMeta): Pr
     });
     c.down(14);
   }
-  c.text(`Erstellt am ${meta.generatedOn} mit Vendora. Ohne Gewähr, keine Steuerberatung.`, c.left, 9, {
+  c.text(`Erstellt am ${meta.generatedOn} mit ${APP_NAME}. Ohne Gewähr, keine Steuerberatung.`, c.left, 9, {
     color: PDF_COLORS.muted,
   });
 

@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { useReducedMotionSafe } from "@/lib/hooks/useReducedMotionSafe";
+import { Logo } from "@/components/Logo";
 
 export function AnimatedLogo() {
   const reduceMotion = useReducedMotionSafe();
@@ -13,18 +14,7 @@ export function AnimatedLogo() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* eslint-disable @next/next/no-img-element */}
-      <img
-        src="/vendora_logo_v1_transparent.png"
-        alt="Vendora"
-        className="h-14 w-auto block dark:hidden"
-      />
-      <img
-        src="/vendora_logo_v2_transparent.png"
-        alt="Vendora"
-        className="h-14 w-auto hidden dark:block"
-      />
-      {/* eslint-enable @next/next/no-img-element */}
+      <Logo className="h-14 w-auto" />
     </motion.div>
   );
 }

@@ -6,7 +6,7 @@
  * ZIELdatenbank, ob dort ein `backup_verified` juenger als 26 Stunden steht.
  *
  * Gegen localhost winkt er lautlos durch. Alles andere gilt als Produktion —
- * Vendora hat kein Staging, und die einzige sichere Fehlerrichtung ist
+ * Bilanz-Buddy hat kein Staging, und die einzige sichere Fehlerrichtung ist
  * "Nachweis verlangen".
  *
  * Ist der Nachweis NICHT PRUEFBAR (Datenbank nicht erreichbar, Tabelle fehlt),

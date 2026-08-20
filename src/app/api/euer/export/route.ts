@@ -1,3 +1,4 @@
+import { APP_NAME, APP_NAME_PRO } from "@/lib/brand";
 import { NextResponse } from "next/server";
 import { fail, withAuth } from "@/lib/server/route";
 import { getEffectivePlan, canCreate, canExportYear } from "@/lib/plan";
@@ -32,7 +33,7 @@ export const GET = withAuth(
   if (!canExportYear(plan, alreadyExported)) {
     return NextResponse.json(
       {
-        message: "Für einen neuen Jahresreport wird Vendora Pro benötigt.",
+        message: `Für einen neuen Jahresreport wird ${APP_NAME_PRO} benötigt.`,
         code: "PRO_REQUIRED",
       },
       { status: 403 }
@@ -60,7 +61,7 @@ export const GET = withAuth(
   });
 
   const meta: EuerExportMeta = {
-    companyName: profile.name || "Vendora",
+    companyName: profile.name || APP_NAME,
     isSmallBusiness: profile.isSmallBusiness,
     generatedOn: isoDay(now),
   };

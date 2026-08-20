@@ -172,7 +172,7 @@ export default function DashboardPage() {
         <Card>
           <div className="text-center py-4">
             <h2 className="text-lg font-semibold text-primary mb-2">
-              {language === "de" ? "Willkommen bei Vendora!" : "Welcome to Vendora!"}
+              {language === "de" ? "Willkommen bei Bilanz-Buddy!" : "Welcome to Bilanz-Buddy!"}
             </h2>
             <p className="text-sm text-muted mb-4 max-w-md mx-auto">
               {language === "de"

@@ -49,7 +49,7 @@ export default function MarketPosPage() {
     // Dashboard, das bewusst nicht zwischengespeichert wird. Ohne diesen
     // Merker gaebe es nach einem Kaltstart ohne Empfang keinen Weg zur Kasse.
     try {
-      window.localStorage.setItem("vendora-last-register", url);
+      window.localStorage.setItem("bilanz-buddy-last-register", url);
     } catch {
       /* localStorage nicht verfuegbar */
     }
@@ -157,8 +157,8 @@ export default function MarketPosPage() {
     if (!canCreate) {
       setError(
         de
-          ? "Nur-Lese-Modus – für neue Verkäufe wird Vendora Pro benötigt."
-          : "Read-only – Vendora Pro is required to record sales."
+          ? "Nur-Lese-Modus – für neue Verkäufe wird Bilanz-Buddy Pro benötigt."
+          : "Read-only – Bilanz-Buddy Pro is required to record sales."
       );
       return;
     }

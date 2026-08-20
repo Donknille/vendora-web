@@ -22,7 +22,7 @@
 
 import type { Query } from "@tanstack/react-query";
 
-export const OFFLINE_CACHE_KEY = "vendora-offline-cache";
+export const OFFLINE_CACHE_KEY = "bilanz-buddy-offline-cache";
 
 /** Eine Woche: deckt eine Marktsaison-Woche ab, ohne ewig alte Stände zu halten. */
 export const OFFLINE_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;

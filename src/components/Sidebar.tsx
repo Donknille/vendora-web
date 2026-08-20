@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { authClient } from "@/lib/auth-client";
 import { clearLocalData } from "@/lib/clearLocalData";
+import { Logo } from "@/components/Logo";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -56,8 +57,7 @@ export function Sidebar() {
       <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
         {/* Logo */}
         <div className="flex items-center px-5 py-4 border-b border-line">
-          <img src="/vendora_logo_v1_transparent.png" alt="Vendora" className="h-9 w-auto block dark:hidden" />
-          <img src="/vendora_logo_v2_transparent.png" alt="Vendora" className="h-9 w-auto hidden dark:block" />
+          <Logo className="h-9 w-auto" />
         </div>
 
         {/* Navigation */}

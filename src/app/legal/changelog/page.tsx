@@ -5,6 +5,19 @@ import { BackLink } from "@/components/legal/BackLink";
 
 const releases = [
   {
+    version: "1.6.0",
+    date: "2026-08-21",
+    title: "Neuer Name: Bilanz-Buddy",
+    changes: [
+      "Aus Vendora wird Bilanz-Buddy — gleiche App, gleiches Konto, gleiche Daten",
+      "Neues Zeichen und neue Wortmarke; die Farben bleiben",
+      "Die App liegt jetzt unter bilanz-buddy.de",
+      "Wer die App auf dem Startbildschirm hat, sieht den neuen Namen und das neue Symbol nach dem nächsten Öffnen",
+      "Theme und Sprache stellen sich einmalig auf die Standardwerte zurück",
+      "Der Auftragsverarbeitungsvertrag nennt jetzt den neuen Namen; an den Inhalten ändert sich nichts",
+    ],
+  },
+  {
     version: "1.5.0",
     date: "2026-08-10",
     title: "Bestätigte Anmeldung",
@@ -12,7 +25,7 @@ const releases = [
       "Neue Konten müssen die E-Mail-Adresse bestätigen, bevor die Anmeldung möglich ist — der Link in der Bestätigungsmail ist eine Stunde gültig",
       "Kommt keine Mail an, lässt sie sich auf der Registrierungs-, Login- und Bestätigungsseite erneut anfordern",
       "Wer sich mit unbestätigter Adresse anmeldet, liest jetzt den echten Grund statt „falsches Passwort“",
-      "Bestätigungs- und Reset-Mails im Vendora-Design, mit Klartext-Fassung und Dunkelmodus",
+      "Bestätigungs- und Reset-Mails im Design der App, mit Klartext-Fassung und Dunkelmodus",
       "E-Mail-Versand läuft jetzt über STRATO in Deutschland statt über einen US-Anbieter",
       "Beim Zurücksetzen des Passworts werden alle bestehenden Sitzungen beendet",
       "Bestehende Konten bleiben unverändert nutzbar und müssen nichts bestätigen",

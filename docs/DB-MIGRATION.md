@@ -1,7 +1,7 @@
 # Von Supabase auf Neon umstellen — Schritt für Schritt
 
 Vollständige 1:1-Anleitung. Alle Befehle in **PowerShell** im Projektordner
-`C:\Users\sebgr\Coding\Vendora`.
+`C:\Users\sebgr\Coding\Bilanz-Buddy`.
 
 ## Was „Umstellung" überhaupt bedeutet
 
@@ -48,7 +48,7 @@ Supabase-Variablen.
 
 ### A.1 — Alte Variablen entfernen
 
-Vercel → Projekt **vendora-web** → **Settings** → **Environment Variables**.
+Vercel → Projekt **bilanz-buddy-web** → **Settings** → **Environment Variables**.
 Diese drei löschen (alle Environments):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -63,14 +63,14 @@ Jeweils für **Production**, **Preview** und **Development** setzen:
 |---|---|---|
 | `DATABASE_URL` | Neon-**pooled**-String (mit `-pooler`) | **ja** |
 | `BETTER_AUTH_SECRET` | Zufalls-Secret, siehe unten | **ja** |
-| `BETTER_AUTH_URL` | `https://vendora-web-peach.vercel.app` (bzw. deine Domain) | **ja** |
+| `BETTER_AUTH_URL` | `https://bilanz-buddy.de` (bzw. deine Domain) | **ja** |
 | `STRIPE_SECRET_KEY` | `sk_live_…` bzw. `sk_test_…` | für Billing |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` aus dem Stripe-Webhook | für Billing |
 | `STRIPE_PRICE_ID` | `price_…` des Pro-Produkts (19,90 €/Monat) | für Billing |
 | `ARCJET_KEY` | Arcjet-Key | empfohlen |
 | `SMTP_HOST` / `SMTP_PORT` | `smtp.strato.de` / `465` | für E-Mails |
 | `SMTP_USER` / `SMTP_PASSWORD` | Postfach-Adresse und Postfach-Passwort | für E-Mails |
-| `EMAIL_FROM` | z. B. `Vendora <info@deine-domain.de>` | für E-Mails |
+| `EMAIL_FROM` | z. B. `Bilanz-Buddy <info@deine-domain.de>` | für E-Mails |
 | `ADMIN_EMAILS` | `seb.grueber@gmail.com` | für `/admin` |
 
 Ein Secret erzeugst du so:
@@ -103,7 +103,7 @@ Danach das PowerShell-Fenster schließen, damit die Variable nicht hängen bleib
 gh pr merge 10 --merge
 ```
 
-Oder in GitHub auf [PR #10](https://github.com/Donknille/vendora-web/pull/10) →
+Oder in GitHub auf [PR #10](https://github.com/Donknille/bilanz-buddy-web/pull/10) →
 **Merge**. Das löst automatisch den Production-Deploy aus.
 
 > Der aktuelle Production-Deploy ist rot („Edge Function `_middleware` size is 1.11 MB").

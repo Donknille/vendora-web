@@ -35,7 +35,7 @@ function buildBody(): { subject: string; text: string } {
 
   if (IS_TEST) {
     return {
-      subject: "[TEST] Vendora Backup — Alarmkette",
+      subject: "[TEST] Bilanz-Buddy Backup — Alarmkette",
       text: [
         "Dies ist ein Test der Alarmkette. Es ist nichts kaputt.",
         "",
@@ -51,7 +51,7 @@ function buildBody(): { subject: string; text: string } {
   }
 
   return {
-    subject: "FEHLGESCHLAGEN: Vendora Backup",
+    subject: "FEHLGESCHLAGEN: Bilanz-Buddy Backup",
     text: [
       "Der naechtliche Backup-Lauf ist fehlgeschlagen.",
       "",
@@ -61,6 +61,10 @@ function buildBody(): { subject: string; text: string } {
       "",
       "Das bedeutet: fuer diese Nacht gibt es keinen verifizierten Stand.",
       "Der letzte gueltige Stand liegt in Google Drive unter",
+      // Der Drive-Ordner heisst weiter vendora-backups: der Retention-Schritt
+      // in backup.yml prueft den Pfad gegen ein festes Muster, bevor er
+      // loescht. Ihn umzubenennen hiesse, an dieser Sicherung zu drehen --
+      // fuer nichts als den Namen. Siehe docs/backup-runbook.md.
       "vendora-backups/daily/ — Wiederherstellung siehe docs/backup-runbook.md.",
       "",
       "Zuerst das Log des Laufs oeffnen und die erste rote Zeile lesen; die",

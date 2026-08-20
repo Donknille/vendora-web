@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { env } from "@/lib/server/env";
 import { db } from "@/lib/server/db";
+import { APP_NAME } from "@/lib/brand";
 import { user, session, account, verification } from "@/lib/server/auth-schema";
 import { sendEmail } from "@/lib/server/email";
 import { verificationEmail, passwordResetEmail } from "@/lib/server/emailTemplates";
@@ -15,7 +16,7 @@ import { ensureUserRecord, ensureUserRecordById } from "@/lib/server/provisionin
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export const auth = betterAuth({
-  appName: "Vendora",
+  appName: APP_NAME,
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {

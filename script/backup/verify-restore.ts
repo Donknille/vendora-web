@@ -149,7 +149,7 @@ async function main(): Promise<void> {
       if (actual === null || actual === undefined || actual < 1) {
         problems.push(
           `${table} ist in der Wiederherstellung leer (${actual ?? "nicht lesbar"}). ` +
-            "In einer lebenden Vendora-Datenbank kann das nicht sein — sehr " +
+            "In einer lebenden Bilanz-Buddy-Datenbank kann das nicht sein — sehr " +
             "wahrscheinlich zeigt BACKUP_DATABASE_URL auf den falschen Neon-Branch."
         );
       }
