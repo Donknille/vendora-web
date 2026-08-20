@@ -17,8 +17,9 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > login 1`] 
           aria-label="Bilanz-Buddy"
           class="h-12 w-auto"
           focusable="false"
+          overflow="visible"
           role="img"
-          viewBox="0 0 520 96"
+          viewBox="0 0 404 96"
         >
           <g
             transform="translate(0 12) scale(1.125)"
@@ -154,8 +155,9 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
           aria-label="Bilanz-Buddy"
           class="h-12 w-auto"
           focusable="false"
+          overflow="visible"
           role="img"
-          viewBox="0 0 520 96"
+          viewBox="0 0 404 96"
         >
           <g
             transform="translate(0 12) scale(1.125)"

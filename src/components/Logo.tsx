@@ -11,6 +11,13 @@ import { APP_NAME, APP_NAME_HEAD, APP_NAME_TAIL } from "@/lib/brand";
 // Stand 20.08.2026): Zeichen auf 72px, Wortmarke ab x=96 — der Abstand von 24
 // entspricht der geforderten Balkenlänge. Beide Balken sind gleich lang; das
 // ist der Kern des Zeichens ("eine Bilanz, die aufgeht") und keine Zierde.
+//
+// Die viewBox ist enger als in der Vorlage (404 statt 520): die Wortmarke endet
+// bei 394, und der Rest waere Leerraum IM Bild — bei `w-auto` schoebe er das
+// Logo im Layout nach links und liesse eine Luecke stehen. Der geforderte
+// Freiraum ringsum gehoert ins Layout, nicht in die Grafik. `overflow-visible`
+// ist die Absicherung: sollte die Wortmarke einmal breiter setzen als gemessen,
+// laeuft sie ueber statt abgeschnitten zu werden.
 
 type LogoProps = {
   /** Höhe steuern wie zuvor beim <img>, z. B. "h-9 w-auto". */
@@ -20,7 +27,8 @@ type LogoProps = {
 export function Logo({ className = "h-9 w-auto" }: LogoProps) {
   return (
     <svg
-      viewBox="0 0 520 96"
+      viewBox="0 0 404 96"
+      overflow="visible"
       className={className}
       role="img"
       aria-label={APP_NAME}
