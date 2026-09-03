@@ -12,6 +12,7 @@ import {
   users,
 } from "./schema";
 import { session } from "./auth-schema";
+import { getStripe } from "./stripe";
 import { PRO_PRICE_CENTS, getEffectivePlan, type Plan } from "@/lib/plan";
 
 /**
@@ -304,6 +305,11 @@ export async function listUsers(opts: ListUsersOptions = {}): Promise<ListUsersR
   if (opts.search) filters.push(sql`${users.email} ilike ${"%" + opts.search + "%"}`);
   if (opts.status) filters.push(eq(users.subscriptionStatus, opts.status));
   if (opts.blocked !== undefined) filters.push(eq(users.isBlocked, opts.blocked));
+  // Der effektive Plan wird in SQL nachgebildet (dieselbe Regel wie
+  // getEffectivePlan), damit der Filter VOR Paginierung und Zählung greift.
+  // Vorher wurde erst die Seite geschnitten und dann gefiltert: `total`
+  // stimmte nicht, und Treffer auf späteren Seiten waren unerreichbar.
+  if (opts.plan) filters.push(sql`${effectivePlanSql()} = ${opts.plan}`);
 
   const where = and(...filters);
 
@@ -333,12 +339,16 @@ export async function listUsers(opts: ListUsersOptions = {}): Promise<ListUsersR
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  const mapped = rows.map(toAdminUserRow);
+  return { users: rows.map(toAdminUserRow), total: Number(total), page, pageSize };
+}
 
-  // Effective plan is computed in JS (date-dependent), so filter after mapping.
-  const filtered = opts.plan ? mapped.filter((u) => u.plan === opts.plan) : mapped;
-
-  return { users: filtered, total: Number(total), page, pageSize };
+/** SQL-Zwilling von `getEffectivePlan` aus `@/lib/plan` — beide synchron halten. */
+function effectivePlanSql(): SQL {
+  return sql`(case
+    when ${users.plan} = 'pro' and ${users.subscriptionExpiresAt} > now() then 'pro'
+    when ${users.trialEndsAt} > now() then 'trial'
+    else 'free'
+  end)`;
 }
 
 export async function getUserDetail(id: string): Promise<AdminUserRow | null> {
@@ -468,11 +478,29 @@ export async function applyAdminAction(
   input: AdminAction
 ): Promise<ApplyActionResult> {
   const [target] = await db
-    .select({ id: users.id, email: users.email, expiresAt: users.subscriptionExpiresAt, trialEndsAt: users.trialEndsAt })
+    .select({
+      id: users.id,
+      email: users.email,
+      expiresAt: users.subscriptionExpiresAt,
+      trialEndsAt: users.trialEndsAt,
+      stripeSubscriptionId: users.stripeSubscriptionId,
+    })
     .from(users)
     .where(eq(users.id, targetUserId));
 
   if (!target) return { ok: false, reason: "not_found" };
+
+  // Ein Entzug muss auch bei Stripe ankommen. Vorher blieb das Abo dort aktiv:
+  // Die nächste Zahlung löste invoice.payment_succeeded aus, und der Webhook
+  // setzte das Konto wieder auf Pro — der Entzug hob sich selbst auf.
+  if (input.action === "revoke_pro" && target.stripeSubscriptionId) {
+    try {
+      await getStripe().subscriptions.cancel(target.stripeSubscriptionId);
+    } catch (error) {
+      console.error("Failed to cancel Stripe subscription:", error);
+      return { ok: false, reason: "stripe_failed" };
+    }
+  }
 
   // Blocking or deleting yourself would lock the operator out of their own
   // platform; the UI hides it, the server refuses it.
@@ -516,7 +544,12 @@ export async function applyAdminAction(
       case "revoke_pro":
         await tx
           .update(users)
-          .set({ plan: "free", subscriptionStatus: "cancelled" })
+          .set({
+            plan: "free",
+            subscriptionStatus: "cancelled",
+            subscriptionExpiresAt: null,
+            stripeSubscriptionId: null,
+          })
           .where(eq(users.id, targetUserId));
         break;
       case "extend_trial": {

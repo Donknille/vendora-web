@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatCurrency, formatAmountInput, parseAmount, formatDate } from "@/lib/formatCurrency";
+import { formatCurrency, formatAmountInput, parseAmount, parseAmountOrNull, formatDate } from "@/lib/formatCurrency";
 
 // Money is integer cents throughout the app.
 
@@ -53,6 +53,22 @@ describe("parseAmount", () => {
   it("rounds to whole cents", () => {
     expect(parseAmount("1,999")).toBe(200);
     expect(parseAmount("1,001")).toBe(100);
+  });
+});
+
+describe("parseAmountOrNull", () => {
+  it("returns null when there is no number to parse", () => {
+    expect(parseAmountOrNull("")).toBeNull();
+    expect(parseAmountOrNull("abc")).toBeNull();
+    expect(parseAmountOrNull("€")).toBeNull();
+    expect(parseAmountOrNull("-")).toBeNull();
+    expect(parseAmountOrNull(",")).toBeNull();
+  });
+
+  it("returns cents for valid input", () => {
+    expect(parseAmountOrNull("0")).toBe(0);
+    expect(parseAmountOrNull("12,50 €")).toBe(1250);
+    expect(parseAmountOrNull("1.234,56")).toBe(123456);
   });
 });
 

@@ -1,8 +1,8 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db } from "./db";
 import { users } from "./schema";
-import { user as authUser } from "./auth-schema";
+import { user as authUser, verification } from "./auth-schema";
 import { getUser, deleteAllUserData, archiveUserInvoices } from "./storage";
 import { getStripe } from "./stripe";
 
@@ -51,6 +51,13 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
     await deleteAllUserData(userId, tx);
     await tx.delete(users).where(eq(users.id, userId));
     await tx.delete(authUser).where(eq(authUser.id, userId));
+    // Die `verification`-Tabelle hat keinen Fremdschlüssel auf `user`: Better
+    // Auth legt Reset- und Bestätigungs-Token mit der E-Mail als `identifier`
+    // bzw. der User-ID als `value` ab. Ohne diese Zeile überlebten sie die
+    // Löschung — samt der E-Mail-Adresse, die Art. 17 gerade beseitigen soll.
+    await tx
+      .delete(verification)
+      .where(or(eq(verification.identifier, user.email), eq(verification.value, userId)));
   });
 
   return { ok: true };

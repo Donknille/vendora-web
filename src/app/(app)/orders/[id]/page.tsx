@@ -108,6 +108,9 @@ export default function OrderDetailPage() {
       await deleteOrder.mutateAsync(order.id);
       router.push("/orders");
     } catch (e) {
+      // Dialog schließen und den Fehler auf der Seite zeigen — sonst bliebe
+      // das Modal mit Spinner offen und der Fehler dahinter unsichtbar.
+      setShowDeleteDialog(false);
       setError(apiErrorMessage(e, language, t.orders.deleteError));
     }
   };

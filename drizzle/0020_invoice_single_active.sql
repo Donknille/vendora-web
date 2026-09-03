@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "uq_invoices_active_per_order" ON "invoices" USING btree ("user_id","order_id") WHERE "invoices"."type" = 'invoice' and "invoices"."status" = 'issued';

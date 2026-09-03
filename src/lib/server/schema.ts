@@ -343,6 +343,14 @@ export const invoices = pgTable("invoices", {
   index("idx_invoices_order_id").on(t.orderId),
   // A user's invoice numbers are unique (GoBD: no duplicates).
   uniqueIndex("uq_invoices_user_number").on(t.userId, t.invoiceNumber),
+  // Höchstens EINE gültige Rechnung je Auftrag. Der Existenz-Check in
+  // issueInvoice läuft in der Transaktion, aber zwei gleichzeitige Requests
+  // sehen einander dort nicht (READ COMMITTED) — erst dieser Index macht die
+  // zweite Rechnung unmöglich. Stornierte Rechnungen fallen heraus, damit nach
+  // einem Storno eine neue Rechnung ausgestellt werden kann.
+  uniqueIndex("uq_invoices_active_per_order")
+    .on(t.userId, t.orderId)
+    .where(sql`${t.type} = 'invoice' and ${t.status} = 'issued'`),
   check("chk_invoices_type", sql`${t.type} in ('invoice', 'cancellation')`),
   check("chk_invoices_status", sql`${t.status} in ('issued', 'cancelled')`),
 ]);

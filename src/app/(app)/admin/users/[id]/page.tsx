@@ -277,7 +277,10 @@ export default function AdminUserDetailPage() {
         title="Konto sperren?"
         message={`${user.email} kann sich danach nicht mehr anmelden. Die Daten bleiben erhalten und die Sperre lässt sich jederzeit aufheben.`}
         confirmText="Sperren"
-        onConfirm={() => act({ action: "block" })}
+        onConfirm={async () => {
+          await act({ action: "block" });
+          setConfirm(null);
+        }}
         onClose={() => setConfirm(null)}
       />
 
@@ -286,7 +289,10 @@ export default function AdminUserDetailPage() {
         title="Konto endgültig löschen?"
         message={`Alle Daten von ${user.email} werden gelöscht — Aufträge, Märkte, Verkäufe, Ausgaben und das Firmenprofil. Ausgestellte Rechnungen werden nicht gelöscht, sondern gesetzlich vorgeschrieben archiviert. Der Vorgang ist nicht umkehrbar.`}
         confirmText="Endgültig löschen"
-        onConfirm={() => act({ action: "delete_user", confirmEmail: user.email })}
+        onConfirm={async () => {
+          await act({ action: "delete_user", confirmEmail: user.email });
+          setConfirm(null);
+        }}
         onClose={() => setConfirm(null)}
       />
     </div>

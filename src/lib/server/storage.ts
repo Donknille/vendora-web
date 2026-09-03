@@ -192,62 +192,72 @@ export async function createOrder(
   const now = new Date();
   const today = isoDay(now);
 
-  // Link (or create) the customer master record for autocomplete.
-  const customerId = await upsertCustomerFromOrder(userId, {
-    name: data.customerName,
-    email: data.customerEmail,
-    street: data.customerStreet,
-    zip: data.customerZip,
-    city: data.customerCity,
-    country: data.customerCountry || "",
-  });
-
-  const [order] = await db
-    .insert(orders)
-    .values({
+  // Kunde, Auftrag und Positionen in EINER Transaktion — wie updateOrder.
+  // Vorher waren es drei getrennte Statements: brach es zwischen Auftrag und
+  // Positionen ab, blieb ein Auftrag mit Total > 0 und null Positionen stehen,
+  // aus dem sich eine Rechnung ohne Posten ausstellen ließ.
+  return db.transaction(async (tx) => {
+    // Link (or create) the customer master record for autocomplete.
+    const customerId = await upsertCustomerFromOrder(
       userId,
-      customerId,
-      customerName: data.customerName,
-      customerEmail: data.customerEmail,
-      customerStreet: data.customerStreet,
-      customerZip: data.customerZip,
-      customerCity: data.customerCity,
-      customerCountry: data.customerCountry || "",
-      status: data.status,
-      invoiceNumber: "",
-      notes: data.notes,
-      orderDate: data.orderDate || today,
-      serviceDate: data.serviceDate || null,
-      // Zuflussdatum: übernommen falls angegeben, sonst heute bei bezahltem Status.
-      paidAt: data.paidAt || (isPaidLike(data.status) ? today : null),
-      paymentMethod: data.paymentMethod || null,
-      shippingCost,
-      total,
-      processingStatus: data.processingStatus,
-      comment: data.comment,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
+      {
+        name: data.customerName,
+        email: data.customerEmail,
+        street: data.customerStreet,
+        zip: data.customerZip,
+        city: data.customerCity,
+        country: data.customerCountry || "",
+      },
+      tx
+    );
 
-  const insertedItems =
-    data.items.length > 0
-      ? await db
-          .insert(orderItems)
-          .values(
-            data.items.map((item) => ({
-              orderId: order.id,
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price,
-              processingStatus: item.processingStatus,
-              comment: item.comment,
-            }))
-          )
-          .returning()
-      : [];
+    const [order] = await tx
+      .insert(orders)
+      .values({
+        userId,
+        customerId,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerStreet: data.customerStreet,
+        customerZip: data.customerZip,
+        customerCity: data.customerCity,
+        customerCountry: data.customerCountry || "",
+        status: data.status,
+        invoiceNumber: "",
+        notes: data.notes,
+        orderDate: data.orderDate || today,
+        serviceDate: data.serviceDate || null,
+        // Zuflussdatum: übernommen falls angegeben, sonst heute bei bezahltem Status.
+        paidAt: data.paidAt || (isPaidLike(data.status) ? today : null),
+        paymentMethod: data.paymentMethod || null,
+        shippingCost,
+        total,
+        processingStatus: data.processingStatus,
+        comment: data.comment,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
 
-  return buildOrderWithItems(order, insertedItems);
+    const insertedItems =
+      data.items.length > 0
+        ? await tx
+            .insert(orderItems)
+            .values(
+              data.items.map((item) => ({
+                orderId: order.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                processingStatus: item.processingStatus,
+                comment: item.comment,
+              }))
+            )
+            .returning()
+        : [];
+
+    return buildOrderWithItems(order, insertedItems);
+  });
 }
 
 export async function updateOrder(
@@ -956,48 +966,78 @@ export async function issueInvoice(userId: string, orderId: string): Promise<Iss
   const order = await getOrder(userId, orderId);
   if (!order) return { ok: false, code: "order_not_found" };
 
-  const [existing] = await db
-    .select({ id: invoices.id })
-    .from(invoices)
-    .where(
-      and(
-        eq(invoices.userId, userId),
-        eq(invoices.orderId, orderId),
-        eq(invoices.type, "invoice"),
-        eq(invoices.status, "issued")
-      )
-    );
-  if (existing) return { ok: false, code: "already_issued" };
-
   const profile = await getProfile(userId);
   if (!isInvoiceReadyProfile(profile)) return { ok: false, code: "profile_incomplete" };
 
   const today = todayIso();
 
-  const row = await db.transaction(async (tx) => {
-    const invoiceNumber = await getNextInvoiceNumber(userId, tx);
-    const snapshot = buildInvoiceSnapshot({
-      invoiceNumber,
-      issueDate: today,
-      order: {
-        customerName: order.customerName,
-        customerEmail: order.customerEmail,
-        customerStreet: order.customerStreet,
-        customerZip: order.customerZip,
-        customerCity: order.customerCity,
-        customerCountry: order.customerCountry,
-        serviceDate: order.serviceDate,
-        shippingCost: order.shippingCost,
-        notes: order.notes,
-      },
-      items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
-      profile: profile.id ? profile : null,
-    });
-    const [inserted] = await tx.insert(invoices).values(snapshotToInsert(userId, orderId, snapshot)).returning();
-    return inserted;
-  });
+  // Existenz-Check UND Insert in einer Transaktion. Der Check stand vorher
+  // davor: zwei gleichzeitige Klicks kamen beide daran vorbei, zogen je eine
+  // Nummer und erzeugten zwei gültige Rechnungen zu einem Auftrag. Gegen
+  // echte Gleichzeitigkeit hält am Ende der Teil-Unique-Index
+  // uq_invoices_active_per_order — dessen Verletzung wird hier als
+  // `already_issued` gemeldet statt als 500.
+  try {
+    const row = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({ id: invoices.id })
+        .from(invoices)
+        .where(
+          and(
+            eq(invoices.userId, userId),
+            eq(invoices.orderId, orderId),
+            eq(invoices.type, "invoice"),
+            eq(invoices.status, "issued")
+          )
+        );
+      if (existing) return null;
 
-  return { ok: true, invoice: toInvoiceResponse(row) };
+      const invoiceNumber = await getNextInvoiceNumber(userId, tx);
+      const snapshot = buildInvoiceSnapshot({
+        invoiceNumber,
+        issueDate: today,
+        order: {
+          customerName: order.customerName,
+          customerEmail: order.customerEmail,
+          customerStreet: order.customerStreet,
+          customerZip: order.customerZip,
+          customerCity: order.customerCity,
+          customerCountry: order.customerCountry,
+          serviceDate: order.serviceDate,
+          shippingCost: order.shippingCost,
+          notes: order.notes,
+        },
+        items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+        profile: profile.id ? profile : null,
+      });
+      const [inserted] = await tx.insert(invoices).values(snapshotToInsert(userId, orderId, snapshot)).returning();
+      return inserted;
+    });
+
+    if (!row) return { ok: false, code: "already_issued" };
+    return { ok: true, invoice: toInvoiceResponse(row) };
+  } catch (error) {
+    if (isUniqueViolation(error, "uq_invoices_active_per_order")) {
+      return { ok: false, code: "already_issued" };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Erkennt die Verletzung eines bestimmten Unique-Index, egal ob der Treiber
+ * (postgres-js, PGlite) den Fehler direkt oder als `cause` eines
+ * DrizzleQueryError liefert.
+ */
+function isUniqueViolation(error: unknown, indexName: string): boolean {
+  let current: unknown = error;
+  for (let depth = 0; current && depth < 4; depth++) {
+    const e = current as { code?: string; message?: string; constraint_name?: string; cause?: unknown };
+    const text = `${e.message ?? ""} ${e.constraint_name ?? ""}`;
+    if ((e.code === "23505" || text.includes("duplicate key")) && text.includes(indexName)) return true;
+    current = e.cause;
+  }
+  return false;
 }
 
 export type CancelInvoiceResult =
@@ -1011,18 +1051,37 @@ export type CancelInvoiceResult =
  * cancelled again.
  */
 export async function cancelInvoice(userId: string, invoiceId: string): Promise<CancelInvoiceResult> {
-  const [original] = await db
-    .select()
-    .from(invoices)
-    .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, userId)));
-  if (!original) return { ok: false, code: "not_found" };
-  if (original.type !== "invoice" || original.status !== "issued") {
-    return { ok: false, code: "not_cancellable" };
-  }
-
   const today = todayIso();
 
+  // Lesen, Storno-Insert und Status-Wechsel in EINER Transaktion, und der
+  // Status-Wechsel ist auf `status = 'issued'` bedingt: Nur wer das Original
+  // tatsächlich von "issued" auf "cancelled" gedreht hat, darf den Storno-Beleg
+  // behalten. Zwei gleichzeitige Storno-Klicks erzeugten vorher zwei
+  // Stornorechnungen zu einer Rechnung — für die GoBD ein Beleg zu viel.
   const result = await db.transaction(async (tx) => {
+    const [original] = await tx
+      .select()
+      .from(invoices)
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, userId)));
+    if (!original) return { ok: false as const, code: "not_found" as const };
+    if (original.type !== "invoice" || original.status !== "issued") {
+      return { ok: false as const, code: "not_cancellable" as const };
+    }
+
+    const [updatedOriginal] = await tx
+      .update(invoices)
+      .set({ status: "cancelled" })
+      .where(
+        and(
+          eq(invoices.id, original.id),
+          eq(invoices.userId, userId),
+          eq(invoices.status, "issued")
+        )
+      )
+      .returning();
+    // Ein anderer Request war schneller: nichts einfügen, nichts ändern.
+    if (!updatedOriginal) return { ok: false as const, code: "not_cancellable" as const };
+
     const invoiceNumber = await getNextInvoiceNumber(userId, tx);
     const cancellation = buildCancellationSnapshot({
       invoiceNumber,
@@ -1034,13 +1093,10 @@ export async function cancelInvoice(userId: string, invoiceId: string): Promise<
       .insert(invoices)
       .values(snapshotToInsert(userId, original.orderId, cancellation))
       .returning();
-    const [updatedOriginal] = await tx
-      .update(invoices)
-      .set({ status: "cancelled" })
-      .where(and(eq(invoices.id, original.id), eq(invoices.userId, userId)))
-      .returning();
-    return { cancellationRow, updatedOriginal };
+    return { ok: true as const, cancellationRow, updatedOriginal };
   });
+
+  if (!result.ok) return { ok: false, code: result.code };
 
   return {
     ok: true,

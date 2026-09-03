@@ -84,7 +84,6 @@ export default function SettingsPage() {
 
   // Delete account
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
 
   // Load user email
   useEffect(() => {
@@ -707,29 +706,28 @@ export default function SettingsPage() {
       {/* Delete Account Dialog */}
       <ConfirmDialog
         open={showDeleteAccount}
-        onClose={() => {
-          setShowDeleteAccount(false);
-          setDeleteError("");
-        }}
+        onClose={() => setShowDeleteAccount(false)}
         onConfirm={async () => {
-          setDeleteError("");
+          // Ein Fehler wird GEWORFEN, nicht in den Seitenzustand geschrieben:
+          // Der Dialog zeigt ihn an und bleibt offen. Ein `return` galt ihm
+          // als Erfolg — und ließ ihn eingefroren stehen.
+          const fallback = language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.";
+          let res: Response;
           try {
-            const res = await fetch("/api/account", { method: "DELETE" });
-            if (!res.ok) {
-              const data = await res.json().catch(() => ({}));
-              setDeleteError(data.message || (language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account."));
-              return;
-            }
-            await clearLocalData({ deleteSalesQueue: true });
-            await authClient.signOut();
-            router.push("/auth/login");
+            res = await fetch("/api/account", { method: "DELETE" });
           } catch {
-            setDeleteError(language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.");
+            throw new Error(fallback);
           }
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || fallback);
+          }
+          await clearLocalData({ deleteSalesQueue: true });
+          await authClient.signOut();
+          router.push("/auth/login");
         }}
         title={language === "de" ? "Konto löschen" : "Delete Account"}
         message={
-          (deleteError ? deleteError + "\n\n" : "") +
           (language === "de"
             ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht. Bereits ausgestellte Rechnungen werden für die gesetzliche Aufbewahrungsfrist entkoppelt archiviert."
             : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted. Invoices you already issued are archived, decoupled from your account, for the statutory retention period.")

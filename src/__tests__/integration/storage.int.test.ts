@@ -160,6 +160,69 @@ describe("Storage gegen echtes Postgres", () => {
       expect(await storage.getInvoices(ANNA)).toHaveLength(1);
     });
 
+    it("stellt auch bei gleichzeitigen Anfragen nur eine Rechnung aus", async () => {
+      // Regression: Der Existenz-Check lief VOR der Transaktion. Zwei parallele
+      // Klicks kamen beide daran vorbei, zogen je eine Nummer und hinterließen
+      // zwei gültige Rechnungen zu einem Auftrag. Mutation zum Rotfahren:
+      // Teil-Unique-Index uq_invoices_active_per_order aus der Migration
+      // entfernen UND den Check wieder vor die Transaktion ziehen.
+      await storage.upsertProfile(ANNA, PROFILE_INPUT);
+      const order = await storage.createOrder(ANNA, ORDER_INPUT);
+
+      const results = await Promise.all([
+        storage.issueInvoice(ANNA, order.id),
+        storage.issueInvoice(ANNA, order.id),
+        storage.issueInvoice(ANNA, order.id),
+      ]);
+
+      expect(results.filter((r) => r.ok)).toHaveLength(1);
+      expect(results.filter((r) => !r.ok && r.code === "already_issued")).toHaveLength(2);
+      expect(await storage.getInvoices(ANNA)).toHaveLength(1);
+    });
+
+    it("lehnt eine zweite gültige Rechnung zum selben Auftrag auch am Index ab", async () => {
+      // Der Index ist die letzte Verteidigung — er muss unabhängig vom
+      // App-Code halten, sonst schützt er nichts.
+      await storage.upsertProfile(ANNA, PROFILE_INPUT);
+      const order = await storage.createOrder(ANNA, ORDER_INPUT);
+      const first = await storage.issueInvoice(ANNA, order.id);
+      expect(first.ok).toBe(true);
+
+      const { invoices } = await import("@/lib/server/schema");
+      await expect(
+        db.insert(invoices).values({
+          userId: ANNA,
+          orderId: order.id,
+          invoiceNumber: "99-999",
+          type: "invoice",
+          status: "issued",
+          issueDate: "2026-08-01",
+        }),
+      ).rejects.toSatisfy((e: unknown) => {
+        // Drizzle verpackt den Treiberfehler; der Indexname steht in `cause`.
+        const cause = (e as { cause?: { message?: string } }).cause;
+        return /uq_invoices_active_per_order/.test(cause?.message ?? String(e));
+      });
+    });
+
+    it("erzeugt bei gleichzeitigen Storno-Anfragen nur einen Storno-Beleg", async () => {
+      await storage.upsertProfile(ANNA, PROFILE_INPUT);
+      const order = await storage.createOrder(ANNA, ORDER_INPUT);
+      const issued = await storage.issueInvoice(ANNA, order.id);
+      expect(issued.ok).toBe(true);
+      if (!issued.ok) return;
+
+      const results = await Promise.all([
+        storage.cancelInvoice(ANNA, issued.invoice.id),
+        storage.cancelInvoice(ANNA, issued.invoice.id),
+      ]);
+
+      expect(results.filter((r) => r.ok)).toHaveLength(1);
+      expect(results.filter((r) => !r.ok && r.code === "not_cancellable")).toHaveLength(1);
+      const all = await storage.getInvoices(ANNA);
+      expect(all.filter((i) => i.type === "cancellation")).toHaveLength(1);
+    });
+
     it("verweigert die Rechnung ohne Firmenname und Anschrift (§ 14 Abs. 4 UStG)", async () => {
       const order = await storage.createOrder(ANNA, ORDER_INPUT);
       const result = await storage.issueInvoice(ANNA, order.id);
@@ -385,7 +448,6 @@ describe("Storage gegen echtes Postgres", () => {
       expect(await storage.getInvoices(ANNA)).toHaveLength(0);
       // … die Belege existieren aber weiter, entkoppelt und mit Frist.
       const { rows } = await db.execute<{ user_id: string | null; retention_until: string | null }>(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (await import("drizzle-orm")).sql`select user_id, retention_until from invoices`,
       );
       expect(rows).toHaveLength(1);

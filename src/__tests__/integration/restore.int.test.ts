@@ -135,6 +135,22 @@ describe("Restore und Rechnungszähler", () => {
     await expect(res.json()).resolves.toMatchObject({ code: "PRO_REQUIRED" });
   });
 
+  it("rechnet den Versand in das Auftragstotal ein", async () => {
+    // Regression: Der Restore summierte nur die Positionen. Weil die EÜR
+    // `order.total` bucht, fehlten nach jedem Restore die Versandkosten
+    // jedes bezahlten Auftrags in den Einnahmen — ohne Fehlermeldung.
+    const res = await callRestore({
+      schemaVersion: 2,
+      orders: [{ ...ORDER, status: "paid", paidAt: "2026-08-02", shippingCost: 490, total: 1 }],
+    });
+    expect(res.status).toBe(200);
+
+    const [order] = await storage.getOrders(ANNA);
+    expect(order.shippingCost).toBe(490);
+    // 1 x 2500 + 490 Versand — nicht das (hier absichtlich falsche) Backup-Total.
+    expect(order.total).toBe(2990);
+  });
+
   it("verträgt einen Kategoriewert, der auf Object.prototype zeigt", async () => {
     // "constructor" traf früher die geerbte Funktion der Mapping-Tabelle, wurde
     // als Kategorie durchgereicht und liess den gesamten Import am

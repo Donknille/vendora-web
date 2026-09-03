@@ -20,11 +20,78 @@ export function formatCurrency(cents: number, currency: string = "€"): string 
   return `${currency}${formatAmountInput(cents)}`;
 }
 
-/** Parses a user-entered euro amount (e.g. "12,34" or "€12.34") into integer cents. */
+/**
+ * Parses a user-entered euro amount into integer cents, or `null` if the text
+ * contains no usable number.
+ *
+ * Deutsche und englische Schreibweise werden beide verstanden:
+ *   "12,34"      -> 1234      "12.34"     -> 1234
+ *   "1.234,56"   -> 123456    "1,234.56"  -> 123456
+ *   "1.234"      -> 123400    (Punkt vor genau drei Ziffern = Tausenderpunkt)
+ *   "1,999"      -> 200       (Komma ist immer Dezimaltrenner, gerundet)
+ *
+ * Vorher ersetzte `.replace(",", ".")` nur das ERSTE Komma und ließ jeden
+ * Punkt stehen: "1.234,56" wurde zu "1.234.56", `parseFloat` las 1.234 —
+ * aus 1.234,56 € wurden 1,23 € in der EÜR, ohne Fehlermeldung.
+ */
+export function parseAmountOrNull(text: string): number | null {
+  const cleaned = text.replace(/[^0-9.,-]/g, "");
+  const negative = cleaned.startsWith("-");
+  const body = cleaned.replace(/-/g, "");
+  if (!/\d/.test(body)) return null;
+
+  const lastComma = body.lastIndexOf(",");
+  const lastDot = body.lastIndexOf(".");
+  let intPart: string;
+  let fracPart: string;
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    // Beide Zeichen: das letzte ist der Dezimaltrenner, das andere gruppiert.
+    const sep = Math.max(lastComma, lastDot);
+    intPart = body.slice(0, sep);
+    fracPart = body.slice(sep + 1);
+  } else if (lastComma >= 0) {
+    if (body.indexOf(",") !== lastComma) {
+      // "1,234,567" — englische Tausenderkommas ohne Dezimalteil.
+      intPart = body;
+      fracPart = "";
+    } else {
+      intPart = body.slice(0, lastComma);
+      fracPart = body.slice(lastComma + 1);
+    }
+  } else if (lastDot >= 0) {
+    const after = body.slice(lastDot + 1);
+    if (body.indexOf(".") !== lastDot || (after.length === 3 && lastDot > 0)) {
+      // "1.234.567" oder "1.234" — Tausenderpunkte, kein Dezimalteil.
+      intPart = body;
+      fracPart = "";
+    } else {
+      intPart = body.slice(0, lastDot);
+      fracPart = after;
+    }
+  } else {
+    intPart = body;
+    fracPart = "";
+  }
+
+  const intDigits = intPart.replace(/[.,]/g, "");
+  const fracDigits = fracPart.replace(/[.,]/g, "");
+  if (!intDigits && !fracDigits) return null;
+
+  const euros = intDigits ? Number(intDigits) : 0;
+  // Nachkommastellen jenseits der zweiten werden gerundet ("1,999" -> 2,00).
+  const fracCents = fracDigits ? Math.round(Number("0." + fracDigits) * 100) : 0;
+  const cents = euros * 100 + fracCents;
+  return negative ? -cents : cents;
+}
+
+/**
+ * Wie `parseAmountOrNull`, liefert für unbrauchbare Eingaben aber 0. Für
+ * Summen in laufenden Formularen (Zwischensumme beim Tippen); wer eine
+ * Eingabe *abschickt*, nimmt `parseAmountOrNull` und lehnt `null` ab.
+ */
 export function parseAmount(text: string): number {
-  const cleaned = text.replace(/[^0-9.,-]/g, "").replace(",", ".");
-  const euros = parseFloat(cleaned);
-  return isNaN(euros) ? 0 : Math.round(euros * 100);
+  return parseAmountOrNull(text) ?? 0;
 }
 
 export function formatDate(dateStr: string, locale: string = "de-DE"): string {

@@ -10,6 +10,7 @@ import {
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { mapLegacyCategory } from "@/lib/euer";
 import { planMarketCostRows } from "@/lib/marketCosts";
+import { computeInvoiceTotals } from "@/lib/invoice";
 import { z } from "zod";
 import { isoDay } from "@/lib/date";
 
@@ -40,6 +41,7 @@ const migrateOrderSchema = z.object({
   paidAt: z.string().max(50).nullable().optional(),
   paymentMethod: z.string().max(50).nullable().optional(),
   shippingCost: z.union([z.number(), z.null()]).optional(),
+  // `total` steht im Export, wird beim Import aber neu berechnet (s. u.).
   total: z.union([z.number(), z.string()]).optional(),
   processingStatus: z.string().max(50).nullable().optional(),
   comment: z.string().max(5000).nullable().optional(),
@@ -159,8 +161,21 @@ export const POST = withAuth(
     const today = isoDay(now);
     if (data.orders) {
       for (const order of data.orders) {
-        const total = (order.items || []).reduce(
-          (sum, item) => sum + toCents(item.price, fromEuros) * (item.quantity || 1), 0
+        // Dieselbe Rechnung wie createOrder und die Rechnung selbst: Positionen
+        // PLUS Versand. Vorher fehlte der Versand, und weil die EÜR `order.total`
+        // bucht, senkte jeder Restore still die Einnahmen jedes bezahlten
+        // Auftrags um seine Versandkosten. Das `total` aus dem Backup wird
+        // bewusst nicht übernommen — es könnte aus einer älteren Version mit
+        // anderer Rechenregel stammen.
+        const shippingCost =
+          order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null;
+        const { total } = computeInvoiceTotals(
+          (order.items || []).map((item) => ({
+            name: item.name || "",
+            quantity: item.quantity || 1,
+            price: toCents(item.price, fromEuros),
+          })),
+          shippingCost ?? 0
         );
         const [inserted] = await tx.insert(orders).values({
           userId,
@@ -177,7 +192,7 @@ export const POST = withAuth(
           serviceDate: order.serviceDate || null,
           paidAt: order.paidAt || null,
           paymentMethod: order.paymentMethod || null,
-          shippingCost: order.shippingCost != null ? toCents(order.shippingCost, fromEuros) : null,
+          shippingCost,
           total,
           processingStatus: order.processingStatus,
           comment: order.comment,

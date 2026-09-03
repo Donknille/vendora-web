@@ -32,6 +32,8 @@ function buildCsp(nonce: string): string {
   ].join("; ");
 }
 
+export const STRIPE_WEBHOOK_PATH = "/api/stripe/webhook";
+
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
@@ -47,6 +49,15 @@ export async function proxy(request: NextRequest) {
     response.headers.set("Content-Security-Policy", csp);
     return response;
   };
+
+  // Der Stripe-Webhook bleibt außerhalb des Rate-Limits: Er authentifiziert
+  // sich über die Signatur, kommt immer von denselben wenigen Stripe-IPs und
+  // darf bei einem Zustell-Burst (Retries, Abo-Wechsel vieler Kunden) nicht
+  // in das 20/min-Schreibbudget laufen — eine 429 dort heißt: Abo-Status
+  // bleibt still falsch, bis Stripe irgendwann erneut zustellt.
+  if (request.nextUrl.pathname === STRIPE_WEBHOOK_PATH) {
+    return withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
+  }
 
   // Rate limiting — fail-closed in production
   if (process.env.ARCJET_KEY) {

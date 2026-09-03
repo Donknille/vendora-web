@@ -57,136 +57,163 @@ export async function POST(request: Request) {
 
     // Idempotency: skip events we've already processed (guards against replays,
     // e.g. a re-delivered customer.subscription.deleted cancelling an active sub).
-    const [seen] = await db
-      .select({ eventId: webhookEvents.eventId })
-      .from(webhookEvents)
-      .where(eq(webhookEvents.eventId, event.id));
-    if (seen) {
+    //
+    // Der Eintrag wird VOR der Verarbeitung atomar reserviert (Insert mit
+    // Konflikt-Ignorieren). Ein Select-dann-Insert ließ zwei gleichzeitige
+    // Zustellungen desselben Events beide durch. Scheitert die Verarbeitung,
+    // wird die Reservierung unten wieder freigegeben, damit Stripes Retry
+    // nicht als Duplikat verworfen wird.
+    const [claimed] = await db
+      .insert(webhookEvents)
+      .values({ eventId: event.id })
+      .onConflictDoNothing()
+      .returning({ eventId: webhookEvents.eventId });
+    if (!claimed) {
       return NextResponse.json({ received: true, duplicate: true });
     }
 
-    // Use Record type for event data — Stripe v22 types are overly strict
-    // for constructEvent which returns generic Stripe.Event
-    const obj = event.data.object as unknown as Record<string, unknown>;
+    try {
+      await handleEvent(event);
+    } catch (error) {
+      await db.delete(webhookEvents).where(eq(webhookEvents.eventId, event.id)).catch(() => {});
+      throw error;
+    }
 
-    switch (event.type) {
-      case "checkout.session.completed": {
-        // `vendora_user_id` ist die Bruecke ueber die Umbenennung im August
-        // 2026: Stripe-Objekte, die vorher angelegt wurden, tragen noch den
-        // alten Schluessel. Faellt er weg, findet der Webhook die User-ID
-        // nicht mehr -- und das faellt erst auf, wenn ein Abo-Status still
-        // falsch steht. Entfernen, sobald keine Customer mit dem alten
-        // Schluessel mehr existieren.
-        const metadata = obj.metadata as Record<string, string> | undefined;
-        const userId = metadata?.bilanz_buddy_user_id ?? metadata?.vendora_user_id;
-        const subscriptionId = obj.subscription as string | undefined;
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error("Stripe webhook error:", error);
+    return NextResponse.json({ message: "Webhook error" }, { status: 500 });
+  }
+}
 
-        if (userId && subscriptionId) {
-          const expiresAt = await getSubscriptionExpiry(subscriptionId);
+async function handleEvent(event: { id: string; type: string; data: { object: unknown } }): Promise<void> {
+  // Use Record type for event data — Stripe v22 types are overly strict
+  // for constructEvent which returns generic Stripe.Event
+  const obj = event.data.object as unknown as Record<string, unknown>;
 
-          // Idempotent: only update if new expiration is later than current
-          const currentUser = await storage.getUser(userId);
-          const currentExpiry = currentUser?.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
-          if (!currentExpiry || expiresAt > currentExpiry) {
-            await storage.updateSubscription(userId, {
-              plan: "pro",
-              subscriptionStatus: "active",
-              subscriptionExpiresAt: expiresAt,
-              stripeSubscriptionId: subscriptionId,
-              stripeCustomerId: obj.customer as string,
-            });
-          }
+  switch (event.type) {
+    case "checkout.session.completed": {
+      // `vendora_user_id` ist die Bruecke ueber die Umbenennung im August
+      // 2026: Stripe-Objekte, die vorher angelegt wurden, tragen noch den
+      // alten Schluessel. Faellt er weg, findet der Webhook die User-ID
+      // nicht mehr -- und das faellt erst auf, wenn ein Abo-Status still
+      // falsch steht. Entfernen, sobald keine Customer mit dem alten
+      // Schluessel mehr existieren.
+      const metadata = obj.metadata as Record<string, string> | undefined;
+      const userId = metadata?.bilanz_buddy_user_id ?? metadata?.vendora_user_id;
+      const subscriptionId = obj.subscription as string | undefined;
+
+      if (userId && subscriptionId) {
+        const expiresAt = await getSubscriptionExpiry(subscriptionId);
+
+        // Idempotent: only update if new expiration is later than current
+        const currentUser = await storage.getUser(userId);
+        const currentExpiry = currentUser?.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
+        if (!currentExpiry || expiresAt > currentExpiry) {
+          await storage.updateSubscription(userId, {
+            plan: "pro",
+            subscriptionStatus: "active",
+            subscriptionExpiresAt: expiresAt,
+            stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: obj.customer as string,
+          });
         }
-        break;
+      } else {
+        // Ohne diese Zeile blieb ein zahlender Kunde lautlos auf FREE.
+        console.error(
+          `Stripe webhook ${event.id}: checkout.session.completed ohne User-ID (${userId ?? "-"}) oder Subscription (${subscriptionId ?? "-"})`
+        );
       }
+      break;
+    }
 
-      case "invoice.payment_succeeded": {
-        // Ab API-Version "basil"/"dahlia" haengt die Zuordnung nicht mehr direkt
-        // am Invoice-Objekt, sondern unter parent.subscription_details. Das SDK
-        // ist auf 2026-03-25.dahlia gepinnt: obj.subscription war hier immer
-        // undefined, der ganze Zweig lief ins Leere -- Verlaengerungen wurden
-        // nie verbucht und eine zahlende Kundin waere nach einer Periode auf
-        // "free" gefallen. Der alte Pfad bleibt als Rueckfall stehen.
-        const parent = obj.parent as
-          | { subscription_details?: { subscription?: string } }
-          | undefined;
-        const subscriptionId =
-          parent?.subscription_details?.subscription ??
-          (obj.subscription as string | undefined);
+    case "invoice.payment_succeeded": {
+      // Ab API-Version "basil"/"dahlia" haengt die Zuordnung nicht mehr direkt
+      // am Invoice-Objekt, sondern unter parent.subscription_details. Das SDK
+      // ist auf 2026-03-25.dahlia gepinnt: obj.subscription war hier immer
+      // undefined, der ganze Zweig lief ins Leere -- Verlaengerungen wurden
+      // nie verbucht und eine zahlende Kundin waere nach einer Periode auf
+      // "free" gefallen. Der alte Pfad bleibt als Rueckfall stehen.
+      const parent = obj.parent as
+        | { subscription_details?: { subscription?: string } }
+        | undefined;
+      const subscriptionId =
+        parent?.subscription_details?.subscription ??
+        (obj.subscription as string | undefined);
 
-        if (subscriptionId) {
-          const customerId = obj.customer as string;
-
-          const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.stripeCustomerId, customerId));
-
-          if (user) {
-            const expiresAt = await getSubscriptionExpiry(subscriptionId);
-            // Idempotent: only extend if new expiration is later than current
-            const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
-            if (!currentExpiry || expiresAt > currentExpiry) {
-              await storage.updateSubscription(user.id, {
-                plan: "pro",
-                subscriptionStatus: "active",
-                subscriptionExpiresAt: expiresAt,
-                // Die Subscription-ID MUSS hier mitwandern. Sie ist der
-                // Vergleichswert, an dem customer.subscription.deleted
-                // erkennt, ob das geloeschte Abo das aktuelle ist. Wurde sie
-                // nur beim Checkout geschrieben, blieb nach einem Abo-Wechsel
-                // eine veraltete ID stehen -- die Kuendigung des NEUEN Abos
-                // haette dann als "altes Event" gegolten und das Konto haette
-                // Pro behalten, bis der Ablauf von selbst greift.
-                stripeSubscriptionId: subscriptionId,
-              });
-            }
-          }
-        }
-        break;
-      }
-
-      case "customer.subscription.deleted": {
+      if (subscriptionId) {
         const customerId = obj.customer as string;
-        const subscriptionId = obj.id as string | undefined;
 
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.stripeCustomerId, customerId));
 
-        // Nur herunterstufen, wenn das geloeschte Abo auch das aktuell
-        // hinterlegte ist. Stripe liefert Events bis zu drei Tage nach; ein
-        // nachgereichtes deleted-Event eines ALTEN Abos haette sonst einen
-        // zahlenden Kunden in den Nur-Lese-Modus geworfen, bis die naechste
-        // Zahlung ihn zufaellig wieder hochstuft. Die Idempotenzsperre schuetzt
-        // davor nicht: sie greift erst nach der Verarbeitung.
-        const staleEvent =
-          !!user?.stripeSubscriptionId &&
-          !!subscriptionId &&
-          user.stripeSubscriptionId !== subscriptionId;
-
-        if (user && !staleEvent) {
-          await storage.updateSubscription(user.id, {
-            plan: "free",
-            subscriptionStatus: "cancelled",
-          });
+        if (user) {
+          const expiresAt = await getSubscriptionExpiry(subscriptionId);
+          // Idempotent: only extend if new expiration is later than current
+          const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
+          if (!currentExpiry || expiresAt > currentExpiry) {
+            await storage.updateSubscription(user.id, {
+              plan: "pro",
+              subscriptionStatus: "active",
+              subscriptionExpiresAt: expiresAt,
+              // Die Subscription-ID MUSS hier mitwandern. Sie ist der
+              // Vergleichswert, an dem customer.subscription.deleted
+              // erkennt, ob das geloeschte Abo das aktuelle ist. Wurde sie
+              // nur beim Checkout geschrieben, blieb nach einem Abo-Wechsel
+              // eine veraltete ID stehen -- die Kuendigung des NEUEN Abos
+              // haette dann als "altes Event" gegolten und das Konto haette
+              // Pro behalten, bis der Ablauf von selbst greift.
+              stripeSubscriptionId: subscriptionId,
+            });
+          }
+        } else {
+          console.error(
+            `Stripe webhook ${event.id}: invoice.payment_succeeded für unbekannten Customer ${customerId}`
+          );
         }
-        break;
+      } else {
+        console.error(`Stripe webhook ${event.id}: invoice.payment_succeeded ohne Subscription-ID`);
       }
-
-      default:
-        // Unhandled event type
-        break;
+      break;
     }
 
-    // Record the event as processed (after successful handling, so a failure
-    // above returns 500 and lets Stripe retry).
-    await db.insert(webhookEvents).values({ eventId: event.id }).onConflictDoNothing();
+    case "customer.subscription.deleted": {
+      const customerId = obj.customer as string;
+      const subscriptionId = obj.id as string | undefined;
 
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error("Stripe webhook error:", error);
-    return NextResponse.json({ message: "Webhook error" }, { status: 500 });
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.stripeCustomerId, customerId));
+
+      // Nur herunterstufen, wenn das geloeschte Abo auch das aktuell
+      // hinterlegte ist. Stripe liefert Events bis zu drei Tage nach; ein
+      // nachgereichtes deleted-Event eines ALTEN Abos haette sonst einen
+      // zahlenden Kunden in den Nur-Lese-Modus geworfen, bis die naechste
+      // Zahlung ihn zufaellig wieder hochstuft. Die Idempotenzsperre schuetzt
+      // davor nicht: sie greift erst nach der Verarbeitung.
+      const staleEvent =
+        !!user?.stripeSubscriptionId &&
+        !!subscriptionId &&
+        user.stripeSubscriptionId !== subscriptionId;
+
+      if (user && !staleEvent) {
+        await storage.updateSubscription(user.id, {
+          plan: "free",
+          subscriptionStatus: "cancelled",
+        });
+      } else if (!user) {
+        console.error(
+          `Stripe webhook ${event.id}: customer.subscription.deleted für unbekannten Customer ${customerId}`
+        );
+      }
+      break;
+    }
+
+    default:
+      // Unhandled event type
+      break;
   }
 }

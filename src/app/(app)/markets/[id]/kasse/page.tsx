@@ -21,7 +21,7 @@ import { useOfflineSales } from "@/lib/offline/useOfflineSales";
 import type { SalePaymentMethod } from "@/lib/offline/salesQueue";
 import { computeDayClosing } from "@/lib/marketDay";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate, parseAmountOrNull } from "@/lib/formatCurrency";
 import { TseNotice } from "@/components/markets/TseNotice";
 import { iconButtonMuted } from "@/lib/styles";
 
@@ -174,7 +174,12 @@ export default function MarketPosPage() {
   const handleFreeSale = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!freeDesc.trim() || !freeAmount.trim()) return;
-    await record(freeDesc.trim(), parseAmount(freeAmount));
+    const cents = parseAmountOrNull(freeAmount);
+    if (cents === null) {
+      setError(t.common.invalidAmount);
+      return;
+    }
+    await record(freeDesc.trim(), cents);
     setFreeDesc("");
     setFreeAmount("");
   };

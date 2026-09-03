@@ -6,7 +6,7 @@ import { Receipt, Plus, Trash2, X, Store } from "lucide-react";
 import { useExpenses, useCreateExpense, useDeleteExpense } from "@/lib/hooks/useExpenses";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 import { useLanguage } from "@/lib/context/LanguageContext";
-import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate, parseAmountOrNull } from "@/lib/formatCurrency";
 import { EUER_CATEGORIES, euerLabel, isEuerCategory, type EuerCategory } from "@/lib/euer";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -94,11 +94,16 @@ export default function ExpensesPage() {
     e.preventDefault();
     setFormError("");
     if (!description.trim() || !amount.trim()) return;
+    const cents = parseAmountOrNull(amount);
+    if (cents === null || cents < 0) {
+      setFormError(t.common.invalidAmount);
+      return;
+    }
 
     try {
       await createExpense.mutateAsync({
         description: description.trim(),
-        amount: parseAmount(amount),
+        amount: cents,
         category,
         expenseDate,
       });

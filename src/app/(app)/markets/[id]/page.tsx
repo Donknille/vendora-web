@@ -30,7 +30,7 @@ import { computeYearComparison } from "@/lib/marketCalendar";
 import type { MarketSale } from "@/lib/types";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
-import { formatCurrency, formatDate, parseAmount } from "@/lib/formatCurrency";
+import { formatCurrency, formatDate, parseAmountOrNull } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -168,11 +168,16 @@ export default function MarketDetailPage() {
       return;
     }
     if (!saleDescription.trim() || !saleAmount.trim()) return;
+    const cents = parseAmountOrNull(saleAmount);
+    if (cents === null || cents < 0) {
+      setError(t.common.invalidAmount);
+      return;
+    }
 
     try {
       await recordSale({
         description: saleDescription.trim(),
-        amount: parseAmount(saleAmount),
+        amount: cents,
         quantity: parseInt(saleQuantity, 10) || 1,
       });
       setSaleDescription("");
@@ -567,7 +572,11 @@ export default function MarketDetailPage() {
       <ConfirmDialog
         open={!!confirmDeleteSaleId}
         onClose={() => setConfirmDeleteSaleId(null)}
-        onConfirm={() => { if (confirmDeleteSaleId) { handleDeleteSale(confirmDeleteSaleId); setConfirmDeleteSaleId(null); } }}
+        onConfirm={async () => {
+          if (!confirmDeleteSaleId) return;
+          await handleDeleteSale(confirmDeleteSaleId);
+          setConfirmDeleteSaleId(null);
+        }}
         title={t.markets.deleteSale}
         message={t.markets.removeSale}
         confirmText={t.markets.deleteAction}
