@@ -380,6 +380,7 @@ export default function ExpensesPage() {
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
+        errorFallback={t.expenses.deleteError}
         title={t.expenses.deleteExpense}
         message={t.expenses.areYouSure}
         confirmText={t.expenses.delete}

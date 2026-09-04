@@ -33,6 +33,7 @@ import { apiErrorMessage } from "@/lib/apiError";
 import { formatCurrency, formatDate, parseAmountOrNull } from "@/lib/formatCurrency";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { TseNotice } from "@/components/markets/TseNotice";
 import { iconButtonMuted, inputSurface } from "@/lib/styles";
@@ -54,6 +55,7 @@ export default function MarketDetailPage() {
   const copyMarket = useCopyMarket();
   const { pending, syncing, recordSale } = useOfflineSales(marketId);
   const canCreate = useCanCreate();
+  const { showSuccess } = useToast();
 
   const [error, setError] = useState("");
 
@@ -189,6 +191,7 @@ export default function MarketDetailPage() {
   const handleDeleteMarket = async () => {
     try {
       await deleteMarket.mutateAsync(marketId);
+      showSuccess(t.markets.deleted);
       router.push("/markets");
     } catch {
       setError(t.markets.deleteMarketError);
@@ -208,6 +211,9 @@ export default function MarketDetailPage() {
     setError("");
     try {
       const copied = await copyMarket.mutateAsync(marketId);
+      // Das Ziel ist das Formular der KOPIE. Ohne Meldung sieht das aus, als
+      // haette man den urspruenglichen Markt zum Bearbeiten geoeffnet.
+      showSuccess(t.markets.copied);
       router.push(`/markets/${copied.id}/edit`);
     } catch {
       setError(t.markets.copyError);

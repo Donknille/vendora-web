@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -10,8 +11,15 @@ interface ConfirmDialogProps {
    * Läuft beim Bestätigen. Ein `throw` hält den Dialog offen und zeigt die
    * Fehlermeldung an; wer den Dialog nach Erfolg schließen will, ruft in
    * `onConfirm` selbst `onClose` bzw. setzt `open` auf false.
+   *
+   * Der geworfene Fehler geht durch `apiErrorMessage`: bekannte Fehlercodes
+   * werden übersetzt, alles andere zeigt `errorFallback`. Die rohe
+   * Server-Meldung erscheint NIE — sie ist englisch und teils intern
+   * („Expense not found", „Unauthorized").
    */
   onConfirm: () => void | Promise<void>;
+  /** Text für unbekannte Fehler. Ohne Angabe: „Ein Fehler ist aufgetreten." */
+  errorFallback?: string;
   title: string;
   message: string;
   confirmText?: string;
@@ -24,12 +32,13 @@ export function ConfirmDialog({
   open,
   onClose,
   onConfirm,
+  errorFallback,
   title,
   message,
   confirmText,
   cancelText,
 }: ConfirmDialogProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -41,6 +50,15 @@ export function ConfirmDialog({
   // nicht bei jedem Zustandswechsel neu registriert werden muss.
   const loadingRef = useRef(false);
   loadingRef.current = loading;
+  // `onClose` ebenfalls über eine Ref: jede aufrufende Seite übergibt eine
+  // Pfeilfunktion, die bei JEDEM Elternrender neu entsteht. Stand sie in den
+  // Abhängigkeiten, lief der Effekt unten bei jedem Elternrender erneut — und
+  // sein `setError("")` löschte die Meldung, die `handleConfirm` gerade
+  // gesetzt hatte. Genau das passierte im Fehlerfall immer: die Mutation
+  // wechselt von "läuft" auf "gescheitert", die Seite rendert neu, der
+  // Dialog stand wieder da, als wäre nichts gewesen.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Der Dialog bleibt zwischen zwei Öffnungen gemountet (`open` false rendert
   // nur nichts). Deshalb muss der Zustand beim Öffnen frisch sein: Vorher blieb
@@ -57,7 +75,7 @@ export function ConfirmDialog({
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (!loadingRef.current) onClose();
+        if (!loadingRef.current) onCloseRef.current();
         return;
       }
       if (e.key === "Tab" && panelRef.current) {
@@ -81,7 +99,7 @@ export function ConfirmDialog({
       window.removeEventListener("keydown", handleKey);
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -91,7 +109,7 @@ export function ConfirmDialog({
     try {
       await onConfirm();
     } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : t.common.errorOccurred);
+      setError(apiErrorMessage(err, language, errorFallback ?? t.common.errorOccurred));
     } finally {
       setLoading(false);
     }

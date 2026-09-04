@@ -25,6 +25,7 @@ import { isInvoiceReadyProfile } from "@/lib/invoice";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { dayOf } from "@/lib/date";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/orderStatus";
@@ -53,6 +54,7 @@ export default function OrderDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [error, setError] = useState("");
+  const { showSuccess } = useToast();
 
   const order = orders?.find((o) => o.id === id);
 
@@ -104,10 +106,15 @@ export default function OrderDetailPage() {
   const handleDelete = async () => {
     try {
       await deleteOrder.mutateAsync(order.id);
+      // Nach dem Sprung auf die Liste ist der Auftrag einfach weg; ohne
+      // Meldung bleibt offen, ob geloescht wurde oder nur navigiert.
+      showSuccess(t.orders.deleted);
       router.push("/orders");
     } catch (e) {
-      // Dialog schließen und den Fehler auf der Seite zeigen — sonst bliebe
-      // das Modal mit Spinner offen und der Fehler dahinter unsichtbar.
+      // Dialog schließen und den Fehler auf der Seite zeigen: er soll auch
+      // dann noch dastehen, wenn der Dialog weg ist. (Der Dialog zeigt einen
+      // geworfenen Fehler inzwischen selbst an — hier wird bewusst nicht
+      // geworfen, sondern auf der Seite gemeldet.)
       setShowDeleteDialog(false);
       setError(apiErrorMessage(e, language, t.orders.deleteError));
     }

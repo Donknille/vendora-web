@@ -711,20 +711,27 @@ export default function SettingsPage() {
       <ConfirmDialog
         open={showDeleteAccount}
         onClose={() => setShowDeleteAccount(false)}
+        errorFallback={t.settings.failedToDeleteAccount}
         onConfirm={async () => {
           // Ein Fehler wird GEWORFEN, nicht in den Seitenzustand geschrieben:
           // Der Dialog zeigt ihn an und bleibt offen. Ein `return` galt ihm
           // als Erfolg — und ließ ihn eingefroren stehen.
-          const fallback = t.settings.failedToDeleteAccount;
+          //
+          // Geworfen wird der Fehlercode, nicht der Meldungstext des Servers:
+          // den übersetzt der Dialog über `apiErrorMessage`, alles Unbekannte
+          // wird zu `errorFallback`. "Unauthorized" im deutschen Dialog war
+          // genau der Fall, den das verhindert.
           let res: Response;
           try {
             res = await fetch("/api/account", { method: "DELETE" });
           } catch {
-            throw new Error(fallback);
+            throw new Error("network");
           }
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.message || fallback);
+            const err: Error & { code?: string } = new Error("account-delete-failed");
+            err.code = typeof data.code === "string" ? data.code : undefined;
+            throw err;
           }
           await clearLocalData({ deleteSalesQueue: true });
           await authClient.signOut();

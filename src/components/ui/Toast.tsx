@@ -5,6 +5,20 @@ import { CheckCircle, AlertCircle, X } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { toneClasses } from "@/lib/statusColors";
 
+/**
+ * Kurze Rückmeldung, die eine Navigation überlebt.
+ *
+ * Wofür: eine Aktion ist geglückt und die Seite wechselt danach — nach dem
+ * Löschen eines Auftrags landet man auf der Liste, nach dem Kopieren eines
+ * Markts im Formular der Kopie. Ohne Meldung bleibt offen, ob überhaupt etwas
+ * passiert ist. Der Provider hängt über dem Router (Providers.tsx), die
+ * Meldung übersteht den Seitenwechsel.
+ *
+ * Wofür NICHT: Fehler eines Formulars oder eines Dialogs. Die gehören neben
+ * das Feld bzw. in den Dialog (`ConfirmDialog` zeigt sie selbst an) — dort
+ * sucht man sie, und dort verschwinden sie nicht nach vier Sekunden.
+ */
+
 interface Toast {
   id: number;
   message: string;
