@@ -66,7 +66,7 @@ Jeweils für **Production**, **Preview** und **Development** setzen:
 | `BETTER_AUTH_URL` | `https://bilanz-buddy.de` (bzw. deine Domain) | **ja** |
 | `STRIPE_SECRET_KEY` | `sk_live_…` bzw. `sk_test_…` | für Billing |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` aus dem Stripe-Webhook | für Billing |
-| `STRIPE_PRICE_ID` | `price_…` des Pro-Produkts (19,90 €/Monat) | für Billing |
+| `STRIPE_PRICE_ID` | `price_…` des Pro-Produkts (9,99 €/Monat brutto, `tax_behavior: inclusive`) | für Billing |
 | `ARCJET_KEY` | Arcjet-Key | empfohlen |
 | `SMTP_HOST` / `SMTP_PORT` | `smtp.strato.de` / `465` | für E-Mails |
 | `SMTP_USER` / `SMTP_PASSWORD` | Postfach-Adresse und Postfach-Passwort | für E-Mails |

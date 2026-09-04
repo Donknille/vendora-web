@@ -2,7 +2,7 @@
 // enforcement and client display and is trivially testable.
 //
 // Model (per product decision): new accounts get a TRIAL with full access for
-// TRIAL_DAYS. After that, without an active PRO subscription (19.90 €/month) the
+// TRIAL_DAYS. After that, without an active PRO subscription (9.99 €/month) the
 // account is FREE and READ-ONLY: existing data can be viewed and existing
 // documents (invoice PDFs, DSGVO data export) can be re-downloaded at any time,
 // but nothing new can be created — including generating the EÜR/GuV year
@@ -13,10 +13,24 @@ export type Plan = "free" | "trial" | "pro";
 // Length of the free trial for new accounts (days).
 export const TRIAL_DAYS = 42;
 
-// List price of Bilanz-Buddy Pro in cents. The authoritative amount charged is the
-// Stripe Price behind STRIPE_PRICE_ID; this constant exists so the platform's
-// own revenue can be reported without reading anything from user data.
-export const PRO_PRICE_CENTS = 1990;
+// Bruttopreis von Bilanz-Buddy Pro in Cent — der Betrag, den die Kundin zahlt
+// und der in der Oberflaeche steht. Abgerechnet wird der Stripe-Price hinter
+// STRIPE_PRICE_ID; diese Konstante ist die Quelle fuer Anzeige und eigene
+// Umsatzzahlen, ohne dafuer Nutzerdaten zu lesen.
+export const PRO_PRICE_CENTS = 999;
+
+// Umsatzsteuer auf die Abo-Leistung (Regelsteuersatz). Seit dem Verzicht auf
+// die Kleinunternehmerregelung ist sie im Preis enthalten und wird abgefuehrt.
+export const VAT_RATE = 0.19;
+
+/**
+ * Nettoanteil des Bruttopreises in Cent.
+ *
+ * Die Umsatzsteuer ist ein durchlaufender Posten: der eigene Erloes ist der
+ * Nettoanteil, nicht der Zahlbetrag. Gerundet wie Stripe bei
+ * `tax_behavior: "inclusive"` — 999 / 1,19 = 839,50 → 839, Steueranteil 160.
+ */
+export const PRO_PRICE_NET_CENTS = Math.round(PRO_PRICE_CENTS / (1 + VAT_RATE));
 
 /** Whether the plan may create new records / generate the GuV. FREE is read-only. */
 export function canCreate(plan: Plan): boolean {

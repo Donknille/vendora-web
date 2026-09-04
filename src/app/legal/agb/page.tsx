@@ -49,7 +49,7 @@ export default function AGBPage() {
         <h2 className="text-lg font-semibold text-primary mb-3">§ 4 Kostenlose Testphase und Abonnement</h2>
         <div className="space-y-2 text-sm text-secondary leading-relaxed">
           <p>(1) Nach der Registrierung erhält der Nutzer eine kostenlose Testphase von 42 Tagen (6 Wochen) mit vollem Funktionsumfang.</p>
-          <p>(2) Nach Ablauf der Testphase ist das kostenpflichtige Abonnement &bdquo;Bilanz-Buddy Pro&ldquo; (19,90 €/Monat) erforderlich, um neue Einträge anzulegen (insbesondere Aufträge, Rechnungen, Märkte, Verkäufe und Ausgaben) sowie um eine GuV-/EÜR-Jahresübersicht zu erstellen und Daten zu importieren.</p>
+          <p>(2) Nach Ablauf der Testphase ist das kostenpflichtige Abonnement &bdquo;Bilanz-Buddy Pro&ldquo; (9,99 €/Monat inkl. gesetzlicher Umsatzsteuer) erforderlich, um neue Einträge anzulegen (insbesondere Aufträge, Rechnungen, Märkte, Verkäufe und Ausgaben) sowie um eine GuV-/EÜR-Jahresübersicht zu erstellen und Daten zu importieren.</p>
           <p>(3) Ohne aktives Abonnement wird das Konto in den Nur-Lese-Modus versetzt. Bestehende Daten bleiben unbegrenzt einsehbar; bereits ausgestellte Rechnungen können weiterhin als PDF heruntergeladen und der vollständige Datenexport (Art. 20 DSGVO) kann jederzeit abgerufen werden.</p>
           <p>(4) Eine GuV-/EÜR-Jahresübersicht, die während der Testphase oder eines aktiven Abonnements bereits erstellt wurde, bleibt auch im Nur-Lese-Modus abrufbar. Für bislang nicht erstellte Jahre ist ein aktives Abonnement erforderlich.</p>
           <p>(5) Das Abonnement verlängert sich automatisch um jeweils einen Monat, sofern es nicht vor Ablauf gekündigt wird.</p>

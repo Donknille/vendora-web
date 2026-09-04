@@ -64,7 +64,7 @@ Bilanz-Buddy ist eine Multi-Tenant-SaaS für **kreative Markthändler:innen in D
 | Export/Backup | `api/export` (JSON-Bundle, schemaVersion 1), `api/migrate` (285 Z., komplett transaktionaler Restore mit Zod-Caps und Legacy-Feld-Mapping, Import nur bei `subscriptionStatus === "active"`). |
 | Settings/Konto | `settings/page.tsx` (642 Z., größte Datei). DSGVO-Löschung: Stripe-Customer löschen → Transaktion (alle Daten + Soft-Delete-Profil + Better-Auth-User). |
 | Admin | `admin/`-Seiten + APIs (`extend_trial`, `activate_subscription`, `block`, `unblock`), Gate via `ADMIN_EMAILS`. |
-| Billing | Abo 19,90 €/Monat (`STRIPE_PRICE_ID` aus der Env), 42-Tage-Trial (`provisioning.ts`), `requireWriteAccess()` gated alle Schreib-Endpunkte (Free = Nur-Lese). Webhook: signaturverifiziert, fail-closed, Event-ID-Dedup atomar vor der Verarbeitung, ausserhalb des Rate-Limits; Ablauf aus `current_period_end` (Rueckfall +30 Tage). *(Stand 04.09.2026 — die Zeile beschrieb vorher den Ist-Zustand vom Projektstart.)* |
+| Billing | Abo 9,99 €/Monat brutto inkl. 19 % USt. (`STRIPE_PRICE_ID` aus der Env), 42-Tage-Trial (`provisioning.ts`), `requireWriteAccess()` gated alle Schreib-Endpunkte (Free = Nur-Lese). Webhook: signaturverifiziert, fail-closed, Event-ID-Dedup atomar vor der Verarbeitung, ausserhalb des Rate-Limits; Ablauf aus `current_period_end` (Rueckfall +30 Tage). *(Stand 04.09.2026 — die Zeile beschrieb vorher den Ist-Zustand vom Projektstart.)* |
 
 **Tote Pfade:** `api/customers` + `useCustomers()` (nie aufgerufen), `api/invoice-number` (kein UI-Caller), `app_settings`-Tabelle + Settings-PUT (Theme/Sprache liegen in localStorage). **Nicht existent trotz Doku:** Produktkatalog/`api/products`, `docs/known-issues.md`, `docs/security-policy.md`, `docs/database-schema.md`, `docs/stripe-integration.md`, `docs/development-workflow.md`.
 
@@ -181,7 +181,7 @@ Vorab: Branch `claude/pwa-offline-marktmodus-of3xb2` sichten; Verwertbares über
 ### Phase 4 — Monetarisierungs-Umbau
 
 > **⚠ Bei der Umsetzung geändert (Inhaber-Entscheidung, ersetzt die Vorschläge unten):**
-> **Ein Preis – Bilanz-Buddy Pro = 19,90 €/Monat für alles**, mit **42-Tage-Trial** (Vollzugriff)
+> **Ein Preis – Bilanz-Buddy Pro = 9,99 €/Monat brutto (inkl. 19 % USt.) für alles**, mit **42-Tage-Trial** (Vollzugriff)
 > für neue Nutzer. Nach Trial ohne Zahlung: **Free = Nur-Lese** – ansehen und
 > **bestehende Belege (Rechnungs-PDFs) + DSGVO-Datenexport herunterladen** immer möglich,
 > aber **nichts Neues anlegen** (Create-Endpoints → 403 `PRO_REQUIRED`); das schließt die

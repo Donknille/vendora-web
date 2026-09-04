@@ -40,16 +40,17 @@ export function PricingBox() {
       <div className="flex items-baseline justify-center gap-1 mb-4 relative">
         <span className="text-5xl font-bold text-primary tabular-nums">
           {reduceMotion || !inView ? (
-            "19,90 €"
+            "9,99 €"
           ) : (
             <>
-              <CountUp end={19.9} duration={1.2} decimals={2} decimal="," />
+              <CountUp end={9.99} duration={1.2} decimals={2} decimal="," />
               {" €"}
             </>
           )}
         </span>
         <span className="text-muted">/Monat</span>
       </div>
+      <p className="-mt-3 mb-4 text-xs text-faint relative">inkl. 19 % USt.</p>
       <ul className="space-y-2 text-sm text-secondary text-left mb-6 relative">
         {FEATURES.map((f) => (
           <li key={f} className="flex items-center gap-2">

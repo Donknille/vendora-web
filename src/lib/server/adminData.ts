@@ -13,7 +13,12 @@ import {
 } from "./schema";
 import { session } from "./auth-schema";
 import { getStripe } from "./stripe";
-import { PRO_PRICE_CENTS, getEffectivePlan, type Plan } from "@/lib/plan";
+import {
+  PRO_PRICE_CENTS,
+  PRO_PRICE_NET_CENTS,
+  getEffectivePlan,
+  type Plan,
+} from "@/lib/plan";
 
 /**
  * The ONLY data source the admin area is allowed to read from.
@@ -261,7 +266,10 @@ export async function getPlatformRevenue(): Promise<PlatformRevenue> {
   const payingAccounts = Number(paying);
   return {
     payingAccounts,
-    monthlyRecurringCents: payingAccounts * PRO_PRICE_CENTS,
+    // Erloes ist der NETTO-Anteil: die im Preis enthaltene Umsatzsteuer wird
+    // abgefuehrt, sie ist kein Einkommen. Mit dem Bruttopreis gerechnet stuende
+    // die Kennzahl um 19 % zu hoch.
+    monthlyRecurringCents: payingAccounts * PRO_PRICE_NET_CENTS,
     pricePerAccountCents: PRO_PRICE_CENTS,
   };
 }

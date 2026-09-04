@@ -37,7 +37,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="mt-3 text-sm text-faint">Keine Kreditkarte nötig. Danach 19,90 €/Monat.</p>
+        <p className="mt-3 text-sm text-faint">Keine Kreditkarte nötig. Danach 9,99 €/Monat inkl. USt.</p>
       </header>
 
       {/* Features Grid */}

@@ -32,7 +32,7 @@ export default function ImpressumPage() {
       <Card>
         <h2 className="text-lg font-semibold text-primary mb-3">Umsatzsteuer</h2>
         <p className="text-sm text-secondary">
-          Kleinunternehmer gemäß § 19 UStG. Es wird keine Umsatzsteuer berechnet und daher auch nicht ausgewiesen.
+          Die angegebenen Preise verstehen sich inklusive der gesetzlichen Umsatzsteuer von 19 %.
         </p>
       </Card>
 

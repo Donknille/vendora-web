@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
             <p className="text-2xl font-bold text-green-600">
               {formatCurrency(revenue.monthlyRecurringCents)}
             </p>
-            <p className="text-xs text-muted">wiederkehrend pro Monat</p>
+            <p className="text-xs text-muted">wiederkehrend pro Monat (netto)</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-primary">{revenue.payingAccounts}</p>
@@ -143,7 +143,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
         <p className="text-xs text-faint mt-3">
-          Hochgerechnet aus zahlenden Konten × Listenpreis. Maßgeblich abgerechnet wird über Stripe.
+          Hochgerechnet aus zahlenden Konten × Listenpreis, abzüglich der enthaltenen Umsatzsteuer.
+          Maßgeblich abgerechnet wird über Stripe.
         </p>
       </Card>
 
