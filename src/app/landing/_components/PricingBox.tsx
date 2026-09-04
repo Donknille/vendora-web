@@ -40,10 +40,10 @@ export function PricingBox() {
       <div className="flex items-baseline justify-center gap-1 mb-4 relative">
         <span className="text-5xl font-bold text-primary tabular-nums">
           {reduceMotion || !inView ? (
-            "9,99 €"
+            "14,99 €"
           ) : (
             <>
-              <CountUp end={9.99} duration={1.2} decimals={2} decimal="," />
+              <CountUp end={14.99} duration={1.2} decimals={2} decimal="," />
               {" €"}
             </>
           )}

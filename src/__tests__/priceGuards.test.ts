@@ -12,7 +12,7 @@ const read = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
  * Der Preis steht an sieben Stellen im Quelltext — Landing-Header, Preisbox,
  * AGB, Abo-Banner (zweisprachig) und Woerterbuch (zweisprachig) — und keine
  * davon kann `PRO_PRICE_CENTS` importieren, weil es Fliesstext ist. Beim
- * Wechsel von 19,90 € auf 9,99 € im September 2026 war genau das die Arbeit:
+ * Wechsel von 19,90 € auf 14,99 € im September 2026 war genau das die Arbeit:
  * jede Kopie von Hand finden. Was hier steht, faengt die vergessene achte.
  */
 
@@ -33,7 +33,7 @@ const DE_FILES = [
 const EN_FILES = ["src/components/ui/SubscriptionBanner.tsx", "src/lib/i18n.ts"];
 
 /**
- * „9,99 €/Monat" — aber das Woerterbuch schreibt das Euro-Zeichen als
+ * „14,99 €/Monat" — aber das Woerterbuch schreibt das Euro-Zeichen als
  * `€`-Escape. Der Punkt in der zweiten Alternative deckt den Backslash
  * ab, damit beide Schreibweisen gefunden werden.
  */

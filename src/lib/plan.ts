@@ -2,7 +2,7 @@
 // enforcement and client display and is trivially testable.
 //
 // Model (per product decision): new accounts get a TRIAL with full access for
-// TRIAL_DAYS. After that, without an active PRO subscription (9.99 €/month) the
+// TRIAL_DAYS. After that, without an active PRO subscription (14.99 €/month) the
 // account is FREE and READ-ONLY: existing data can be viewed and existing
 // documents (invoice PDFs, DSGVO data export) can be re-downloaded at any time,
 // but nothing new can be created — including generating the EÜR/GuV year
@@ -17,7 +17,7 @@ export const TRIAL_DAYS = 42;
 // und der in der Oberflaeche steht. Abgerechnet wird der Stripe-Price hinter
 // STRIPE_PRICE_ID; diese Konstante ist die Quelle fuer Anzeige und eigene
 // Umsatzzahlen, ohne dafuer Nutzerdaten zu lesen.
-export const PRO_PRICE_CENTS = 999;
+export const PRO_PRICE_CENTS = 1499;
 
 // Umsatzsteuer auf die Abo-Leistung (Regelsteuersatz). Seit dem Verzicht auf
 // die Kleinunternehmerregelung ist sie im Preis enthalten und wird abgefuehrt.
@@ -28,7 +28,7 @@ export const VAT_RATE = 0.19;
  *
  * Die Umsatzsteuer ist ein durchlaufender Posten: der eigene Erloes ist der
  * Nettoanteil, nicht der Zahlbetrag. Gerundet wie Stripe bei
- * `tax_behavior: "inclusive"` — 999 / 1,19 = 839,50 → 839, Steueranteil 160.
+ * `tax_behavior: "inclusive"` — 1499 / 1,19 = 1259,66 → 1260, Steueranteil 239.
  */
 export const PRO_PRICE_NET_CENTS = Math.round(PRO_PRICE_CENTS / (1 + VAT_RATE));
 
