@@ -73,3 +73,16 @@ describe("die Varianten sind Absicht, nicht Versehen", () => {
     expect(ohneAbstand(styles.labelClass)).toBe(ohneAbstand(styles.labelTight));
   });
 });
+
+describe("Fokus bleibt sichtbar", () => {
+  it("kein Produktquelltext traegt ein unbedingtes outline-none", () => {
+    // `outline-none` ohne `focus:`/`focus-visible:` davor entfernt den
+    // Fokusring dauerhaft. Fuenf Seiten trugen genau diese Variante als
+    // lokale Kopie von inputClass — und der Guard oben sah sie nicht, weil
+    // sich die Kette in genau diesem einen Token unterschied.
+    const offenders = collectProductSources()
+      .filter((f) => /(^|[\s"'`])outline-none/m.test(readFileSync(f, "utf8")))
+      .map(rel);
+    expect(offenders).toEqual([]);
+  });
+});

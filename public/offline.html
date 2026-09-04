@@ -19,10 +19,13 @@
         text-align: center;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         background: #fafafa;
-        color: #1a1a1a;
+        color: #0f1522;
       }
       @media (prefers-color-scheme: dark) {
-        body { background: #121212; color: #ededed; }
+        body { background: #0f1522; color: #ffffff; }
+      }
+      @media (prefers-color-scheme: dark) {
+        button { background: #d4af37; }
       }
       img { width: 140px; height: auto; opacity: 0.9; }
       h1 { font-size: 1.25rem; margin: 0.5rem 0 0; }
@@ -31,8 +34,9 @@
         margin-top: 0.5rem;
         border: 0;
         border-radius: 0.6rem;
-        background: #d4af37;
-        color: #1a1a1a;
+        /* BRAND_GOLD_ON_LIGHT aus brand.ts; im Dunkeln das volle Gold. */
+        background: #b8952f;
+        color: #ffffff;
         font: inherit;
         font-weight: 600;
         padding: 0.7rem 1.4rem;

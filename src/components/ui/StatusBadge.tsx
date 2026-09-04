@@ -1,16 +1,17 @@
 "use client";
 
 import { useLanguage } from "@/lib/context/LanguageContext";
+import { toneClasses, type Tone } from "@/lib/statusColors";
 
-const statusColors: Record<string, string> = {
-  open: "bg-orange-100 text-orange-800 border-orange-200",
-  paid: "bg-green-100 text-green-800 border-green-200",
-  shipped: "bg-blue-100 text-blue-800 border-blue-200",
-  delivered: "bg-green-100 text-green-800 border-green-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
+const statusTones: Record<string, Tone> = {
+  open: "orange",
+  paid: "green",
+  shipped: "blue",
+  delivered: "green",
+  cancelled: "red",
 };
 
-const statusLabels: Record<string, { en: string; de: string }> = {
+export const ORDER_STATUS_LABELS: Record<string, { en: string; de: string }> = {
   open: { en: "Open", de: "Offen" },
   paid: { en: "Paid", de: "Bezahlt" },
   shipped: { en: "Shipped", de: "Versendet" },
@@ -24,8 +25,8 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const { language } = useLanguage();
-  const colors = statusColors[status] ?? "bg-elevated text-faint border-line";
-  const label = statusLabels[status]?.[language] ?? status;
+  const colors = toneClasses(statusTones[status] ?? "neutral");
+  const label = ORDER_STATUS_LABELS[status]?.[language] ?? status;
 
   return (
     <span

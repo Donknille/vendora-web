@@ -4,19 +4,21 @@ import { formatCurrency, formatAmountInput, parseAmount, parseAmountOrNull, form
 // Money is integer cents throughout the app.
 
 describe("formatCurrency", () => {
-  it("formats positive cents with euro sign and comma", () => {
-    expect(formatCurrency(1250)).toBe("€12,50");
-    expect(formatCurrency(0)).toBe("€0,00");
-    expect(formatCurrency(100000)).toBe("€1000,00");
-    expect(formatCurrency(5)).toBe("€0,05");
+  it("formats cents German-style: grouped, comma, symbol after", () => {
+    expect(formatCurrency(1250)).toBe("12,50\u00A0€");
+    expect(formatCurrency(0)).toBe("0,00\u00A0€");
+    expect(formatCurrency(100000)).toBe("1.000,00\u00A0€");
+    expect(formatCurrency(5)).toBe("0,05\u00A0€");
+    expect(formatCurrency(123456789)).toBe("1.234.567,89\u00A0€");
   });
 
   it("formats negative cents", () => {
-    expect(formatCurrency(-550)).toBe("€-5,50");
+    expect(formatCurrency(-550)).toBe("-5,50\u00A0€");
+    expect(formatCurrency(-100000)).toBe("-1.000,00\u00A0€");
   });
 
   it("uses custom currency symbol", () => {
-    expect(formatCurrency(1000, "$")).toBe("$10,00");
+    expect(formatCurrency(1000, "$")).toBe("10,00\u00A0$");
   });
 });
 

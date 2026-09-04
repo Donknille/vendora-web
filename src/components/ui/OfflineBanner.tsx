@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { WifiOff } from "lucide-react";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 export function OfflineBanner() {
+  const { t } = useLanguage();
   const [isOffline, setIsOffline] = useState(() =>
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
@@ -23,9 +25,14 @@ export function OfflineBanner() {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-2 bg-brand-primary px-4 py-2 text-sm font-medium text-white">
+    // Im Fluss des Layouts (nicht `fixed`): Als Overlay verdeckte die Leiste
+    // Logo und Seitentitel, weil <main> keinen Abstand nach oben hatte.
+    <div
+      role="status"
+      className="flex shrink-0 items-center justify-center gap-2 bg-brand-primary px-4 py-2 text-sm font-medium text-white"
+    >
       <WifiOff className="h-4 w-4" />
-      <span>Keine Internetverbindung</span>
+      <span>{t.common.offline}</span>
     </div>
   );
 }

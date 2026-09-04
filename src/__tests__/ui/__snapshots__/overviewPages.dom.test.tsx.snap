@@ -102,7 +102,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
     class="grid grid-cols-1 gap-4 md:grid-cols-3"
   >
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
     >
       <p
         class="text-sm text-faint"
@@ -110,13 +110,13 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
         Umsatz
       </p>
       <p
-        class="mt-1 text-2xl font-bold text-green-600"
+        class="mt-1 text-2xl font-bold text-income"
       >
-        €86,50
+        86,50 €
       </p>
     </div>
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
     >
       <p
         class="text-sm text-faint"
@@ -124,13 +124,13 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
         Ausgaben
       </p>
       <p
-        class="mt-1 text-2xl font-bold text-brand-primary"
+        class="mt-1 text-2xl font-bold text-expense"
       >
-        €77,00
+        77,00 €
       </p>
     </div>
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
     >
       <p
         class="text-sm text-faint"
@@ -138,9 +138,9 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
         Nettogewinn
       </p>
       <p
-        class="mt-1 text-2xl font-bold text-green-600"
+        class="mt-1 text-2xl font-bold text-income"
       >
-        €9,50
+        9,50 €
       </p>
     </div>
   </div>
@@ -148,7 +148,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
     class="grid grid-cols-3 gap-4"
   >
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm text-center"
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm text-center"
     >
       <p
         class="text-2xl font-bold text-primary"
@@ -162,7 +162,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
       </p>
     </div>
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm text-center"
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm text-center"
     >
       <p
         class="text-2xl font-bold text-primary"
@@ -176,7 +176,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
       </p>
     </div>
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm text-center"
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm text-center"
     >
       <p
         class="text-2xl font-bold text-primary"
@@ -191,7 +191,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
     </div>
   </div>
   <div
-    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+    class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
   >
     <h2
       class="mb-4 text-lg font-semibold text-primary"
@@ -245,19 +245,19 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
               2026
             </td>
             <td
-              class="py-2.5 pr-4 text-right text-green-600"
+              class="py-2.5 pr-4 text-right text-income"
             >
-              €86,50
+              86,50 €
             </td>
             <td
-              class="py-2.5 pr-4 text-right text-brand-primary"
+              class="py-2.5 pr-4 text-right text-expense"
             >
-              €77,00
+              77,00 €
             </td>
             <td
-              class="py-2.5 text-right font-medium text-green-600"
+              class="py-2.5 text-right font-medium text-income"
             >
-              €9,50
+              9,50 €
             </td>
           </tr>
         </tbody>
@@ -265,7 +265,7 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
     </div>
   </div>
   <div
-    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+    class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
   >
     <h2
       class="mb-4 text-lg font-semibold text-primary"
@@ -285,9 +285,9 @@ exports[`dashboard > rendert die Kennzahlen unveraendert 1`] = `
             Frühlingsmarkt
           </span>
           <span
-            class="shrink-0 font-medium text-green-600"
+            class="shrink-0 font-medium text-income"
           >
-            €7,00
+            7,00 €
           </span>
         </div>
         <div
@@ -343,7 +343,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
     </button>
   </div>
   <div
-    class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm "
+    class="bg-surface rounded-2xl p-4 border border-line shadow-sm "
   >
     <div
       class="flex items-center justify-between"
@@ -358,7 +358,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
       <p
         class="text-2xl font-bold text-brand-primary"
       >
-        €77,00
+        77,00 €
       </p>
     </div>
   </div>
@@ -366,7 +366,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
     class="space-y-3"
   >
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm flex items-center justify-between gap-4"
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm flex items-center justify-between gap-4"
     >
       <div
         class="min-w-0 flex-1"
@@ -380,7 +380,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
             Ton, 25 kg
           </h3>
           <span
-            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 border-zinc-500/20"
           >
             Sonstiges
           </span>
@@ -397,7 +397,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
         <p
           class="text-sm font-semibold text-brand-primary"
         >
-          €32,00
+          32,00 €
         </p>
         <button
           aria-label="Ausgabe löschen"
@@ -436,7 +436,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
       </div>
     </div>
     <div
-      class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm flex items-center justify-between gap-4"
+      class="bg-surface rounded-2xl p-4 border border-line shadow-sm flex items-center justify-between gap-4"
     >
       <div
         class="min-w-0 flex-1"
@@ -450,7 +450,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
             Standgebühr – Frühlingsmarkt
           </h3>
           <span
-            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-orange-500/10 text-orange-400 border-orange-500/20"
+            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20"
           >
             Standgebühren / Raumkosten
           </span>
@@ -496,7 +496,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
         <p
           class="text-sm font-semibold text-brand-primary"
         >
-          €45,00
+          45,00 €
         </p>
       </div>
     </div>
@@ -590,7 +590,7 @@ exports[`markets — Liste > rendert die Marktliste unveraendert 1`] = `
         href="/markets/market-1"
       >
         <div
-          class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm hover:border-line-hover transition-colors cursor-pointer"
+          class="bg-surface rounded-2xl p-4 border border-line shadow-sm hover:border-line-hover transition-colors cursor-pointer"
         >
           <div
             class="flex items-start justify-between gap-4"
@@ -607,7 +607,7 @@ exports[`markets — Liste > rendert die Marktliste unveraendert 1`] = `
                   Frühlingsmarkt
                 </h3>
                 <span
-                  class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-500/10 text-green-600"
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
                 >
                   Zugesagt
                 </span>
@@ -730,14 +730,14 @@ exports[`markets — Liste > rendert die Marktliste unveraendert 1`] = `
               >
                 Verkäufe
                 : 
-                €52,00
+                52,00 €
               </p>
               <p
-                class="text-sm font-semibold text-brand-primary"
+                class="text-sm font-semibold text-expense"
               >
                 Gewinn
                 : 
-                €-5,00
+                -5,00 €
               </p>
             </div>
           </div>
@@ -864,7 +864,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
       href="/orders/order-1"
     >
       <div
-        class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm hover:border-line-hover transition-colors cursor-pointer"
+        class="bg-surface rounded-2xl p-4 border border-line shadow-sm hover:border-line-hover transition-colors cursor-pointer"
       >
         <div
           class="flex items-start justify-between gap-4"
@@ -881,7 +881,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
                 Anna Beispiel
               </h3>
               <span
-                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 border-orange-200"
+                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-medium bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20"
               >
                 Offen
               </span>
@@ -965,7 +965,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
             <p
               class="text-sm font-semibold text-green-600"
             >
-              €34,50
+              34,50 €
             </p>
           </div>
         </div>
@@ -975,7 +975,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
       href="/orders/order-2"
     >
       <div
-        class="bg-surface rounded-2xl p-4 border border-black/12 dark:border-white/10 shadow-sm hover:border-line-hover transition-colors cursor-pointer"
+        class="bg-surface rounded-2xl p-4 border border-line shadow-sm hover:border-line-hover transition-colors cursor-pointer"
       >
         <div
           class="flex items-start justify-between gap-4"
@@ -992,7 +992,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
                 Anna Beispiel
               </h3>
               <span
-                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 border-green-200"
+                class="inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-medium bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
               >
                 Bezahlt
               </span>
@@ -1076,7 +1076,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
             <p
               class="text-sm font-semibold text-green-600"
             >
-              €34,50
+              34,50 €
             </p>
           </div>
         </div>

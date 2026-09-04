@@ -30,11 +30,21 @@ export function MonthlyChart({
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value) || 0)}
-          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          contentStyle={{
+            fontSize: 12,
+            borderRadius: 8,
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-line-hover)",
+            color: "var(--color-primary)",
+          }}
+          itemStyle={{ color: "var(--color-primary)" }}
+          labelStyle={{ color: "var(--color-secondary)" }}
+          cursor={{ fill: "var(--color-hover)" }}
         />
         <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="revenue" name={revenueLabel} fill="#16a34a" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="expenses" name={expensesLabel} fill="#ef4444" radius={[3, 3, 0, 0]} />
+        {/* Dieselben Töne wie Kacheln und Tabelle (globals.css) — kein eigenes Rot. */}
+        <Bar dataKey="revenue" name={revenueLabel} fill="var(--color-income)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="expenses" name={expensesLabel} fill="var(--color-expense)" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

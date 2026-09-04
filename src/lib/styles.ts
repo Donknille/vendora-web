@@ -35,7 +35,7 @@
 
 /** Das gerundete Feld mit eigener Eingabefläche. Märkte, Einstellungen, Ausgaben. */
 export const inputClass =
-  "w-full rounded-xl border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
+  "w-full rounded-xl border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
 /** Das Standardfeld der Formularseiten (Aufträge). */
 export const inputSurface =
@@ -45,9 +45,9 @@ export const inputSurface =
 export const inputNested =
   "w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors";
 
-/** Feld der Anmelde-/Registrierungsseiten — größer, ohne Fokusring. */
+/** Feld der Anmelde-/Registrierungsseiten — größer. */
 export const inputAuth =
-  "w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition";
+  "w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition";
 
 // ── Beschriftungen ─────────────────────────────────────────
 

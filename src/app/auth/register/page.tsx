@@ -133,8 +133,8 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.email}</label>
-            <input
+            <label htmlFor="register-1" className="block text-sm text-faint mb-1">{t.auth.email}</label>
+            <input id="register-1"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -145,8 +145,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.password}</label>
-            <input
+            <label htmlFor="register-2" className="block text-sm text-faint mb-1">{t.auth.password}</label>
+            <input id="register-2"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -157,8 +157,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.confirmPassword}</label>
-            <input
+            <label htmlFor="register-3" className="block text-sm text-faint mb-1">{t.auth.confirmPassword}</label>
+            <input id="register-3"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

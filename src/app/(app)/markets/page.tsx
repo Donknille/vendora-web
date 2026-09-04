@@ -129,7 +129,7 @@ export default function MarketsPage() {
               <p className="text-sm text-faint">
                 {t.markets.sales}: {formatCurrency(totalSales)}
               </p>
-              <p className={`text-sm font-semibold ${profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+              <p className={`text-sm font-semibold ${profit >= 0 ? "text-income" : "text-expense"}`}>
                 {t.markets.profit}: {formatCurrency(profit)}
               </p>
             </div>

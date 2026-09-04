@@ -28,12 +28,14 @@ export default async function AppLayout({
   // query may start. See AuthUserSeed for why that waterfall was harmful.
   return (
     <AuthUserSeed userId={session.user.id}>
-      <div className="flex h-screen">
+      <div className="flex h-screen flex-col">
         <OfflineBanner />
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6 pb-20 md:pb-6">
-          {children}
-        </main>
+        <div className="flex min-h-0 flex-1">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto p-6 pb-20 md:pb-6">
+            {children}
+          </main>
+        </div>
       </div>
     </AuthUserSeed>
   );

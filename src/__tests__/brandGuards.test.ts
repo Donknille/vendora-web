@@ -9,6 +9,7 @@ import {
   APP_NAME_TAIL,
   APP_SLUG,
   BRAND_GOLD,
+  BRAND_GOLD_ON_LIGHT,
   BRAND_OBSIDIAN,
 } from "@/lib/brand";
 import { DARK_COOKIE, LANGUAGE_COOKIE, THEME_COOKIE } from "@/lib/prefs";
@@ -105,6 +106,28 @@ describe("public/ kennt keine Imports und muss trotzdem synchron bleiben", () =>
     const key = `${APP_SLUG}-last-register`;
     expect(read("public/offline.html")).toContain(`localStorage.getItem("${key}")`);
     expect(read("src/app/(app)/markets/[id]/kasse/page.tsx")).toContain(`"${key}"`);
+  });
+});
+
+describe("Die Farben stehen in CSS ein zweites Mal und muessen mit brand.ts gehen", () => {
+  // globals.css kann brand.ts nicht importieren. Hell bekommt den
+  // abgedunkelten Ton (Kontrast auf Weiss), dunkel das volle Gold.
+  it("globals.css: helles Gold in :root, volles Gold in .dark", () => {
+    const css = read("src/app/globals.css");
+    const root = css.slice(css.indexOf(":root {"), css.indexOf(".dark {"));
+    const dark = css.slice(css.indexOf(".dark {"), css.indexOf("@theme {"));
+    expect(root).toContain(`--color-brand-primary: ${BRAND_GOLD_ON_LIGHT};`);
+    expect(dark).toContain(`--color-brand-primary: ${BRAND_GOLD};`);
+    expect(dark).toContain(`--color-page: ${BRAND_OBSIDIAN};`);
+  });
+
+  it("die beiden Rueckfallseiten ohne Build tragen dieselben Toene", () => {
+    // offline.html und global-error.tsx bringen ihr CSS selbst mit.
+    for (const rel of ["public/offline.html", "src/app/global-error.tsx"]) {
+      const text = read(rel).toUpperCase();
+      expect(text, `${rel}: dunkler Grund`).toContain(BRAND_OBSIDIAN.toUpperCase());
+      expect(text, `${rel}: Gold auf hellem Grund`).toContain(BRAND_GOLD_ON_LIGHT.toUpperCase());
+    }
   });
 });
 

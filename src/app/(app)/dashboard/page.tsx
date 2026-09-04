@@ -225,7 +225,7 @@ export default function DashboardPage() {
         {/* Revenue */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.revenue}</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">
+          <p className="mt-1 text-2xl font-bold text-income">
             {formatCurrency(report.incomeTotal)}
           </p>
         </Card>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
         {/* Expenses */}
         <Card>
           <p className="text-sm text-faint">{t.dashboard.expenses}</p>
-          <p className="mt-1 text-2xl font-bold text-brand-primary">
+          <p className="mt-1 text-2xl font-bold text-expense">
             {formatCurrency(report.expenseTotal)}
           </p>
         </Card>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
           <p className="text-sm text-faint">{t.dashboard.netProfit}</p>
           <p
             className={`mt-1 text-2xl font-bold ${
-              report.surplus >= 0 ? "text-green-600" : "text-brand-primary"
+              report.surplus >= 0 ? "text-income" : "text-expense"
             }`}
           >
             {formatCurrency(report.surplus)}
@@ -307,15 +307,15 @@ export default function DashboardPage() {
                     <td className="py-2.5 pr-4 text-secondary">
                       {t.months[row.monthIndex]} {row.year}
                     </td>
-                    <td className="py-2.5 pr-4 text-right text-green-600">
+                    <td className="py-2.5 pr-4 text-right text-income">
                       {formatCurrency(row.income)}
                     </td>
-                    <td className="py-2.5 pr-4 text-right text-brand-primary">
+                    <td className="py-2.5 pr-4 text-right text-expense">
                       {formatCurrency(row.expenses)}
                     </td>
                     <td
                       className={`py-2.5 text-right font-medium ${
-                        row.surplus >= 0 ? "text-green-600" : "text-brand-primary"
+                        row.surplus >= 0 ? "text-income" : "text-expense"
                       }`}
                     >
                       {formatCurrency(row.surplus)}
@@ -350,7 +350,7 @@ export default function DashboardPage() {
                     )}
                   </span>
                   <span
-                    className={`shrink-0 font-medium ${m.profit >= 0 ? "text-green-600" : "text-red-500"}`}
+                    className={`shrink-0 font-medium ${m.profit >= 0 ? "text-income" : "text-expense"}`}
                   >
                     {formatCurrency(m.profit)}
                   </span>

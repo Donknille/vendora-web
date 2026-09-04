@@ -35,7 +35,9 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { TseNotice } from "@/components/markets/TseNotice";
-import { iconButtonMuted } from "@/lib/styles";
+import { iconButtonMuted, inputSurface } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { NotFoundState } from "@/components/ui/NotFoundState";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
@@ -68,9 +70,7 @@ export default function MarketDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
+      <ListSkeleton count={3} />
     );
   }
 
@@ -80,9 +80,7 @@ export default function MarketDetailPage() {
 
   if (!market) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.markets.noMarkets}</p>
-      </div>
+      <NotFoundState backHref="/markets" />
     );
   }
 
@@ -227,8 +225,6 @@ export default function MarketDetailPage() {
     return serverCount + pendingCountForItem;
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -337,7 +333,7 @@ export default function MarketDetailPage() {
                   <span className="text-sm font-semibold text-primary truncate w-full text-center">
                     {item.name}
                   </span>
-                  <span className="text-lg font-bold text-green-600">
+                  <span className="text-lg font-bold text-income">
                     {formatCurrency(item.price)}
                   </span>
                   {soldCount > 0 && (
@@ -371,7 +367,7 @@ export default function MarketDetailPage() {
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
-                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                <CheckCircle2 className="h-3 w-3 text-income" />
                 {language === "de" ? "Synchronisiert" : "Synced"}
               </span>
             )}
@@ -387,10 +383,10 @@ export default function MarketDetailPage() {
         {/* Add Sale Form */}
         {showAddSale && (
           <form onSubmit={handleAddSale} className="mb-4 space-y-3 rounded-lg border border-line bg-page p-3">
-            <input type="text" value={saleDescription} onChange={(e) => setSaleDescription(e.target.value)} className={inputClass} placeholder={t.markets.itemDescription} required />
+            <input type="text" value={saleDescription} onChange={(e) => setSaleDescription(e.target.value)} className={inputSurface} placeholder={t.markets.itemDescription} required />
             <div className="grid grid-cols-2 gap-3">
-              <input type="text" inputMode="decimal" value={saleAmount} onChange={(e) => setSaleAmount(e.target.value)} className={inputClass} placeholder={t.expenses.amount} required />
-              <input type="number" min="1" max="9999" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputClass} placeholder={t.orders.qty} />
+              <input type="text" inputMode="decimal" value={saleAmount} onChange={(e) => setSaleAmount(e.target.value)} className={inputSurface} placeholder={t.expenses.amount} required />
+              <input type="number" min="1" max="9999" value={saleQuantity} onChange={(e) => setSaleQuantity(e.target.value)} className={inputSurface} placeholder={t.orders.qty} />
             </div>
             <div className="flex items-center gap-2">
               <button type="submit" className="flex-1 rounded-lg bg-brand-primary py-2 text-sm font-medium text-white hover:bg-brand-primary/90 disabled:opacity-50 transition-colors">
@@ -441,7 +437,7 @@ export default function MarketDetailPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-green-600">
+                  <span className="text-sm font-medium text-income">
                     {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
                   </span>
                   <button onClick={() => setConfirmDeleteSaleId(sale.id)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
@@ -457,7 +453,7 @@ export default function MarketDetailPage() {
         {((sales && sales.length > 0) || unsyncedPending.length > 0) && (
           <div className="mt-3 border-t border-line pt-3 flex items-center justify-between text-sm font-medium">
             <span className="text-secondary">{t.orders.total}</span>
-            <span className="text-green-600">{formatCurrency(totalSales)}</span>
+            <span className="text-income">{formatCurrency(totalSales)}</span>
           </div>
         )}
       </Card>
@@ -497,7 +493,7 @@ export default function MarketDetailPage() {
           </div>
           <div className="flex items-center justify-between border-t border-line pt-2 font-medium">
             <span className="text-secondary">{t.markets.profit}</span>
-            <span className={`text-lg font-bold tabular-nums ${closing.profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+            <span className={`text-lg font-bold tabular-nums ${closing.profit >= 0 ? "text-income" : "text-expense"}`}>
               {formatCurrency(closing.profit)}
             </span>
           </div>
@@ -526,7 +522,7 @@ export default function MarketDetailPage() {
                     {t.markets.sales}:{" "}
                     <span className="text-primary tabular-nums">{formatCurrency(y.sales)}</span>
                   </span>
-                  <span className={`font-semibold tabular-nums ${y.profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+                  <span className={`font-semibold tabular-nums ${y.profit >= 0 ? "text-income" : "text-expense"}`}>
                     {formatCurrency(y.profit)}
                   </span>
                 </div>

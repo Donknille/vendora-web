@@ -16,19 +16,23 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { today, isoDay } from "@/lib/date";
-import { labelTight } from "@/lib/styles";
+import { labelTight, inputSurface } from "@/lib/styles";
+import { toneClasses, type Tone } from "@/lib/statusColors";
 
-const categoryColors: Record<EuerCategory, string> = {
-  wareneinkauf_material: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  standgebuehren_raumkosten: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  fahrtkosten: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  arbeitsmittel_gwg: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  verpackung: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  marketing: "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  versicherungen_beitraege: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  software_gebuehren: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-  sonstiges: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+const categoryTones: Record<EuerCategory, Tone> = {
+  wareneinkauf_material: "blue",
+  standgebuehren_raumkosten: "orange",
+  fahrtkosten: "amber",
+  arbeitsmittel_gwg: "yellow",
+  verpackung: "teal",
+  marketing: "pink",
+  versicherungen_beitraege: "purple",
+  software_gebuehren: "indigo",
+  sonstiges: "zinc",
 };
+const categoryColors = Object.fromEntries(
+  Object.entries(categoryTones).map(([k, tone]) => [k, toneClasses(tone)])
+) as Record<EuerCategory, string>;
 
 /** Year of a date-only or full ISO string, without going through Date(). */
 function yearOf(dateStr: string | null | undefined): number | null {
@@ -125,8 +129,6 @@ export default function ExpensesPage() {
     setDeleteId(null);
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   if (isLoading) return <div className="mx-auto max-w-2xl space-y-4"><Skeleton className="h-8 w-48" /><ListSkeleton count={4} /></div>;
   if (isError) return <div className="mx-auto max-w-2xl"><ErrorState onRetry={() => refetch()} /></div>;
@@ -202,14 +204,14 @@ export default function ExpensesPage() {
             </h2>
 
             <div>
-              <label className={labelTight}>
+              <label htmlFor="expense-1" className={labelTight}>
                 {t.expenses.description} *
               </label>
-              <input
+              <input id="expense-1"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
                 placeholder={t.expenses.whatSpent}
                 required
               />
@@ -217,41 +219,41 @@ export default function ExpensesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelTight}>
+                <label htmlFor="expense-2" className={labelTight}>
                   {t.expenses.amount} *
                 </label>
-                <input
+                <input id="expense-2"
                   type="text"
                   inputMode="decimal"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className={inputClass}
+                  className={inputSurface}
                   placeholder="0,00"
                   required
                 />
               </div>
 
               <div>
-                <label className={labelTight}>
+                <label htmlFor="expense-3" className={labelTight}>
                   {t.expenses.expenseDate}
                 </label>
-                <input
+                <input id="expense-3"
                   type="date"
                   value={expenseDate}
                   onChange={(e) => setExpenseDate(e.target.value)}
-                  className={inputClass}
+                  className={inputSurface}
                 />
               </div>
             </div>
 
             <div>
-              <label className={labelTight}>
+              <label htmlFor="expense-4" className={labelTight}>
                 {t.expenses.category}
               </label>
-              <select
+              <select id="expense-4"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as EuerCategory)}
-                className={inputClass}
+                className={inputSurface}
               >
                 {EUER_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>

@@ -76,20 +76,20 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.email}</label>
-            <input
+            <label htmlFor="login-1" className="block text-sm text-faint mb-1">{t.auth.email}</label>
+            <input id="login-1"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={inputAuth}
-              placeholder="deine@email.de"
+              placeholder={t.auth.emailPlaceholder}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.password}</label>
-            <input
+            <label htmlFor="login-2" className="block text-sm text-faint mb-1">{t.auth.password}</label>
+            <input id="login-2"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

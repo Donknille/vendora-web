@@ -28,6 +28,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { dayOf } from "@/lib/date";
 import { iconButton } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { NotFoundState } from "@/components/ui/NotFoundState";
 
 const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
@@ -56,9 +58,7 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
+      <ListSkeleton count={3} />
     );
   }
 
@@ -68,9 +68,7 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.orders.noOrders}</p>
-      </div>
+      <NotFoundState backHref="/orders" />
     );
   }
 

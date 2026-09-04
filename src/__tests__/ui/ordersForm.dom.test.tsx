@@ -89,8 +89,8 @@ describe("orders/new — Auftrag anlegen", () => {
     await user.type(itemPrice, "25,50");
 
     // 1 x 25,50 Zwischensumme, dazu 4,50 Versand aus dem Firmenprofil.
-    expect(screen.getByText("€25,50")).toBeInTheDocument();
-    expect(screen.getByText("€30,00")).toBeInTheDocument();
+    expect(screen.getByText("25,50 €")).toBeInTheDocument();
+    expect(screen.getByText("30,00 €")).toBeInTheDocument();
   });
 
   it("nimmt weitere Positionen auf und entfernt sie wieder", async () => {

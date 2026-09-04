@@ -34,7 +34,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ReferralCard } from "@/components/ReferralCard";
 import { InstallAppCard } from "@/components/pwa/InstallAppCard";
 import { today } from "@/lib/date";
-import { labelTight } from "@/lib/styles";
+import { labelTight, inputSurface } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
@@ -245,15 +246,13 @@ export default function SettingsPage() {
   // der Server entscheidet ohnehin.
   const importAllowed = sub == null || sub.plan === "pro";
 
-  const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   const isLoading = loadingProfile;
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
+      <div className="mx-auto max-w-2xl">
+        <ListSkeleton count={4} />
       </div>
     );
   }
@@ -349,26 +348,26 @@ export default function SettingsPage() {
 
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div>
-            <label className={labelTight}>
+            <label htmlFor="settings-1" className={labelTight}>
               {t.settings.companyName}
             </label>
-            <input
+            <input id="settings-1"
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder={t.settings.companyName}
             />
           </div>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="settings-2" className={labelTight}>
               {t.settings.address}
             </label>
-            <textarea
+            <textarea id="settings-2"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className={`${inputClass} resize-none`}
+              className={`${inputSurface} resize-none`}
               rows={2}
               placeholder={t.settings.address}
             />
@@ -376,40 +375,40 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelTight}>
+              <label htmlFor="settings-3" className={labelTight}>
                 {t.settings.email}
               </label>
-              <input
+              <input id="settings-3"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
                 placeholder={t.settings.email}
               />
             </div>
             <div>
-              <label className={labelTight}>
+              <label htmlFor="settings-4" className={labelTight}>
                 {t.settings.phone}
               </label>
-              <input
+              <input id="settings-4"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
                 placeholder={t.settings.phone}
               />
             </div>
           </div>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="settings-5" className={labelTight}>
               {t.settings.taxNote}
             </label>
-            <input
+            <input id="settings-5"
               type="text"
               value={taxNote}
               onChange={(e) => setTaxNote(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder={t.settings.taxNotePlaceholder}
             />
           </div>
@@ -429,28 +428,28 @@ export default function SettingsPage() {
           </label>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="settings-6" className={labelTight}>
               {language === "de" ? "Zusätzlicher Steuerhinweis" : "Additional tax note"}
             </label>
-            <input
+            <input id="settings-6"
               type="text"
               value={smallBusinessNote}
               onChange={(e) => setSmallBusinessNote(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder={t.settings.taxNotePlaceholder}
             />
           </div>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="settings-7" className={labelTight}>
               {t.settings.defaultShippingCost}
             </label>
-            <input
+            <input id="settings-7"
               type="text"
               inputMode="decimal"
               value={defaultShippingCost}
               onChange={(e) => setDefaultShippingCost(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder="0,00"
             />
           </div>

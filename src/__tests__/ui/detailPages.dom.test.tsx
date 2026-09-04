@@ -59,12 +59,10 @@ describe("markets/[id] — Marktdetail", () => {
     // Umsatz 2x15,00 + 1x22,00 = 52,00. Kosten 45,00 + 12,00 = 57,00.
     // Gewinn also -5,00 — ein Minus ist hier ein gueltiges Ergebnis und darf
     // beim Umbau nicht zu 0,00 werden.
-    expect(screen.getAllByText("€52,00").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("€45,00").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("€12,00").length).toBeGreaterThan(0);
-    // formatCurrency setzt das Minus hinter das Waehrungszeichen: "€-5,00".
-    // Sieht ungewohnt aus, ist aber der Bestand — festhalten, nicht angleichen.
-    expect(screen.getAllByText("€-5,00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("52,00 €").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("45,00 €").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("12,00 €").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("-5,00 €").length).toBeGreaterThan(0);
   });
 
   it("listet die erfassten Verkaeufe", async () => {

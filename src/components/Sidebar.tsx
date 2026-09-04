@@ -54,7 +54,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-screen">
+      <aside className="hidden md:flex flex-col w-64 bg-surface border-r border-line h-full">
         {/* Logo */}
         <div className="flex items-center px-5 py-4 border-b border-line">
           <Logo className="h-9 w-auto" />
@@ -132,14 +132,17 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              // min-w-0 + truncate: sechs deutsche Labels ("Einstellungen")
+              // brauchen sonst ~420 px und sprengen ein 360-px-Display.
+              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
                 active
                   ? "text-brand-primary"
                   : "text-muted hover:text-secondary"
               }`}
+              aria-current={active ? "page" : undefined}
             >
-              <Icon className="h-5 w-5" />
-              <span>{t.tabs[item.labelKey]}</span>
+              <Icon className="h-5 w-5 shrink-0" />
+              <span className="max-w-full truncate">{t.tabs[item.labelKey]}</span>
             </Link>
           );
         })}

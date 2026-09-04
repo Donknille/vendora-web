@@ -52,12 +52,14 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-1"
         >
           Kundenname
            *
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-1"
           list="customer-suggestions"
           placeholder="Kundenname"
           type="text"
@@ -77,11 +79,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-2"
         >
           E-Mail (optional)
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-2"
           placeholder="E-Mail (optional)"
           type="email"
           value="anna@example.org"
@@ -90,12 +94,14 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-3"
         >
           Straße + Hausnr.
            *
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-3"
           placeholder="Musterstraße 1"
           type="text"
           value="Musterstraße 1"
@@ -109,12 +115,14 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-edit-4"
           >
             PLZ
              *
           </label>
           <input
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-edit-4"
             placeholder="12345"
             type="text"
             value="10115"
@@ -125,12 +133,14 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-edit-5"
           >
             Ort
              *
           </label>
           <input
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-edit-5"
             placeholder="Musterstadt"
             type="text"
             value="Berlin"
@@ -140,11 +150,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-6"
         >
           Land
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-6"
           placeholder="Land"
           type="text"
           value="Deutschland"
@@ -153,11 +165,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-7"
         >
           Datum
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-7"
           type="date"
           value="2026-03-01"
         />
@@ -165,11 +179,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-edit-8"
         >
           Leistungsdatum
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-edit-8"
           type="date"
           value="2026-03-05"
         />
@@ -187,11 +203,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-edit-9"
           >
             Zahlungsart
           </label>
           <select
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-edit-9"
           >
             <option
               value=""
@@ -230,11 +248,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-edit-10"
           >
             Bezahlt am
           </label>
           <input
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-edit-10"
             type="date"
             value=""
           />
@@ -302,11 +322,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-edit-item-0-11"
                 >
                   Anz.
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-edit-item-0-11"
                   min="1"
                   type="number"
                   value="1"
@@ -317,11 +339,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-edit-item-0-12"
                 >
                   Preis
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-edit-item-0-12"
                   inputmode="decimal"
                   placeholder="0,00"
                   type="text"
@@ -385,11 +409,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-edit-item-1-11"
                 >
                   Anz.
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-edit-item-1-11"
                   min="1"
                   type="number"
                   value="2"
@@ -400,11 +426,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-edit-item-1-12"
                 >
                   Preis
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-edit-item-1-12"
                   inputmode="decimal"
                   placeholder="0,00"
                   type="text"
@@ -463,7 +491,7 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
           <span
             class="text-sm text-primary"
           >
-            €30,00
+            30,00 €
           </span>
         </div>
         <div
@@ -495,7 +523,7 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
           <span
             class="text-lg font-bold text-green-600"
           >
-            €34,50
+            34,50 €
           </span>
         </div>
       </div>
@@ -503,11 +531,13 @@ exports[`orders/[id]/edit — Auftrag bearbeiten > rendert das befuellte Formula
     <div>
       <label
         class="block text-sm font-medium text-secondary mb-1.5"
+        for="order-edit-14"
       >
         Notizen
       </label>
       <textarea
         class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        id="order-edit-14"
         placeholder="Zusätzliche Notizen (optional)"
         rows="3"
       >
@@ -576,12 +606,14 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-1"
         >
           Kundenname
            *
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-1"
           list="customer-suggestions"
           placeholder="Kundenname"
           type="text"
@@ -601,11 +633,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-2"
         >
           E-Mail (optional)
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-2"
           placeholder="E-Mail (optional)"
           type="email"
           value=""
@@ -614,12 +648,14 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-3"
         >
           Straße + Hausnr.
            *
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-3"
           placeholder="Musterstraße 1"
           type="text"
           value=""
@@ -633,12 +669,14 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-new-4"
           >
             PLZ
              *
           </label>
           <input
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-new-4"
             placeholder="12345"
             type="text"
             value=""
@@ -649,12 +687,14 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
         >
           <label
             class="block text-sm font-medium text-secondary mb-1.5"
+            for="order-new-5"
           >
             Ort
              *
           </label>
           <input
             class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="order-new-5"
             placeholder="Musterstadt"
             type="text"
             value=""
@@ -664,11 +704,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-6"
         >
           Land
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-6"
           placeholder="Land"
           type="text"
           value=""
@@ -677,11 +719,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-7"
         >
           Datum
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-7"
           type="date"
           value="2026-03-15"
         />
@@ -689,11 +733,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
       <div>
         <label
           class="block text-sm font-medium text-secondary mb-1.5"
+          for="order-new-8"
         >
           Leistungsdatum
         </label>
         <input
           class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="order-new-8"
           type="date"
           value=""
         />
@@ -765,11 +811,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-new-item-0-9"
                 >
                   Anz.
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-new-item-0-9"
                   min="1"
                   type="number"
                   value="1"
@@ -780,11 +828,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
               >
                 <label
                   class="block text-xs text-muted mb-1"
+                  for="order-new-item-0-10"
                 >
                   Preis
                 </label>
                 <input
                   class="w-full rounded-lg border border-line bg-page px-3 py-2 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+                  id="order-new-item-0-10"
                   inputmode="decimal"
                   placeholder="0,00"
                   type="text"
@@ -809,7 +859,7 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
           <span
             class="text-sm text-primary"
           >
-            €0,00
+            0,00 €
           </span>
         </div>
         <div
@@ -841,7 +891,7 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
           <span
             class="text-lg font-bold text-green-600"
           >
-            €0,00
+            0,00 €
           </span>
         </div>
       </div>
@@ -849,11 +899,13 @@ exports[`orders/new — Auftrag anlegen > rendert das leere Formular unveraender
     <div>
       <label
         class="block text-sm font-medium text-secondary mb-1.5"
+        for="order-new-12"
       >
         Notizen
       </label>
       <textarea
         class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        id="order-new-12"
         placeholder="Zusätzliche Notizen (optional)"
         rows="3"
       />

@@ -65,8 +65,8 @@ export default function ResetPasswordPage() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.email}</label>
-            <input
+            <label htmlFor="reset-1" className="block text-sm text-faint mb-1">{t.auth.email}</label>
+            <input id="reset-1"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useLanguage } from "@/lib/context/LanguageContext";
 
 // TODO: Integrate Sentry for production error tracking once account is set up.
 // Replace console.error calls below with Sentry.captureException().
@@ -13,6 +14,31 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+}
+
+/**
+ * Die Standardanzeige im Fehlerfall. Eine Klassen-Komponente kann keine
+ * Hooks nutzen, deshalb liegt die Übersetzung in dieser Funktions-Komponente:
+ * Die Grenze sitzt innerhalb des LanguageProvider, die Texte kommen aus dem
+ * Wörterbuch — vorher stand hier englischer Text in einer deutschen App.
+ */
+function DefaultFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
+  const { t } = useLanguage();
+  return (
+    <div role="alert" className="flex items-center justify-center py-20">
+      <div className="text-center space-y-3">
+        <p className="text-lg font-semibold text-primary">{t.common.unexpectedError}</p>
+        <p className="text-sm text-muted">{error?.message || t.common.unexpectedErrorSub}</p>
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+        >
+          {t.common.retry}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -35,24 +61,11 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-
       return (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center space-y-3">
-            <p className="text-lg font-semibold text-primary">
-              Something went wrong
-            </p>
-            <p className="text-sm text-muted">
-              {this.state.error?.message || "An unexpected error occurred."}
-            </p>
-            <button
-              onClick={() => this.setState({ hasError: false, error: null })}
-              className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-            >
-              Try again
-            </button>
-          </div>
-        </div>
+        <DefaultFallback
+          error={this.state.error}
+          onReset={() => this.setState({ hasError: false, error: null })}
+        />
       );
     }
 

@@ -80,11 +80,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > login 1`] 
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="login-1"
         >
           E-Mail
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="login-1"
           placeholder="deine@email.de"
           required=""
           type="email"
@@ -94,11 +96,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > login 1`] 
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="login-2"
         >
           Passwort
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="login-2"
           placeholder="••••••••"
           required=""
           type="password"
@@ -218,11 +222,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="register-1"
         >
           E-Mail
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="register-1"
           placeholder="deine@email.de"
           required=""
           type="email"
@@ -232,11 +238,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="register-2"
         >
           Passwort
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="register-2"
           placeholder="Mindestens 8 Zeichen"
           required=""
           type="password"
@@ -246,11 +254,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > register 1
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="register-3"
         >
           Passwort bestätigen
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="register-3"
           placeholder="Passwort wiederholen"
           required=""
           type="password"
@@ -353,11 +363,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > reset-pass
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="reset-1"
         >
           E-Mail
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="reset-1"
           placeholder="deine@email.de"
           required=""
           type="email"
@@ -412,11 +424,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > update-pas
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="update-pw-1"
         >
           Neues Passwort
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="update-pw-1"
           placeholder="Mindestens 8 Zeichen"
           required=""
           type="password"
@@ -426,11 +440,13 @@ exports[`auth-Seiten — Snapshots vor der Styling-Zusammenfuehrung > update-pas
       <div>
         <label
           class="block text-sm text-faint mb-1"
+          for="update-pw-2"
         >
           Passwort bestätigen
         </label>
         <input
-          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary transition"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-3 text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition"
+          id="update-pw-2"
           placeholder="Passwort wiederholen"
           required=""
           type="password"

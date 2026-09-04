@@ -9,7 +9,10 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel, type MarketStatus } from "@/lib/marketCalendar";
-import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
+import { ghostBrandButton, iconButtonMuted, inputNested, labelTight, inputSurface } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface QuickItem {
   name: string;
@@ -22,7 +25,7 @@ export default function EditMarketPage() {
   const params = useParams();
   const marketId = params.id as string;
 
-  const { data: markets, isLoading } = useMarkets();
+  const { data: markets, isLoading, isError, refetch } = useMarkets();
   const updateMarket = useUpdateMarket();
 
   const market = markets?.find((m) => m.id === marketId);
@@ -80,17 +83,17 @@ export default function EditMarketPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
+      <ListSkeleton count={3} />
     );
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
 
   if (!market) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.markets.noMarkets}</p>
-      </div>
+      <NotFoundState backHref="/markets" />
     );
   }
 
@@ -122,8 +125,6 @@ export default function EditMarketPage() {
     }
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -146,23 +147,23 @@ export default function EditMarketPage() {
             {t.markets.eventDetails}
           </h2>
           <div>
-            <label className={labelTight}>
+            <label htmlFor="market-edit-1" className={labelTight}>
               {t.markets.marketName} *
             </label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder={t.markets.marketName} required />
+            <input id="market-edit-1" type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputSurface} placeholder={t.markets.marketName} required />
           </div>
           <div>
-            <label className={labelTight}>{t.orders.orderDate}</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+            <label htmlFor="market-edit-2" className={labelTight}>{t.orders.orderDate}</label>
+            <input id="market-edit-2" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputSurface} />
           </div>
           <div>
-            <label className={labelTight}>{t.markets.location}</label>
-            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder={t.markets.location} />
+            <label htmlFor="market-edit-3" className={labelTight}>{t.markets.location}</label>
+            <input id="market-edit-3" type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputSurface} placeholder={t.markets.location} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelTight}>Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as MarketStatus)} className={inputClass}>
+              <label htmlFor="market-edit-4" className={labelTight}>Status</label>
+              <select id="market-edit-4" value={status} onChange={(e) => setStatus(e.target.value as MarketStatus)} className={inputSurface}>
                 {MARKET_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {statusLabel(s, language === "de")}
@@ -171,10 +172,10 @@ export default function EditMarketPage() {
               </select>
             </div>
             <div>
-              <label className={labelTight}>
+              <label htmlFor="market-edit-5" className={labelTight}>
                 {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
               </label>
-              <input type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} className={inputClass} />
+              <input id="market-edit-5" type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} className={inputSurface} />
             </div>
           </div>
         </div>
@@ -184,12 +185,12 @@ export default function EditMarketPage() {
           <h2 className="text-sm font-medium text-faint uppercase tracking-wider">{t.markets.costs}</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelTight}>{t.markets.standFee}</label>
-              <input type="text" inputMode="decimal" value={standFee} onChange={(e) => setStandFee(e.target.value)} className={inputClass} placeholder="0,00" />
+              <label htmlFor="market-edit-6" className={labelTight}>{t.markets.standFee}</label>
+              <input id="market-edit-6" type="text" inputMode="decimal" value={standFee} onChange={(e) => setStandFee(e.target.value)} className={inputSurface} placeholder="0,00" />
             </div>
             <div>
-              <label className={labelTight}>{t.markets.travelCost}</label>
-              <input type="text" inputMode="decimal" value={travelCost} onChange={(e) => setTravelCost(e.target.value)} className={inputClass} placeholder="0,00" />
+              <label htmlFor="market-edit-7" className={labelTight}>{t.markets.travelCost}</label>
+              <input id="market-edit-7" type="text" inputMode="decimal" value={travelCost} onChange={(e) => setTravelCost(e.target.value)} className={inputSurface} placeholder="0,00" />
             </div>
           </div>
         </div>
@@ -230,8 +231,8 @@ export default function EditMarketPage() {
 
         {/* Notes */}
         <div>
-          <label className={labelTight}>{t.markets.notes}</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputClass} resize-none`} rows={3} placeholder={t.markets.additionalNotes} />
+          <label htmlFor="market-edit-8" className={labelTight}>{t.markets.notes}</label>
+          <textarea id="market-edit-8" value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputSurface} resize-none`} rows={3} placeholder={t.markets.additionalNotes} />
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

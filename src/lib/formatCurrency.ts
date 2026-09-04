@@ -2,7 +2,7 @@
 // The only conversions between euros and cents happen at the UI boundary:
 //   - parseAmount:       user euro input  -> integer cents   (form submit)
 //   - formatAmountInput: integer cents    -> "12,34" string  (prefill editable inputs)
-//   - formatCurrency:    integer cents    -> "€12,34" string  (display)
+//   - formatCurrency:    integer cents    -> "12,34 €" string (display, mit Tausenderpunkt)
 // No floating-point arithmetic is performed on amounts after parseAmount.
 
 /** Formats integer cents as a plain comma-decimal string, e.g. 1234 -> "12,34". */
@@ -15,9 +15,24 @@ export function formatAmountInput(cents: number): string {
   return `${sign}${euros},${String(rem).padStart(2, "0")}`;
 }
 
-/** Formats integer cents with a currency symbol, e.g. 1234 -> "€12,34". */
+/**
+ * Anzeigeformat mit Tausenderpunkt und nachgestelltem Symbol, wie es im
+ * Deutschen üblich ist: 1234 -> "12,34 €", 123456789 -> "1.234.567,89 €",
+ * -550 -> "-5,50 €". Vorher stand das Symbol vorn ("€12,34") und ab vier
+ * Stellen fehlte jede Gruppierung — auf der Steuerseite unlesbar. Zwischen
+ * Zahl und Symbol steht ein geschütztes Leerzeichen.
+ */
 export function formatCurrency(cents: number, currency: string = "€"): string {
-  return `${currency}${formatAmountInput(cents)}`;
+  return `${formatAmountDisplay(cents)}\u00A0${currency}`;
+}
+
+/** Wie formatAmountInput, aber mit Tausenderpunkt: 123456789 -> "1.234.567,89". */
+export function formatAmountDisplay(cents: number): string {
+  const plain = formatAmountInput(cents);
+  const sign = plain.startsWith("-") ? "-" : "";
+  const [euros, rem] = plain.slice(sign.length).split(",");
+  const grouped = euros.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${sign}${grouped},${rem}`;
 }
 
 /**

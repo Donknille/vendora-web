@@ -14,8 +14,17 @@
    aendert, aendert beide Stellen (und public/offline.html, das ohne Build
    ausgeliefert wird). */
 :root {
-  --color-brand-primary: #D4AF37;
-  --color-brand-primaryLt: rgba(212, 175, 55, 0.1);
+  /* BRAND_GOLD_ON_LIGHT: das Markenbuch-Gold #D4AF37 erreicht auf Weiß nur
+     ~2,1:1 Kontrast — jeder Knopf und jede goldene Zahl fiel durch WCAG AA.
+     Auf hellem Grund gilt deshalb der abgedunkelte Ton (~3:1, reicht für
+     Knöpfe und große Zahlen; Fließtext bleibt in den Textfarben). */
+  --color-brand-primary: #B8952F;
+  --color-brand-primaryLt: rgba(184, 149, 47, 0.1);
+
+  /* Einnahmen/Ausgaben: EIN Paar für Kennzahlen, Tabellen und das Diagramm.
+     Vorher stand Rot im Diagramm und Gold in der Tabelle direkt darunter. */
+  --color-income: #16a34a;
+  --color-expense: var(--color-brand-primary);
 
   --color-page: #FAFAFA;
   --color-surface: #FFFFFF;
@@ -45,8 +54,12 @@
 
 /* ── Dark mode (Obsidian + Gold) ── */
 .dark {
+  /* BRAND_GOLD: auf Obsidian hat das volle Gold genug Kontrast. */
   --color-brand-primary: #D4AF37;
   --color-brand-primaryLt: rgba(212, 175, 55, 0.12);
+
+  --color-income: #4ade80;
+  --color-expense: var(--color-brand-primary);
 
   --color-page: #0F1522;
   --color-surface: #101624;
@@ -96,6 +109,20 @@
   --color-faint: var(--color-faint);
   --color-holder: var(--color-holder);
   --color-plus: var(--color-plus);
+  --color-income: var(--color-income);
+  --color-expense: var(--color-expense);
+}
+
+/* Sichtbarer Tastaturfokus für alles Klickbare. Eingabefelder bringen ihren
+   Ring selbst mit (styles.ts); Knöpfe und Links hatten bisher keinen. */
+@layer base {
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+  }
 }
 
 /* Force font-display: swap */

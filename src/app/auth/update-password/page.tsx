@@ -84,8 +84,8 @@ function UpdatePasswordForm() {
           )}
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.newPassword}</label>
-            <input
+            <label htmlFor="update-pw-1" className="block text-sm text-faint mb-1">{t.auth.newPassword}</label>
+            <input id="update-pw-1"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -96,8 +96,8 @@ function UpdatePasswordForm() {
           </div>
 
           <div>
-            <label className="block text-sm text-faint mb-1">{t.auth.confirmPassword}</label>
-            <input
+            <label htmlFor="update-pw-2" className="block text-sm text-faint mb-1">{t.auth.confirmPassword}</label>
+            <input id="update-pw-2"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

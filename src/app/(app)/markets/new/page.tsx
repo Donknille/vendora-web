@@ -9,7 +9,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { parseAmount } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel, type MarketStatus } from "@/lib/marketCalendar";
 import { today } from "@/lib/date";
-import { ghostBrandButton, iconButtonMuted, inputNested, labelTight } from "@/lib/styles";
+import { ghostBrandButton, iconButtonMuted, inputNested, labelTight, inputSurface } from "@/lib/styles";
 
 interface QuickItem {
   name: string;
@@ -77,8 +77,6 @@ export default function NewMarketPage() {
     }
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -103,53 +101,53 @@ export default function NewMarketPage() {
           </h2>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="market-new-1" className={labelTight}>
               {t.markets.marketName} *
             </label>
-            <input
+            <input id="market-new-1"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder={t.markets.marketName}
               required
             />
           </div>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="market-new-2" className={labelTight}>
               {t.orders.orderDate}
             </label>
-            <input
+            <input id="market-new-2"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
             />
           </div>
 
           <div>
-            <label className={labelTight}>
+            <label htmlFor="market-new-3" className={labelTight}>
               {t.markets.location}
             </label>
-            <input
+            <input id="market-new-3"
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className={inputClass}
+              className={inputSurface}
               placeholder={t.markets.location}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelTight}>
+              <label htmlFor="market-new-4" className={labelTight}>
                 Status
               </label>
-              <select
+              <select id="market-new-4"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as MarketStatus)}
-                className={inputClass}
+                className={inputSurface}
               >
                 {MARKET_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -159,14 +157,14 @@ export default function NewMarketPage() {
               </select>
             </div>
             <div>
-              <label className={labelTight}>
+              <label htmlFor="market-new-5" className={labelTight}>
                 {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
               </label>
-              <input
+              <input id="market-new-5"
                 type="date"
                 value={applicationDeadline}
                 onChange={(e) => setApplicationDeadline(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
               />
             </div>
           </div>
@@ -180,28 +178,28 @@ export default function NewMarketPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelTight}>
+              <label htmlFor="market-new-6" className={labelTight}>
                 {t.markets.standFee}
               </label>
-              <input
+              <input id="market-new-6"
                 type="text"
                 inputMode="decimal"
                 value={standFee}
                 onChange={(e) => setStandFee(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
                 placeholder="0,00"
               />
             </div>
             <div>
-              <label className={labelTight}>
+              <label htmlFor="market-new-7" className={labelTight}>
                 {t.markets.travelCost}
               </label>
-              <input
+              <input id="market-new-7"
                 type="text"
                 inputMode="decimal"
                 value={travelCost}
                 onChange={(e) => setTravelCost(e.target.value)}
-                className={inputClass}
+                className={inputSurface}
                 placeholder="0,00"
               />
             </div>
@@ -274,13 +272,13 @@ export default function NewMarketPage() {
 
         {/* Notes */}
         <div>
-          <label className={labelTight}>
+          <label htmlFor="market-new-8" className={labelTight}>
             {t.markets.notes}
           </label>
-          <textarea
+          <textarea id="market-new-8"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className={`${inputClass} resize-none`}
+            className={`${inputSurface} resize-none`}
             rows={3}
             placeholder={t.markets.additionalNotes}
           />

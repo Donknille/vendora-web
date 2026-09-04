@@ -139,15 +139,15 @@ export default function SteuerPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <p className="text-sm text-faint">{isDE ? "Einnahmen" : "Income"}</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{formatCurrency(report.incomeTotal)}</p>
+          <p className="mt-1 text-2xl font-bold text-income">{formatCurrency(report.incomeTotal)}</p>
         </Card>
         <Card>
           <p className="text-sm text-faint">{isDE ? "Ausgaben" : "Expenses"}</p>
-          <p className="mt-1 text-2xl font-bold text-brand-primary">{formatCurrency(report.expenseTotal)}</p>
+          <p className="mt-1 text-2xl font-bold text-expense">{formatCurrency(report.expenseTotal)}</p>
         </Card>
         <Card>
           <p className="text-sm text-faint">{isDE ? "Überschuss" : "Surplus"}</p>
-          <p className={`mt-1 text-2xl font-bold ${report.surplus >= 0 ? "text-green-600" : "text-red-500"}`}>
+          <p className={`mt-1 text-2xl font-bold ${report.surplus >= 0 ? "text-income" : "text-expense"}`}>
             {formatCurrency(report.surplus)}
           </p>
         </Card>
@@ -167,7 +167,7 @@ export default function SteuerPage() {
           </div>
           <div className="flex justify-between border-t border-line pt-2 font-medium">
             <span className="text-secondary">{isDE ? "Summe" : "Total"}</span>
-            <span className="text-green-600">{formatCurrency(report.incomeTotal)}</span>
+            <span className="text-income">{formatCurrency(report.incomeTotal)}</span>
           </div>
         </div>
       </Card>
@@ -189,7 +189,7 @@ export default function SteuerPage() {
             ))}
             <div className="flex justify-between border-t border-line pt-2 font-medium">
               <span className="text-secondary">{isDE ? "Summe" : "Total"}</span>
-              <span className="text-brand-primary">{formatCurrency(report.expenseTotal)}</span>
+              <span className="text-expense">{formatCurrency(report.expenseTotal)}</span>
             </div>
           </div>
         )}
@@ -220,7 +220,7 @@ export default function SteuerPage() {
                         <span className="ml-1 text-xs text-muted">· {euerLabel(l.category, language)}</span>
                       )}
                     </td>
-                    <td className={`py-2 text-right ${l.kind === "expense" ? "text-brand-primary" : "text-green-600"}`}>
+                    <td className={`py-2 text-right ${l.kind === "expense" ? "text-expense" : "text-income"}`}>
                       {l.kind === "expense" ? "−" : ""}{formatCurrency(l.amount)}
                     </td>
                   </tr>

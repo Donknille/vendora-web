@@ -24,6 +24,9 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, formatDate, parseAmountOrNull } from "@/lib/formatCurrency";
 import { TseNotice } from "@/components/markets/TseNotice";
 import { iconButtonMuted } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function MarketPosPage() {
   const { t, language } = useLanguage();
@@ -31,7 +34,7 @@ export default function MarketPosPage() {
   const params = useParams();
   const marketId = params.id as string;
 
-  const { data: markets, isLoading } = useMarkets();
+  const { data: markets, isLoading, isError, refetch } = useMarkets();
   const { data: sales } = useMarketSales(marketId);
   const deleteSale = useDeleteMarketSale();
   const canCreate = useCanCreate();
@@ -75,18 +78,26 @@ export default function MarketPosPage() {
 
   if (isLoading) {
     return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-page p-6">
+        <div className="w-full max-w-md">
+          <ListSkeleton count={3} />
+        </div>
+      </div>
+    );
+  }
+  // Ein gescheiterter Abruf ist kein "Markt existiert nicht" — an der Kasse
+  // hiesse das sonst, jemand steht am Stand und glaubt, der Markt sei weg.
+  if (isError) {
+    return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-page">
-        <p className="text-muted">{t.common.loading}</p>
+        <ErrorState onRetry={() => refetch()} />
       </div>
     );
   }
   if (!market) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-page">
-        <p className="text-muted">{t.markets.noMarkets}</p>
-        <Link href="/markets" className="text-brand-primary underline">
-          {t.markets.title}
-        </Link>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-page">
+        <NotFoundState backHref="/markets" />
       </div>
     );
   }
@@ -250,7 +261,7 @@ export default function MarketPosPage() {
               {unsynced.length}
             </span>
           ) : (
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-income" />
           )}
           <Link
             href={`/markets/${marketId}`}
@@ -342,7 +353,7 @@ export default function MarketPosPage() {
                   <span className="w-full truncate text-center text-base font-semibold text-primary">
                     {item.name}
                   </span>
-                  <span className="text-xl font-bold text-green-600">
+                  <span className="text-xl font-bold text-income">
                     {formatCurrency(item.price)}
                   </span>
                   {count > 0 && (
@@ -364,7 +375,7 @@ export default function MarketPosPage() {
             value={freeDesc}
             onChange={(e) => setFreeDesc(e.target.value)}
             placeholder={t.markets.itemDescription}
-            className="w-full rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+            className="w-full rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             required
           />
           <div className="flex gap-2">
@@ -374,7 +385,7 @@ export default function MarketPosPage() {
               value={freeAmount}
               onChange={(e) => setFreeAmount(e.target.value)}
               placeholder={t.expenses.amount}
-              className="flex-1 rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+              className="flex-1 rounded-lg border border-line bg-input px-3 py-2.5 text-sm text-primary placeholder-holder focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               required
             />
             <button
@@ -402,7 +413,7 @@ export default function MarketPosPage() {
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-faint">{t.orders.total}</p>
-            <p className="text-sm font-bold text-green-600 tabular-nums">{formatCurrency(closing.total)}</p>
+            <p className="text-sm font-bold text-income tabular-nums">{formatCurrency(closing.total)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -416,7 +427,7 @@ export default function MarketPosPage() {
           </button>
           <div className="ml-auto text-right">
             <span className="text-[11px] uppercase tracking-wide text-faint">{t.markets.profit}: </span>
-            <span className={`text-sm font-bold tabular-nums ${closing.profit >= 0 ? "text-green-600" : "text-brand-primary"}`}>
+            <span className={`text-sm font-bold tabular-nums ${closing.profit >= 0 ? "text-income" : "text-expense"}`}>
               {formatCurrency(closing.profit)}
             </span>
           </div>

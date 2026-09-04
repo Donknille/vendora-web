@@ -52,12 +52,14 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-edit-1"
         >
           Marktname
            *
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-edit-1"
           placeholder="Marktname"
           required=""
           type="text"
@@ -67,11 +69,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-edit-2"
         >
           Datum
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-edit-2"
           type="date"
           value="2026-03-14"
         />
@@ -79,11 +83,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-edit-3"
         >
           Ort (optional)
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-edit-3"
           placeholder="Ort (optional)"
           type="text"
           value="Marktplatz Musterstadt"
@@ -95,11 +101,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-edit-4"
           >
             Status
           </label>
           <select
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-edit-4"
           >
             <option
               value="open"
@@ -131,11 +139,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-edit-5"
           >
             Bewerbungsfrist
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-edit-5"
             type="date"
             value="2026-02-01"
           />
@@ -156,11 +166,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-edit-6"
           >
             Standgebühr
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-edit-6"
             inputmode="decimal"
             placeholder="0,00"
             type="text"
@@ -170,11 +182,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-edit-7"
           >
             Fahrtkosten
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-edit-7"
             inputmode="decimal"
             placeholder="0,00"
             type="text"
@@ -347,11 +361,13 @@ exports[`markets/[id]/edit — Markt bearbeiten > rendert das befuellte Formular
     <div>
       <label
         class="mb-1 block text-sm font-medium text-secondary"
+        for="market-edit-8"
       >
         Notizen
       </label>
       <textarea
-        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        id="market-edit-8"
         placeholder="Zusätzliche Notizen (optional)"
         rows="3"
       >
@@ -420,12 +436,14 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-new-1"
         >
           Marktname
            *
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-new-1"
           placeholder="Marktname"
           required=""
           type="text"
@@ -435,11 +453,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-new-2"
         >
           Datum
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-new-2"
           type="date"
           value="2026-03-15"
         />
@@ -447,11 +467,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
       <div>
         <label
           class="mb-1 block text-sm font-medium text-secondary"
+          for="market-new-3"
         >
           Ort (optional)
         </label>
         <input
-          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+          class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+          id="market-new-3"
           placeholder="Ort (optional)"
           type="text"
           value=""
@@ -463,11 +485,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-new-4"
           >
             Status
           </label>
           <select
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-new-4"
           >
             <option
               value="open"
@@ -499,11 +523,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-new-5"
           >
             Bewerbungsfrist
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-new-5"
             type="date"
             value=""
           />
@@ -524,11 +550,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-new-6"
           >
             Standgebühr
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-new-6"
             inputmode="decimal"
             placeholder="0,00"
             type="text"
@@ -538,11 +566,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
         <div>
           <label
             class="mb-1 block text-sm font-medium text-secondary"
+            for="market-new-7"
           >
             Fahrtkosten
           </label>
           <input
-            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"
+            class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
+            id="market-new-7"
             inputmode="decimal"
             placeholder="0,00"
             type="text"
@@ -619,11 +649,13 @@ exports[`markets/new — Markt anlegen > rendert das leere Formular unveraendert
     <div>
       <label
         class="mb-1 block text-sm font-medium text-secondary"
+        for="market-new-8"
       >
         Notizen
       </label>
       <textarea
-        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        class="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors resize-none"
+        id="market-new-8"
         placeholder="Zusätzliche Notizen (optional)"
         rows="3"
       />

@@ -42,7 +42,7 @@ export default function GlobalError({
             display: flex; align-items: center; justify-content: center;
             padding: 1rem;
             font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-            background: #fafafa; color: #18181b;
+            background: #fafafa; color: #0f1522;
           }
           .card {
             max-width: 28rem; width: 100%; text-align: center;
@@ -55,11 +55,13 @@ export default function GlobalError({
           button {
             border: 0; border-radius: .5rem; padding: .5rem 1rem;
             font: inherit; font-size: .875rem; font-weight: 500;
-            background: #d4af37; color: #fff; cursor: pointer;
+            /* BRAND_GOLD_ON_LIGHT aus brand.ts; dunkel das volle Gold. */
+            background: #b8952f; color: #fff; cursor: pointer;
           }
           @media (prefers-color-scheme: dark) {
-            body { background: #09090b; color: #fafafa; }
-            .card { background: #18181b; border-color: rgba(255,255,255,.1); }
+            body { background: #0f1522; color: #ffffff; }
+            .card { background: #101624; border-color: rgba(255,255,255,.1); }
+            button { background: #d4af37; }
             p { color: #a1a1aa; }
           }
         `}</style>

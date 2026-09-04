@@ -57,7 +57,7 @@ describe("dashboard", () => {
     // Umsatz = bezahlter Auftrag (34,50) + Marktverkaeufe (2x15,00 + 22,00).
     // Der Betrag steht in der Kennzahlenkachel und noch einmal in der
     // Monatstabelle — beides ist gewollt, deshalb nur "kommt vor".
-    expect(await screen.findAllByText("€86,50")).not.toHaveLength(0);
+    expect(await screen.findAllByText("86,50 €")).not.toHaveLength(0);
     expect(container.firstChild).toMatchSnapshot();
   });
 
@@ -65,7 +65,7 @@ describe("dashboard", () => {
     stubFetch({ ...BASE_ROUTES, "/api/dashboard": EMPTY_PAYLOAD });
     renderWithProviders(<DashboardPage />, { route: "/dashboard" });
 
-    expect(await screen.findAllByText("€0,00")).not.toHaveLength(0);
+    expect(await screen.findAllByText("0,00 €")).not.toHaveLength(0);
   });
 
   it("unterscheidet einen gescheiterten Abruf vom leeren Ergebnis", async () => {

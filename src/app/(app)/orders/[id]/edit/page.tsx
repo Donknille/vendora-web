@@ -11,6 +11,9 @@ import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurr
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, isPaymentMethod } from "@/lib/payments";
 import { dayOf } from "@/lib/date";
 import { ghostBrandButton, iconButton, inputNested, inputSurface, labelClass } from "@/lib/styles";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface OrderItem {
   name: string;
@@ -24,7 +27,7 @@ export default function EditOrderPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data: orders, isLoading } = useOrders();
+  const { data: orders, isLoading, isError, refetch } = useOrders();
   const { data: customers } = useCustomers();
   const updateOrder = useUpdateOrder();
 
@@ -172,17 +175,17 @@ export default function EditOrderPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.common.loading}</p>
-      </div>
+      <ListSkeleton count={3} />
     );
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
 
   if (!order) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted">{t.orders.noOrders}</p>
-      </div>
+      <NotFoundState backHref="/orders" />
     );
   }
 
@@ -209,10 +212,10 @@ export default function EditOrderPage() {
           </h2>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-1" className={labelClass}>
               {t.orders.customerName} *
             </label>
-            <input
+            <input id="order-edit-1"
               type="text"
               list="customer-suggestions"
               value={customerName}
@@ -228,10 +231,10 @@ export default function EditOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-2" className={labelClass}>
               {t.orders.email}
             </label>
-            <input
+            <input id="order-edit-2"
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
@@ -241,10 +244,10 @@ export default function EditOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-3" className={labelClass}>
               {t.orders.street} *
             </label>
-            <input
+            <input id="order-edit-3"
               type="text"
               value={customerStreet}
               onChange={(e) => setCustomerStreet(e.target.value)}
@@ -255,10 +258,10 @@ export default function EditOrderPage() {
 
           <div className="flex gap-3">
             <div className="w-1/3">
-              <label className={labelClass}>
+              <label htmlFor="order-edit-4" className={labelClass}>
                 {t.orders.zip} *
               </label>
-              <input
+              <input id="order-edit-4"
                 type="text"
                 value={customerZip}
                 onChange={(e) => setCustomerZip(e.target.value)}
@@ -267,10 +270,10 @@ export default function EditOrderPage() {
               />
             </div>
             <div className="flex-1">
-              <label className={labelClass}>
+              <label htmlFor="order-edit-5" className={labelClass}>
                 {t.orders.city} *
               </label>
-              <input
+              <input id="order-edit-5"
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
@@ -281,10 +284,10 @@ export default function EditOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-6" className={labelClass}>
               {t.orders.country}
             </label>
-            <input
+            <input id="order-edit-6"
               type="text"
               value={customerCountry}
               onChange={(e) => setCustomerCountry(e.target.value)}
@@ -294,10 +297,10 @@ export default function EditOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-7" className={labelClass}>
               {t.orders.orderDate}
             </label>
-            <input
+            <input id="order-edit-7"
               type="date"
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
@@ -308,10 +311,10 @@ export default function EditOrderPage() {
           {/* Leistungsdatum: § 14 Abs. 4 Nr. 6 UStG. Aendert eine bereits
               ausgestellte Rechnung nicht — deren Snapshot ist unveraenderlich. */}
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-edit-8" className={labelClass}>
               {t.orders.serviceDateLabel}
             </label>
-            <input
+            <input id="order-edit-8"
               type="date"
               value={serviceDate}
               onChange={(e) => setServiceDate(e.target.value)}
@@ -327,10 +330,10 @@ export default function EditOrderPage() {
           {/* Payment (Zufluss for the EÜR) */}
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className={labelClass}>
+              <label htmlFor="order-edit-9" className={labelClass}>
                 {language === "de" ? "Zahlungsart" : "Payment method"}
               </label>
-              <select
+              <select id="order-edit-9"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
@@ -344,10 +347,10 @@ export default function EditOrderPage() {
               </select>
             </div>
             <div className="flex-1">
-              <label className={labelClass}>
+              <label htmlFor="order-edit-10" className={labelClass}>
                 {language === "de" ? "Bezahlt am" : "Paid on"}
               </label>
-              <input
+              <input id="order-edit-10"
                 type="date"
                 value={paidAt}
                 onChange={(e) => setPaidAt(e.target.value)}
@@ -389,10 +392,10 @@ export default function EditOrderPage() {
                   />
                   <div className="flex gap-2">
                     <div className="w-24">
-                      <label className="block text-xs text-muted mb-1">
+                      <label htmlFor={`order-edit-item-${index}-11`} className="block text-xs text-muted mb-1">
                         {t.orders.qty}
                       </label>
-                      <input
+                      <input id={`order-edit-item-${index}-11`}
                         type="number"
                         min="1"
                         value={item.quantity}
@@ -403,10 +406,10 @@ export default function EditOrderPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-muted mb-1">
+                      <label htmlFor={`order-edit-item-${index}-12`} className="block text-xs text-muted mb-1">
                         {t.orders.price}
                       </label>
-                      <input
+                      <input id={`order-edit-item-${index}-12`}
                         type="text"
                         inputMode="decimal"
                         value={item.price}
@@ -474,10 +477,10 @@ export default function EditOrderPage() {
 
         {/* Notes */}
         <div>
-          <label className={labelClass}>
+          <label htmlFor="order-edit-14" className={labelClass}>
             {t.orders.notes}
           </label>
-          <textarea
+          <textarea id="order-edit-14"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}

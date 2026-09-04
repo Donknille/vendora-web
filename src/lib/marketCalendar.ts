@@ -1,3 +1,4 @@
+import { toneClasses } from "@/lib/statusColors";
 // Pure helpers for the market calendar (Phase 3.4): status metadata, application
 // deadline state, and year-over-year comparison. No React / DB imports so it is
 // trivially unit-testable. Dates are ISO "YYYY-MM-DD" strings; "today" is always
@@ -34,15 +35,15 @@ export function statusLabel(status: string | null, de: boolean): string {
 export function statusClasses(status: string | null): string {
   switch (status) {
     case "confirmed":
-      return "bg-green-500/10 text-green-600";
+      return toneClasses("green");
     case "applied":
-      return "bg-amber-500/10 text-amber-600";
+      return toneClasses("amber");
     case "completed":
-      return "bg-brand-primary/10 text-brand-primary";
+      return toneClasses("brand");
     case "cancelled":
-      return "bg-red-500/10 text-red-500";
+      return toneClasses("red");
     default: // open
-      return "bg-elevated text-faint";
+      return toneClasses("neutral");
   }
 }
 

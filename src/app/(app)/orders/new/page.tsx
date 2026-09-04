@@ -156,10 +156,10 @@ export default function NewOrderPage() {
           </h2>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-1" className={labelClass}>
               {t.orders.customerName} *
             </label>
-            <input
+            <input id="order-new-1"
               type="text"
               list="customer-suggestions"
               value={customerName}
@@ -175,10 +175,10 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-2" className={labelClass}>
               {t.orders.email}
             </label>
-            <input
+            <input id="order-new-2"
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
@@ -188,10 +188,10 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-3" className={labelClass}>
               {t.orders.street} *
             </label>
-            <input
+            <input id="order-new-3"
               type="text"
               value={customerStreet}
               onChange={(e) => setCustomerStreet(e.target.value)}
@@ -202,10 +202,10 @@ export default function NewOrderPage() {
 
           <div className="flex gap-3">
             <div className="w-1/3">
-              <label className={labelClass}>
+              <label htmlFor="order-new-4" className={labelClass}>
                 {t.orders.zip} *
               </label>
-              <input
+              <input id="order-new-4"
                 type="text"
                 value={customerZip}
                 onChange={(e) => setCustomerZip(e.target.value)}
@@ -214,10 +214,10 @@ export default function NewOrderPage() {
               />
             </div>
             <div className="flex-1">
-              <label className={labelClass}>
+              <label htmlFor="order-new-5" className={labelClass}>
                 {t.orders.city} *
               </label>
-              <input
+              <input id="order-new-5"
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
@@ -228,10 +228,10 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-6" className={labelClass}>
               {t.orders.country}
             </label>
-            <input
+            <input id="order-new-6"
               type="text"
               value={customerCountry}
               onChange={(e) => setCustomerCountry(e.target.value)}
@@ -241,10 +241,10 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-7" className={labelClass}>
               {t.orders.orderDate}
             </label>
-            <input
+            <input id="order-new-7"
               type="date"
               value={orderDate}
               onChange={(e) => setOrderDate(e.target.value)}
@@ -255,10 +255,10 @@ export default function NewOrderPage() {
           {/* Leistungsdatum: § 14 Abs. 4 Nr. 6 UStG. Leer lassen ist erlaubt —
               dann gilt das Rechnungsdatum als Leistungsdatum. */}
           <div>
-            <label className={labelClass}>
+            <label htmlFor="order-new-8" className={labelClass}>
               {t.orders.serviceDateLabel}
             </label>
-            <input
+            <input id="order-new-8"
               type="date"
               value={serviceDate}
               onChange={(e) => setServiceDate(e.target.value)}
@@ -304,10 +304,10 @@ export default function NewOrderPage() {
                   />
                   <div className="flex gap-2">
                     <div className="w-24">
-                      <label className="block text-xs text-muted mb-1">
+                      <label htmlFor={`order-new-item-${index}-9`} className="block text-xs text-muted mb-1">
                         {t.orders.qty}
                       </label>
-                      <input
+                      <input id={`order-new-item-${index}-9`}
                         type="number"
                         min="1"
                         value={item.quantity}
@@ -318,10 +318,10 @@ export default function NewOrderPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-muted mb-1">
+                      <label htmlFor={`order-new-item-${index}-10`} className="block text-xs text-muted mb-1">
                         {t.orders.price}
                       </label>
-                      <input
+                      <input id={`order-new-item-${index}-10`}
                         type="text"
                         inputMode="decimal"
                         value={item.price}
@@ -389,10 +389,10 @@ export default function NewOrderPage() {
 
         {/* Notes */}
         <div>
-          <label className={labelClass}>
+          <label htmlFor="order-new-12" className={labelClass}>
             {t.orders.notes}
           </label>
-          <textarea
+          <textarea id="order-new-12"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
