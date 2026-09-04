@@ -18,6 +18,7 @@ import { Skeleton, ListSkeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
 // Alias: die Seite fuehrt eine lokale Konstante `today`.
 import { today as todayIso } from "@/lib/date";
+import { saleLineTotal } from "@/lib/saleMath";
 
 export default function MarketsPage() {
   const { t, language } = useLanguage();
@@ -57,7 +58,7 @@ export default function MarketsPage() {
   const renderMarketCard = (market: MarketEvent) => {
     const marketSales = salesByMarket[market.id] || [];
     const totalSales = marketSales.reduce(
-      (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
+      (sum: number, s) => sum + saleLineTotal(s),
       0
     );
     const standFee = Number(market.standFee) || 0;

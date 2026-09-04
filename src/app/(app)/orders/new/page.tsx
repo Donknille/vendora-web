@@ -10,6 +10,7 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { formatCurrency, parseAmount, formatAmountInput } from "@/lib/formatCurrency";
 import { today } from "@/lib/date";
 import { ghostBrandButton, iconButton, inputNested, inputSurface, labelClass } from "@/lib/styles";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface OrderItem {
   name: string;
@@ -128,8 +129,8 @@ export default function NewOrderPage() {
         status: "open",
       });
       router.push("/orders");
-    } catch {
-      setError(t.orders.missingInfo);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.missingInfo));
     }
   };
 

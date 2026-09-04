@@ -109,8 +109,19 @@ export function parseAmount(text: string): number {
   return parseAmountOrNull(text) ?? 0;
 }
 
+/**
+ * Anzeige eines Tagesdatums. `YYYY-MM-DD` (und ISO-Zeitstempel, deren Tag
+ * genommen wird) werden per String-Slice formatiert — `new Date("2026-03-05")`
+ * ist UTC-Mitternacht und zeigte westlich von UTC den Vortag. Andere
+ * Eingaben fallen auf die Browser-Formatierung zurueck.
+ */
 export function formatDate(dateStr: string, locale: string = "de-DE"): string {
   if (!dateStr) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr);
+  if (m) {
+    const [, y, mo, d] = m;
+    return locale.startsWith("de") ? `${d}.${mo}.${y}` : `${Number(mo)}/${Number(d)}/${y}`;
+  }
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString(locale);

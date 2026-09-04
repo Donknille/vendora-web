@@ -10,6 +10,7 @@ import { parseAmount } from "@/lib/formatCurrency";
 import { MARKET_STATUSES, statusLabel, type MarketStatus } from "@/lib/marketCalendar";
 import { today } from "@/lib/date";
 import { ghostBrandButton, iconButtonMuted, inputNested, labelTight, inputSurface } from "@/lib/styles";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface QuickItem {
   name: string;
@@ -72,8 +73,8 @@ export default function NewMarketPage() {
     });
 
     router.push("/markets");
-    } catch {
-      setError(t.common.saveError);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.common.saveError));
     }
   };
 

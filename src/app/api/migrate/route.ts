@@ -13,6 +13,12 @@ import { planMarketCostRows } from "@/lib/marketCosts";
 import { computeInvoiceTotals } from "@/lib/invoice";
 import { z } from "zod";
 import { isoDay } from "@/lib/date";
+import {
+  mapLegacyMarketStatus,
+  mapLegacyOrderStatus,
+  mapLegacyPaymentMethod,
+  normalizeLegacyDate,
+} from "@/lib/legacyImport";
 
 // v1: money as euro decimals. v2: money as integer cents.
 const CURRENT_SCHEMA_VERSION = 2;
@@ -185,13 +191,15 @@ export const POST = withAuth(
           customerZip: order.customerZip || "",
           customerCity: order.customerCity || "",
           customerCountry: order.customerCountry || "",
-          status: order.status || "open",
+          // Uebersetzt statt abgebrochen: ein "Bar" oder "31.12.2026" aus
+          // einem alten Backup rollte sonst den ganzen Import zurueck.
+          status: mapLegacyOrderStatus(order.status),
           invoiceNumber: order.invoiceNumber || "",
           notes: order.notes || "",
-          orderDate: order.orderDate || today,
-          serviceDate: order.serviceDate || null,
-          paidAt: order.paidAt || null,
-          paymentMethod: order.paymentMethod || null,
+          orderDate: normalizeLegacyDate(order.orderDate) ?? today,
+          serviceDate: normalizeLegacyDate(order.serviceDate),
+          paidAt: normalizeLegacyDate(order.paidAt),
+          paymentMethod: mapLegacyPaymentMethod(order.paymentMethod),
           shippingCost,
           total,
           processingStatus: order.processingStatus,
@@ -223,7 +231,7 @@ export const POST = withAuth(
       for (const market of data.markets) {
         const standFee = toCents(market.standFee, fromEuros);
         const travelCost = toCents(market.travelCost, fromEuros);
-        const marketDate = market.date || today;
+        const marketDate = normalizeLegacyDate(market.date) ?? today;
         const marketName = market.name || "";
         const [inserted] = await tx.insert(marketEvents).values({
           userId,
@@ -233,7 +241,7 @@ export const POST = withAuth(
           standFee,
           travelCost,
           notes: market.notes || "",
-          status: market.status || "open",
+          status: mapLegacyMarketStatus(market.status),
           quickItems: market.quickItems?.map((q) => ({
             name: q.name,
             price: toCents(q.price, fromEuros),
@@ -280,7 +288,7 @@ export const POST = withAuth(
           amount: toCents(expense.amount, fromEuros),
           category: mapLegacyCategory(expense.category),
           source: "manual",
-          expenseDate: expense.expenseDate || expense.date || today,
+          expenseDate: normalizeLegacyDate(expense.expenseDate) ?? normalizeLegacyDate(expense.date) ?? today,
           createdAt: now,
         });
       }

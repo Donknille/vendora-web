@@ -1,4 +1,5 @@
 import { toneClasses } from "@/lib/statusColors";
+import { saleLineTotal } from "@/lib/saleMath";
 // Pure helpers for the market calendar (Phase 3.4): status metadata, application
 // deadline state, and year-over-year comparison. No React / DB imports so it is
 // trivially unit-testable. Dates are ISO "YYYY-MM-DD" strings; "today" is always
@@ -113,7 +114,7 @@ export function computeYearComparison(
     .map((m) => {
       const sales = salesByMarketId[m.id] ?? [];
       const total = sales.reduce(
-        (sum, s) => sum + (Number(s.amount) || 0) * (Number(s.quantity) || 0),
+        (sum, s) => sum + saleLineTotal(s),
         0
       );
       const profit = total - (Number(m.standFee) || 0) - (Number(m.travelCost) || 0);

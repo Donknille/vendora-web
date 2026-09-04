@@ -8,6 +8,7 @@
 // silently picking one of two numbers.
 
 import type { MarketEvent, MarketSale, Expense } from "@/lib/types";
+import { saleLineTotal } from "@/lib/saleMath";
 
 export interface MarketRankingRow {
   id: string;
@@ -37,7 +38,7 @@ export function computeMarketRanking(input: MarketRankingInput): MarketRankingRo
   const revenueById = new Map<string, number>();
   for (const sale of input.marketSales) {
     if (!marketIds.has(sale.marketId)) continue;
-    const amount = (Number(sale.amount) || 0) * (Number(sale.quantity) || 1);
+    const amount = saleLineTotal(sale);
     revenueById.set(sale.marketId, (revenueById.get(sale.marketId) || 0) + amount);
   }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isoDateOrEmpty, isoDateString } from "@/lib/schemas/common";
 
 /**
  * Nutzlast-Schemas für Märkte und Marktverkäufe (Refactoring-Plan 2.2).
@@ -23,25 +24,25 @@ export const marketStatusEnum = z.enum([
 
 export const createMarketSchema = z.object({
   name: z.string().min(1, "Market name is required").max(200),
-  date: z.string().min(1, "Date is required").max(50),
+  date: isoDateString,
   location: z.string().max(300).default(""),
   standFee: z.number().int().min(0).max(9999999).default(0), // cents
   travelCost: z.number().int().min(0).max(9999999).default(0), // cents
   notes: z.string().max(5000).default(""),
   status: marketStatusEnum.optional(),
-  applicationDeadline: z.string().min(1).max(50).nullish(),
+  applicationDeadline: isoDateOrEmpty.nullish(),
   quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 
 export const updateMarketSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  date: z.string().max(50).optional(),
+  date: isoDateString.optional(),
   location: z.string().max(300).optional(),
   standFee: z.number().int().min(0).max(9999999).optional(), // cents
   travelCost: z.number().int().min(0).max(9999999).optional(), // cents
   notes: z.string().max(5000).optional(),
   status: marketStatusEnum.optional(),
-  applicationDeadline: z.string().max(50).nullish(),
+  applicationDeadline: isoDateOrEmpty.nullish(),
   quickItems: z.array(quickItemSchema).max(50).optional(),
 });
 

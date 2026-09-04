@@ -12,8 +12,14 @@ export function useSubscription() {
   });
 }
 
-export function invalidateSubscription() {
-  queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
+/**
+ * Nach der Rückkehr aus dem Stripe-Checkout. Der Schlüssel ist user-scoped —
+ * die frühere Fassung invalidierte `["/api/subscription"]`, traf damit nichts
+ * und hatte auch keinen Aufrufer: Nach dem Bezahlen blieb der alte Plan aus
+ * dem persistierten Cache eine Minute lang stehen.
+ */
+export function invalidateSubscription(userId: string | null | undefined) {
+  queryClient.invalidateQueries({ queryKey: [userId, "/api/subscription"] });
 }
 
 /**

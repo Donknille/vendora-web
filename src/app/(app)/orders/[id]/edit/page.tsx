@@ -14,6 +14,8 @@ import { ghostBrandButton, iconButton, inputNested, inputSurface, labelClass } f
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { NotFoundState } from "@/components/ui/NotFoundState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { mapLegacyOrderStatus } from "@/lib/legacyImport";
+import type { OrderStatus } from "@/lib/orderStatus";
 
 interface OrderItem {
   name: string;
@@ -40,7 +42,7 @@ export default function EditOrderPage() {
   const [orderDate, setOrderDate] = useState("");
   const [serviceDate, setServiceDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState("open");
+  const [status, setStatus] = useState<OrderStatus>("open");
   const [paidAt, setPaidAt] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [shippingCost, setShippingCost] = useState("");
@@ -67,7 +69,7 @@ export default function EditOrderPage() {
       );
       setServiceDate(order.serviceDate ? dayOf(order.serviceDate) : "");
       setNotes(order.notes || "");
-      setStatus(order.status || "open");
+      setStatus(mapLegacyOrderStatus(order.status));
       setPaidAt(order.paidAt ? dayOf(order.paidAt) : "");
       setPaymentMethod(order.paymentMethod ?? "");
       // Show what the order actually carries — no profile default here, editing an

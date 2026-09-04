@@ -1,3 +1,4 @@
+import { saleLineTotal, saleQuantity } from "@/lib/saleMath";
 // Pure day-closing ("Tagesabschluss") math for the market mode (Phase 3.3).
 // Kept dependency-free and side-effect-free so it is trivially testable and can
 // combine server sales with not-yet-synced offline sales. All money is integer
@@ -36,8 +37,8 @@ export function computeDayClosing(
   let unknown = 0;
 
   for (const s of sales) {
-    const qty = Number(s.quantity) || 0;
-    const revenue = (Number(s.amount) || 0) * qty;
+    const qty = saleQuantity(s);
+    const revenue = saleLineTotal(s);
     itemCount += qty;
     total += revenue;
     if (s.paymentMethod === "cash") cash += revenue;

@@ -47,7 +47,7 @@ export function fail(
 /** 400 samt Feldfehlern — dieselbe Form, die die Formulare schon auswerten. */
 export function validationError(error: ZodError): NextResponse {
   return NextResponse.json(
-    { message: "Validation error", errors: error.flatten().fieldErrors },
+    { message: "Validation error", code: "VALIDATION_ERROR", errors: error.flatten().fieldErrors },
     { status: 400 }
   );
 }
@@ -88,6 +88,12 @@ export function withRoute<P = Record<string, string>>(
       const params = ((await context?.params) ?? {}) as P;
       return await handler({ request, params });
     } catch (error) {
+      // `request.json()` wirft bei kaputtem JSON einen SyntaxError. Das ist
+      // ein Eingabefehler, kein Serverfehler — vorher wurde er als 500
+      // protokolliert und beantwortet.
+      if (error instanceof SyntaxError) {
+        return fail(400, "Invalid JSON body", { code: "INVALID_JSON" });
+      }
       console.error(`${label} error:`, error);
       return fail(500, opts.errorMessage ?? "Internal server error");
     }

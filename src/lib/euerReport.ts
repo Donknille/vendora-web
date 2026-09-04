@@ -8,6 +8,7 @@
 import type { Order, MarketEvent, MarketSale, Expense } from "@/lib/types";
 import { isPaidLike } from "@/lib/orderStatus";
 import { DEFAULT_EUER_CATEGORY, isEuerCategory, type EuerCategory } from "@/lib/euer";
+import { saleLineTotal } from "@/lib/saleMath";
 
 export type EuerLineKind = "income_order" | "income_market" | "expense";
 
@@ -121,7 +122,7 @@ export function computeEuerReport(input: EuerInput): EuerReport {
     const dateStr = market?.date || sale.createdAt;
     const ym = parseYearMonth(dateStr);
     if (!ym || ym.year !== year) continue;
-    const amount = (sale.amount || 0) * (sale.quantity || 1);
+    const amount = saleLineTotal(sale);
     incomeTotal += amount;
     incomeByMonth[ym.monthIndex] += amount;
     lines.push({

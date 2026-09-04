@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { EUER_CATEGORIES } from "@/lib/euer";
+import { isoDateString } from "@/lib/schemas/common";
 
 /**
  * Die übrigen Nutzlast-Schemas (Refactoring-Plan 2.2): Ausgaben, Firmenprofil,
@@ -16,7 +17,7 @@ export const createExpenseSchema = z.object({
   description: z.string().min(1, "Description is required").max(200),
   amount: z.number().int().min(0).max(99999999), // cents
   category: z.enum(EUER_CATEGORIES),
-  expenseDate: z.string().min(1, "Date is required").max(50),
+  expenseDate: isoDateString,
 });
 
 // Defense-in-depth: reject strings that look like HTML/script injection

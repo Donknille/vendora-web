@@ -27,11 +27,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { dayOf } from "@/lib/date";
+import { ORDER_STATUSES, type OrderStatus } from "@/lib/orderStatus";
 import { iconButton } from "@/lib/styles";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { NotFoundState } from "@/components/ui/NotFoundState";
 
-const ORDER_STATUSES = ["open", "paid", "shipped", "delivered", "cancelled"];
 
 export default function OrderDetailPage() {
   const { t, language } = useLanguage();
@@ -91,7 +91,7 @@ export default function OrderDetailPage() {
   // koennen dadurch nicht auseinanderlaufen.
   const profileReady = isInvoiceReadyProfile(profile);
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: OrderStatus) => {
     setShowStatusMenu(false);
     setError("");
     try {
@@ -117,8 +117,8 @@ export default function OrderDetailPage() {
     setError("");
     try {
       await issueInvoice.mutateAsync(order.id);
-    } catch {
-      setError(t.orders.invoiceActionError);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.invoiceActionError));
     }
   };
 
@@ -128,8 +128,8 @@ export default function OrderDetailPage() {
     if (!activeInvoice) return;
     try {
       await cancelInvoice.mutateAsync(activeInvoice.id);
-    } catch {
-      setError(t.orders.invoiceActionError);
+    } catch (e) {
+      setError(apiErrorMessage(e, language, t.orders.invoiceActionError));
     }
   };
 

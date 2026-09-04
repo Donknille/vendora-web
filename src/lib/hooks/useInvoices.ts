@@ -9,6 +9,14 @@ function useKey() {
   return [userId, "/api/invoices"] as const;
 }
 
+// Rechnung und Storno tragen Beträge (Storno negativ), die im Dashboard
+// erscheinen — die Liste allein zu invalidieren reichte nicht.
+function invalidateInvoiceWrites(userId: string | null | undefined) {
+  for (const path of ["/api/invoices", "/api/dashboard"]) {
+    queryClient.invalidateQueries({ queryKey: [userId, path] });
+  }
+}
+
 export function useInvoices() {
   const key = useKey();
   return useAppQuery<Invoice[]>([...key]);
@@ -22,7 +30,7 @@ export function useIssueInvoice() {
       return res.json() as Promise<Invoice>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...key] });
+      invalidateInvoiceWrites(key[0]);
     },
   });
 }
@@ -35,7 +43,7 @@ export function useCancelInvoice() {
       return res.json() as Promise<{ cancellation: Invoice; original: Invoice }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...key] });
+      invalidateInvoiceWrites(key[0]);
     },
   });
 }

@@ -388,7 +388,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
         <p
           class="mt-0.5 text-xs text-muted"
         >
-          2.3.2026
+          02.03.2026
         </p>
       </div>
       <div
@@ -487,7 +487,7 @@ exports[`expenses — Liste > rendert Ausgaben inklusive abgeleiteter Marktkoste
         <p
           class="mt-0.5 text-xs text-muted"
         >
-          14.3.2026
+          14.03.2026
         </p>
       </div>
       <div
@@ -648,7 +648,7 @@ exports[`markets — Liste > rendert die Marktliste unveraendert 1`] = `
                       d="M3 10h18"
                     />
                   </svg>
-                  14.3.2026
+                  14.03.2026
                 </span>
                 <span
                   class="inline-flex items-center gap-1"
@@ -718,7 +718,7 @@ exports[`markets — Liste > rendert die Marktliste unveraendert 1`] = `
                 Frist
                 :
                  
-                1.2.2026
+                01.02.2026
                  (in -42 T.)
               </span>
             </div>
@@ -922,7 +922,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
                     d="M3 10h18"
                   />
                 </svg>
-                1.3.2026
+                01.03.2026
               </span>
               <span
                 class="inline-flex items-center gap-1"
@@ -1033,7 +1033,7 @@ exports[`orders — Liste > rendert die Auftragsliste unveraendert 1`] = `
                     d="M3 10h18"
                   />
                 </svg>
-                1.3.2026
+                01.03.2026
               </span>
               <span
                 class="inline-flex items-center gap-1"

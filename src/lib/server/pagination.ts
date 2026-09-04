@@ -1,7 +1,12 @@
 import "server-only";
 
-export const DEFAULT_PAGE_SIZE = 500;
-export const MAX_PAGE_SIZE = 1000;
+// Kein Client blaettert heute; die Listen-Hooks holen eine Seite ohne
+// limit/offset. 500 war fuer eine Saison Marktverkaeufe zu wenig — ab da
+// zeigten Marktseite (gekappt) und Dashboard (ungekappt) verschiedene Zahlen
+// fuer denselben Markt. Echtes Blaettern in der Oberflaeche ist ein eigenes
+// Ticket; bis dahin liegt die Grenze weit ueber dem, was ein Konto erreicht.
+export const DEFAULT_PAGE_SIZE = 5000;
+export const MAX_PAGE_SIZE = 5000;
 
 /**
  * Parses `?limit=&offset=` from a request into a bounded page window.

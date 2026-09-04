@@ -151,6 +151,32 @@ describe("Restore und Rechnungszähler", () => {
     expect(order.total).toBe(2990);
   });
 
+  it("übersetzt Werte aus alten Backups statt den Import abzubrechen", async () => {
+    // "Bar", "Bezahlt", "31.12.2025": vorher lief jeder dieser Werte an den
+    // CHECK der Datenbank bzw. in eine date-Spalte — und der GANZE Import
+    // rollte mit "Import failed" zurück.
+    const res = await callRestore({
+      schemaVersion: 2,
+      orders: [{ ...ORDER, status: "Bezahlt", paymentMethod: "Bar", orderDate: "31.12.2025", paidAt: "gestern" }],
+      markets: [{ id: "m1", name: "Weihnachtsmarkt", date: "06.12.2025", status: "Zugesagt", standFee: 8000 }],
+      expenses: [{ description: "Ton", amount: 4000, category: "wareneinkauf_material", expenseDate: "01.08.2025" }],
+    });
+    expect(res.status).toBe(200);
+
+    const [order] = await storage.getOrders(ANNA);
+    expect(order.status).toBe("paid");
+    expect(order.paymentMethod).toBe("cash");
+    expect(order.orderDate).toBe("2025-12-31");
+    expect(order.paidAt).toBeNull();
+
+    const [market] = await storage.getMarkets(ANNA);
+    expect(market.status).toBe("confirmed");
+    expect(market.date).toBe("2025-12-06");
+
+    const expenses = await storage.getExpenses(ANNA);
+    expect(expenses.find((e) => e.source === "manual")?.expenseDate).toBe("2025-08-01");
+  });
+
   it("verträgt einen Kategoriewert, der auf Object.prototype zeigt", async () => {
     // "constructor" traf früher die geerbte Funktion der Mapping-Tabelle, wurde
     // als Kategorie durchgereicht und liess den gesamten Import am

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { ORDER_STATUSES } from "@/lib/orderStatus";
+import { PAYMENT_METHODS } from "@/lib/payments";
+import { isoDateOrEmpty, isoDateString } from "@/lib/schemas/common";
 
 /**
  * Nutzlast-Schemas für Aufträge.
@@ -53,12 +56,14 @@ export const createOrderSchema = z.object({
   customerZip: z.string().min(1, "ZIP is required").max(20),
   customerCity: z.string().min(1, "City is required").max(100),
   customerCountry: z.string().max(100).default(""),
-  status: z.string().max(50).default("open"),
+  // Enum statt String: ein unbekannter Status lief bis an den CHECK der
+  // Datenbank und kam als 500 zurueck statt als Feldmeldung.
+  status: z.enum(ORDER_STATUSES).default("open"),
   notes: z.string().max(5000).default(""),
-  orderDate: z.string().min(1, "Order date is required").max(50),
-  serviceDate: z.string().max(50).optional(),
-  paidAt: z.string().max(50).optional(),
-  paymentMethod: z.enum(["cash", "card", "transfer", "paypal", "other"]).optional(),
+  orderDate: isoDateString,
+  serviceDate: isoDateOrEmpty.optional(),
+  paidAt: isoDateOrEmpty.optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS).optional(),
   shippingCost: z.number().int().min(0).max(9999999).optional(), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),
@@ -80,12 +85,12 @@ export const updateOrderSchema = z.object({
   customerZip: z.string().max(20).optional(),
   customerCity: z.string().max(100).optional(),
   customerCountry: z.string().max(100).optional(),
-  status: z.string().max(50).optional(),
+  status: z.enum(ORDER_STATUSES).optional(),
   notes: z.string().max(5000).optional(),
-  orderDate: z.string().max(50).optional(),
-  serviceDate: z.string().max(50).optional(),
-  paidAt: z.string().max(50).optional(),
-  paymentMethod: z.enum(["cash", "card", "transfer", "paypal", "other"]).optional(),
+  orderDate: isoDateString.optional(),
+  serviceDate: isoDateOrEmpty.optional(),
+  paidAt: isoDateOrEmpty.optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS).optional(),
   shippingCost: z.number().int().min(0).max(9999999).optional(), // cents
   processingStatus: z.string().max(50).optional(),
   comment: z.string().max(1000).optional(),

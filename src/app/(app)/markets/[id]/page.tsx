@@ -38,6 +38,7 @@ import { TseNotice } from "@/components/markets/TseNotice";
 import { iconButtonMuted, inputSurface } from "@/lib/styles";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { NotFoundState } from "@/components/ui/NotFoundState";
+import { saleLineTotal } from "@/lib/saleMath";
 
 export default function MarketDetailPage() {
   const { t, language } = useLanguage();
@@ -95,11 +96,11 @@ export default function MarketDetailPage() {
   const unsyncedPending = pending.filter((p) => !serverClientIds.has(p.clientId));
 
   const serverTotal = (sales || []).reduce(
-    (sum: number, s) => sum + Number(s.amount) * Number(s.quantity),
+    (sum: number, s) => sum + saleLineTotal(s),
     0
   );
   const pendingTotal = unsyncedPending.reduce(
-    (sum, p) => sum + p.amount * p.quantity,
+    (sum, p) => sum + saleLineTotal(p),
     0
   );
   const totalSales = serverTotal + pendingTotal;
@@ -417,7 +418,7 @@ export default function MarketDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-amber-600">
-                    {formatCurrency(p.amount * p.quantity)}
+                    {formatCurrency(saleLineTotal(p))}
                   </span>
                   <RefreshCw
                     className="h-4 w-4 text-amber-500"
@@ -438,7 +439,7 @@ export default function MarketDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-income">
-                    {formatCurrency(Number(sale.amount) * Number(sale.quantity))}
+                    {formatCurrency(saleLineTotal(sale))}
                   </span>
                   <button onClick={() => setConfirmDeleteSaleId(sale.id)} className="rounded p-1 text-muted hover:text-red-400 transition-colors">
                     <Trash2 className="h-4 w-4" />

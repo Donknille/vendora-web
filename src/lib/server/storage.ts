@@ -389,8 +389,17 @@ export interface CustomerResponse {
   country: string;
 }
 
-export async function getCustomers(userId: string): Promise<CustomerResponse[]> {
-  return db
+/**
+ * Kundenstamm. `limit` gilt fuer die Autovervollstaendigung; der
+ * DSGVO-Export (Art. 20) ruft mit `{ limit: null }` und bekommt alle — vorher
+ * schnitt die feste 200er-Grenze den Export still ab.
+ */
+export async function getCustomers(
+  userId: string,
+  opts: { limit?: number | null } = {}
+): Promise<CustomerResponse[]> {
+  const limit = opts.limit === undefined ? 200 : opts.limit;
+  let q = db
     .select({
       id: customers.id,
       name: customers.name,
@@ -403,7 +412,9 @@ export async function getCustomers(userId: string): Promise<CustomerResponse[]> 
     .from(customers)
     .where(eq(customers.userId, userId))
     .orderBy(sql`${customers.updatedAt} DESC`)
-    .limit(200);
+    .$dynamic();
+  if (limit != null) q = q.limit(limit);
+  return q;
 }
 
 type CustomerFields = { name: string; email: string; street: string; zip: string; city: string; country: string };

@@ -18,6 +18,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { today, isoDay } from "@/lib/date";
 import { labelTight, inputSurface } from "@/lib/styles";
 import { toneClasses, type Tone } from "@/lib/statusColors";
+import { apiErrorMessage } from "@/lib/apiError";
 
 const categoryTones: Record<EuerCategory, Tone> = {
   wareneinkauf_material: "blue",
@@ -118,8 +119,14 @@ export default function ExpensesPage() {
       setCategory("sonstiges");
       setExpenseDate(today());
       setShowForm(false);
-    } catch {
-      setFormError(language === "en" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut.");
+    } catch (e) {
+      setFormError(
+        apiErrorMessage(
+          e,
+          language,
+          language === "en" ? "Could not save expense. Please try again." : "Ausgabe konnte nicht gespeichert werden. Bitte versuche es erneut."
+        )
+      );
     }
   };
 

@@ -13,10 +13,14 @@ function useKey() {
   return [userId, "/api/orders"] as const;
 }
 
-// Creating/editing an order may add or relink a customer master record.
+// Ein Auftrag berührt mehr als seine Liste: Kundenstamm (Autocomplete),
+// Dashboard/EÜR (bezahlte Aufträge sind Einnahmen) und beim Löschen die
+// Rechnungen (orderId wird null). Vorher blieb das Dashboard nach dem
+// Löschen fünf Minuten lang bei den alten Zahlen.
 function invalidateOrderScopedQueries(userId: string | null | undefined) {
-  queryClient.invalidateQueries({ queryKey: [userId, "/api/orders"] });
-  queryClient.invalidateQueries({ queryKey: [userId, "/api/customers"] });
+  for (const path of ["/api/orders", "/api/customers", "/api/dashboard", "/api/invoices"]) {
+    queryClient.invalidateQueries({ queryKey: [userId, path] });
+  }
 }
 
 export function useOrders() {
@@ -57,7 +61,7 @@ export function useDeleteOrder() {
       await apiRequest("DELETE", `/api/orders/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...key] });
+      invalidateOrderScopedQueries(key[0]);
     },
   });
 }

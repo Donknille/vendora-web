@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   User,
@@ -24,7 +24,8 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { apiErrorMessage } from "@/lib/apiError";
 import { useTheme } from "@/lib/context/ThemeContext";
 import { useProfile, useUpdateProfile } from "@/lib/hooks/useProfile";
-import { useSubscription } from "@/lib/hooks/useSubscription";
+import { useSubscription, invalidateSubscription } from "@/lib/hooks/useSubscription";
+import { useCurrentUserId } from "@/lib/context/AuthContext";
 import { useStripeCheckout } from "@/lib/hooks/useStripeCheckout";
 import { authClient } from "@/lib/auth-client";
 import { clearLocalData } from "@/lib/clearLocalData";
@@ -36,26 +37,43 @@ import { InstallAppCard } from "@/components/pwa/InstallAppCard";
 import { today } from "@/lib/date";
 import { labelTight, inputSurface } from "@/lib/styles";
 import { ListSkeleton } from "@/components/ui/Skeleton";
+import { apiRequest } from "@/lib/api-client";
 
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const userId = useCurrentUserId();
 
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: sub } = useSubscription();
+
+  // Stripe schickt nach dem Checkout hierher (?subscription=success). Der
+  // persistierte Cache kennt noch den alten Plan — einmal frisch holen.
+  const checkoutResult = searchParams.get("subscription");
+  useEffect(() => {
+    if (checkoutResult === "success") invalidateSubscription(userId);
+  }, [checkoutResult, userId]);
   const { redirectToCheckout: handleSubscribe, loading: subscribeLoading, error: subscribeError } = useStripeCheckout();
   const [portalLoading, setPortalLoading] = useState(false);
 
+  const [portalError, setPortalError] = useState("");
   const handleManageSubscription = async () => {
     setPortalLoading(true);
+    setPortalError("");
     try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const res = await apiRequest("POST", "/api/stripe/portal");
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+        return;
       }
-    } catch {
+      throw new Error("missing url");
+    } catch (e) {
+      // Vorher blieb der Knopf ohne `res.ok`-Pruefung dauerhaft auf "Laden…".
+      setPortalError(apiErrorMessage(e, language, t.common.saveError));
+    } finally {
       setPortalLoading(false);
     }
   };
@@ -305,13 +323,16 @@ export default function SettingsPage() {
           )}
 
           {sub && sub.plan === "pro" && (
-            <button
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-              className="w-full rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
-            >
-              {portalLoading ? t.common.loading : (language === "de" ? "Abo verwalten / kündigen" : "Manage / cancel subscription")}
-            </button>
+            <>
+              <button
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+                className="w-full rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
+              >
+                {portalLoading ? t.common.loading : (language === "de" ? "Abo verwalten / kündigen" : "Manage / cancel subscription")}
+              </button>
+              {portalError && <p className="mt-2 text-sm text-red-400">{portalError}</p>}
+            </>
           )}
         </div>
 

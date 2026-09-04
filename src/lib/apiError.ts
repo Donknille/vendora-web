@@ -46,6 +46,18 @@ export function apiErrorMessage(
       return de
         ? "Im Firmenprofil fehlen Name und Anschrift."
         : "Your company profile is missing name and address.";
+    case "ALREADY_ISSUED":
+      return de
+        ? "Zu diesem Auftrag gibt es bereits eine gültige Rechnung."
+        : "An active invoice already exists for this order.";
+    case "NOT_CANCELLABLE":
+      return de
+        ? "Diese Rechnung kann nicht storniert werden — sie ist bereits storniert oder selbst ein Storno."
+        : "This invoice cannot be cancelled — it is already cancelled or is itself a cancellation.";
+    case "VALIDATION_ERROR":
+      return de
+        ? "Einige Angaben sind ungültig. Bitte prüfe die Felder."
+        : "Some entries are invalid. Please check the fields.";
     default:
       return fallback;
   }

@@ -21,7 +21,7 @@ export const GET = withAuth(
       // Der Restore baut die Kunden zwar aus den Auftraegen neu auf und
       // ignoriert diese Felder — fuer den Datenexport zaehlt aber, was ueber
       // die Person gespeichert ist, nicht was der Import braucht.
-      storage.getCustomers(userId),
+      storage.getCustomers(userId, { limit: null }),
       storage.getUser(userId),
     ]);
 

@@ -148,7 +148,7 @@ exports[`markets/[id] — Marktdetail > rendert die Detailseite unveraendert 1`]
             d="M3 10h18"
           />
         </svg>
-        14.3.2026
+        14.03.2026
       </span>
       <span
         class="inline-flex items-center gap-1"
@@ -837,7 +837,7 @@ exports[`markets/[id]/kasse — Kassenmodus > rendert die Kasse unveraendert 1`]
       <p
         class="truncate text-xs text-faint"
       >
-        14.3.2026
+        14.03.2026
          · Marktplatz Musterstadt
       </p>
     </div>
