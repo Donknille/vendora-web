@@ -15,7 +15,9 @@ describe("shouldPersistQuery", () => {
   });
 
   it("persistiert die Verkäufe eines Marktes", () => {
-    expect(shouldPersistQuery(key("/api/markets/abc-123/sales"))).toBe(true);
+    // Der echte Schluessel aus useMarketSales — nicht eine URL, die die App
+    // nie als Schluessel erzeugt.
+    expect(shouldPersistQuery(["user-1", "/api/markets", "abc-123", "sales"])).toBe(true);
   });
 
   it("persistiert keine Geld- und Kundendaten", () => {

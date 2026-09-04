@@ -34,7 +34,7 @@ const MonthlyChart = dynamic(
 // ---------------------------------------------------------------------------
 
 export default function DashboardPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const userId = useCurrentUserId();
   // Single batched API call instead of 4 separate ones
   const { data, isLoading, isError, refetch } = useAppQuery<{
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-secondary hover:bg-elevated transition-colors"
           >
             <FileText className="h-4 w-4" />
-            {language === "de" ? "GuV / EÜR" : "P&L / Tax"}
+            {t.dashboard.pLTax}
           </Link>
           {/* Der Zugang zur Hilfe auf dem Handy — in der unteren Leiste ist
               kein Platz mehr. */}
@@ -172,12 +172,10 @@ export default function DashboardPage() {
         <Card>
           <div className="text-center py-4">
             <h2 className="text-lg font-semibold text-primary mb-2">
-              {language === "de" ? "Willkommen bei Bilanz-Buddy!" : "Welcome to Bilanz-Buddy!"}
+              {t.dashboard.welcomeToBrand}
             </h2>
             <p className="text-sm text-muted mb-4 max-w-md mx-auto">
-              {language === "de"
-                ? "Starte jetzt: Erstelle deinen ersten Auftrag, lege einen Markt an oder erfasse eine Ausgabe."
-                : "Get started: Create your first order, set up a market, or track an expense."}
+              {t.dashboard.getStartedCreateYour}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/orders/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors">
@@ -332,7 +330,7 @@ export default function DashboardPage() {
       {marketRanking.length > 0 && (
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-primary">
-            {language === "de" ? "Gewinn je Markt" : "Profit per market"}
+            {t.dashboard.profitPerMarket}
           </h2>
           <div className="space-y-3">
             {marketRanking.map((m) => (
@@ -345,7 +343,7 @@ export default function DashboardPage() {
                         sonst grundlos profitabel. */}
                     {!m.costsBooked && (
                       <span className="ml-2 text-xs text-amber-600">
-                        {language === "de" ? "Kosten nicht gebucht" : "costs not booked"}
+                        {t.dashboard.costsNotBooked}
                       </span>
                     )}
                   </span>

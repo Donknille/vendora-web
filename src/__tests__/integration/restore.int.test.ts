@@ -177,6 +177,38 @@ describe("Restore und Rechnungszähler", () => {
     expect(expenses.find((e) => e.source === "manual")?.expenseDate).toBe("2025-08-01");
   });
 
+  it("behält das Firmenprofil, wenn das Backup keines mitbringt", async () => {
+    // Vorher löschte Schritt 1 das Profil immer, Schritt 6 legte nur eines an,
+    // wenn das Backup den Schlüssel trug — ein Restore ohne `profile` ließ
+    // die Nutzerin ohne Firmenname zurück, und die nächste Rechnung scheiterte.
+    await storage.upsertProfile(ANNA, PROFILE);
+    const res = await callRestore({ schemaVersion: 2, orders: [] });
+    expect(res.status).toBe(200);
+    expect((await storage.getProfile(ANNA)).name).toBe(PROFILE.name);
+
+    // Bringt das Backup eines mit, ersetzt es das vorhandene.
+    const res2 = await callRestore({ schemaVersion: 2, profile: { ...PROFILE, name: "Neu" } });
+    expect(res2.status).toBe(200);
+    expect((await storage.getProfile(ANNA)).name).toBe("Neu");
+  });
+
+  it("übernimmt Zahlart, Offline-Schlüssel und Zeitstempel der Marktverkäufe", async () => {
+    const res = await callRestore({
+      schemaVersion: 2,
+      markets: [{ id: "m1", name: "Markt", date: "2026-08-01", applicationDeadline: "2026-07-01" }],
+      marketSales: [
+        { marketId: "m1", description: "Tasse", amount: 1500, quantity: 2, paymentMethod: "card", clientId: "c-1", createdAt: "2026-08-01T10:00:00.000Z" },
+      ],
+    });
+    expect(res.status).toBe(200);
+    const [market] = await storage.getMarkets(ANNA);
+    expect(market.applicationDeadline).toBe("2026-07-01");
+    const [sale] = await storage.getMarketSales(ANNA, market.id);
+    expect(sale.paymentMethod).toBe("card");
+    expect(sale.clientId).toBe("c-1");
+    expect(sale.createdAt).toBe("2026-08-01T10:00:00.000Z");
+  });
+
   it("verträgt einen Kategoriewert, der auf Object.prototype zeigt", async () => {
     // "constructor" traf früher die geerbte Funktion der Mapping-Tabelle, wurde
     // als Kategorie durchgereicht und liess den gesamten Import am

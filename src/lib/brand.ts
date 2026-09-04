@@ -1,4 +1,4 @@
-// Die Marke an einer Stelle. Aus Bilanz-Buddy wurde im August 2026 Bilanz-Buddy,
+// Die Marke an einer Stelle. Im August 2026 bekam das Produkt seinen heutigen Namen,
 // und der Name steckte damals an 261 Stellen im Repo. Diese Datei ist die
 // Antwort darauf: alles, was den Namen, die Domain, die Farben oder das Logo
 // nennt, holt es sich hier.

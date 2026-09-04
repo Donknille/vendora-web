@@ -8,7 +8,6 @@ const storageState = { result: "deleted" as "deleted" | "not_found" | "derived" 
 
 vi.mock("@/lib/server/auth", () => ({
   getAuthUserId: async () => authState.userId,
-  requireActiveSubscription: async () => null,
 }));
 
 vi.mock("@/lib/server/storage", () => ({

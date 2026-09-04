@@ -3,6 +3,7 @@ import { fail, validationError, withAuth } from "@/lib/server/route";
 import { updateOrderSchema } from "@/lib/schemas/order";
 import * as storage from "@/lib/server/storage";
 import { requireWriteAccess } from "@/lib/server/limits";
+import { changedFields, isStatusOnlyChange } from "@/lib/server/changeDetection";
 
 export const PUT = withAuth<{ id: string }>(
   "PUT /api/orders/[id]",
@@ -41,23 +42,11 @@ export const PUT = withAuth<{ id: string }>(
           )
         : "";
 
-    const changedFields = (Object.keys(parsed.data) as (keyof typeof parsed.data)[]).filter(
-      (key) => {
-        const next = parsed.data[key];
-        if (next === undefined) return false;
-        const before = (current as unknown as Record<string, unknown>)[key];
-        if (key === "items") return normalizeItems(next) !== normalizeItems(before);
-        // Leerwerte angleichen (null vs "" vs []), sonst zaehlt ein
-        // unveraendertes Formularfeld als Aenderung.
-        const norm = (v: unknown) =>
-          JSON.stringify(Array.isArray(v) && v.length === 0 ? null : (v ?? null));
-        return norm(next) !== norm(before);
-      }
-    );
-    // Leere Menge = unveraendertes Speichern; legt nichts an, wird nicht gesperrt.
-    const statusOnly = changedFields.every((key) => key === "status");
+    const changed = changedFields(parsed.data, current as unknown as Record<string, unknown>, {
+      normalize: { items: normalizeItems },
+    });
 
-    if (!statusOnly) {
+    if (!isStatusOnlyChange(changed)) {
       const gate = await requireWriteAccess(userId);
       if (gate) return gate;
     }

@@ -10,7 +10,6 @@ const storageState = {
 
 vi.mock("@/lib/server/auth", () => ({
   getAuthUserId: async () => authState.userId,
-  requireActiveSubscription: async () => null,
 }));
 
 vi.mock("@/lib/server/limits", () => ({

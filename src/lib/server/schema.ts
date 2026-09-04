@@ -12,8 +12,6 @@ import {
   uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
 
 // ============================================================
 // Users — app profile keyed by the Better Auth user.id.
@@ -34,7 +32,9 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   // Admin
-  isBlocked: boolean("is_blocked").default(false),
+  // notNull: ein Sicherheitsflag darf keinen dritten Zustand haben. Vorher
+  // war NULL moeglich — `= false`-Filter haetten solche Zeilen uebersehen.
+  isBlocked: boolean("is_blocked").notNull().default(false),
   // Wann die Willkommens-Erklaerung abgeschlossen wurde. Nullable und ohne
   // Default: Bestandskonten gelten damit als "noch nicht gesehen" und bekommen
   // sie einmal. Sie haengt am Konto und nicht an localStorage, weil sie sonst
@@ -89,6 +89,8 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_orders_user_id").on(t.userId),
+  // Listen sortieren nach created_at DESC — der Index deckt Filter UND Sortierung.
+  index("idx_orders_user_created").on(t.userId, t.createdAt),
   index("idx_orders_user_status").on(t.userId, t.status),
   index("idx_orders_user_paid_at").on(t.userId, t.paidAt),
   check(
@@ -101,8 +103,6 @@ export const orders = pgTable("orders", {
   ),
 ]);
 
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type SelectOrder = typeof orders.$inferSelect;
 
 // ============================================================
@@ -147,6 +147,7 @@ export const customers = pgTable("customers", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_customers_user_id").on(t.userId),
+  index("idx_customers_user_updated").on(t.userId, t.updatedAt),
 ]);
 
 export type SelectCustomer = typeof customers.$inferSelect;
@@ -167,7 +168,7 @@ export const marketEvents = pgTable("market_events", {
   standFee: integer("stand_fee").notNull().default(0), // cents
   travelCost: integer("travel_cost").notNull().default(0), // cents
   notes: text("notes").notNull().default(""),
-  status: text("status").default("open"),
+  status: text("status").notNull().default("open"),
   // Application deadline for the stall (Marktkalender, Phase 3.4).
   applicationDeadline: date("application_deadline"),
   quickItems: jsonb("quick_items").$type<{ name: string; price: number }[]>(), // price in cents
@@ -206,6 +207,7 @@ export const marketSales = pgTable("market_sales", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_market_sales_user_id").on(t.userId),
+  index("idx_market_sales_user_created").on(t.userId, t.createdAt),
   index("idx_market_sales_market_id").on(t.marketId),
   uniqueIndex("uq_market_sales_user_client").on(t.userId, t.clientId),
   check(
@@ -237,6 +239,7 @@ export const expenses = pgTable("expenses", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("idx_expenses_user_id").on(t.userId),
+  index("idx_expenses_user_date").on(t.userId, t.expenseDate),
   index("idx_expenses_market_id").on(t.marketId),
   check(
     "chk_expenses_category",
@@ -341,6 +344,8 @@ export const invoices = pgTable("invoices", {
 }, (t) => [
   index("idx_invoices_user_id").on(t.userId),
   index("idx_invoices_order_id").on(t.orderId),
+  // Die Aufbewahrungs-Loeschung sucht nur archivierte Belege mit abgelaufener Frist.
+  index("idx_invoices_retention").on(t.retentionUntil).where(sql`${t.archivedAt} is not null`),
   // A user's invoice numbers are unique (GoBD: no duplicates).
   uniqueIndex("uq_invoices_user_number").on(t.userId, t.invoiceNumber),
   // Höchstens EINE gültige Rechnung je Auftrag. Der Existenz-Check in

@@ -64,7 +64,7 @@ Bilanz-Buddy ist eine Multi-Tenant-SaaS für **kreative Markthändler:innen in D
 | Export/Backup | `api/export` (JSON-Bundle, schemaVersion 1), `api/migrate` (285 Z., komplett transaktionaler Restore mit Zod-Caps und Legacy-Feld-Mapping, Import nur bei `subscriptionStatus === "active"`). |
 | Settings/Konto | `settings/page.tsx` (642 Z., größte Datei). DSGVO-Löschung: Stripe-Customer löschen → Transaktion (alle Daten + Soft-Delete-Profil + Better-Auth-User). |
 | Admin | `admin/`-Seiten + APIs (`extend_trial`, `activate_subscription`, `block`, `unblock`), Gate via `ADMIN_EMAILS`. |
-| Billing | Abo 2,99 €/Monat (`STRIPE_PRICE_ID` **hartkodiert** in `src/lib/server/stripe.ts`), 42-Tage-Trial (`provisioning.ts`), `requireActiveSubscription()` gated alle Schreib-Endpunkte. Webhook: signaturverifiziert, fail-closed, aber **kein Event-ID-Dedup**; `checkout.session.completed` setzt pauschal +30 Tage. |
+| Billing | Abo 19,90 €/Monat (`STRIPE_PRICE_ID` aus der Env), 42-Tage-Trial (`provisioning.ts`), `requireWriteAccess()` gated alle Schreib-Endpunkte (Free = Nur-Lese). Webhook: signaturverifiziert, fail-closed, Event-ID-Dedup atomar vor der Verarbeitung, ausserhalb des Rate-Limits; Ablauf aus `current_period_end` (Rueckfall +30 Tage). *(Stand 04.09.2026 — die Zeile beschrieb vorher den Ist-Zustand vom Projektstart.)* |
 
 **Tote Pfade:** `api/customers` + `useCustomers()` (nie aufgerufen), `api/invoice-number` (kein UI-Caller), `app_settings`-Tabelle + Settings-PUT (Theme/Sprache liegen in localStorage). **Nicht existent trotz Doku:** Produktkatalog/`api/products`, `docs/known-issues.md`, `docs/security-policy.md`, `docs/database-schema.md`, `docs/stripe-integration.md`, `docs/development-workflow.md`.
 

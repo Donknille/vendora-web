@@ -272,9 +272,7 @@ export default function ExpensesPage() {
                   Liste — ohne diesen Hinweis bucht man sie ein zweites Mal. */}
               {(category === "standgebuehren_raumkosten" || category === "fahrtkosten") && (
                 <p className="mt-1.5 text-xs text-muted">
-                  {language === "de"
-                    ? "Standgebühren und Fahrtkosten eines Markts werden automatisch erfasst — du findest sie hier mit dem Markt-Hinweis."
-                    : "Stand fees and travel costs of a market are recorded automatically — they appear here with a market badge."}
+                  {t.expenses.standFeesAndTravel}
                 </p>
               )}
             </div>
@@ -352,7 +350,7 @@ export default function ExpensesPage() {
                           (expense.createdAt
                             ? isoDay(new Date(expense.createdAt))
                             : ""),
-                        language === "de" ? "de-DE" : "en-US"
+                        (language === "de" ? "de-DE" : "en-US")
                       )}
                     </p>
                   </div>

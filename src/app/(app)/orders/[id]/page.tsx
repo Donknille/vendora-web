@@ -178,7 +178,7 @@ export default function OrderDetailPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted" />
                 <span>
-                  {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), language === "de" ? "de-DE" : "en-US")}
+                  {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), (language === "de" ? "de-DE" : "en-US"))}
                 </span>
               </div>
             )}
@@ -393,9 +393,7 @@ export default function OrderDetailPage() {
               {/* Nicht blockierend: die Steuernummer ist erst ab 250 € Pflicht. */}
               {!profile?.taxNote?.trim() && (
                 <p className="text-xs text-muted">
-                  {language === "de"
-                    ? "Hinweis: Im Firmenprofil ist kein Steuerhinweis hinterlegt. Ab 250 € Rechnungsbetrag ist die Steuernummer oder USt-IdNr. Pflicht."
-                    : "Note: no tax reference is set in your company profile. From €250 the tax number or VAT ID is mandatory."}
+                  {t.orders.noteNoTaxReference}
                 </p>
               )}
             </>
@@ -404,15 +402,13 @@ export default function OrderDetailPage() {
                das ohnehin mit 409 ab — hier steht, wie man es behebt. */
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-2">
               <p className="text-sm text-amber-600">
-                {language === "de"
-                  ? "Zum Ausstellen fehlen Firmenname und Anschrift — sie müssen nach § 14 Abs. 4 UStG auf jeder Rechnung stehen."
-                  : "Issuing requires your company name and address — every invoice must show them by law."}
+                {t.orders.issuingRequiresYourCompany}
               </p>
               <Link
                 href="/settings"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-primary hover:bg-elevated transition-colors"
               >
-                {language === "de" ? "Firmenprofil vervollständigen" : "Complete company profile"}
+                {t.orders.completeCompanyProfile}
               </Link>
             </div>
           )}

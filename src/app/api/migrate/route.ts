@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { fail, validationError, withAuth } from "@/lib/server/route";
-import { getUser } from "@/lib/server/storage";
+import { deleteAllUserData, getUser } from "@/lib/server/storage";
 import { getEffectivePlan } from "@/lib/plan";
 import { db } from "@/lib/server/db";
 import {
-  orders, orderItems, customers, marketEvents, marketSales,
+  orders, orderItems, marketEvents, marketSales,
   expenses, companyProfiles, invoiceCounters, invoices,
 } from "@/lib/server/schema";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { mapLegacyCategory } from "@/lib/euer";
 import { planMarketCostRows } from "@/lib/marketCosts";
 import { computeInvoiceTotals } from "@/lib/invoice";
@@ -52,6 +52,7 @@ const migrateOrderSchema = z.object({
   processingStatus: z.string().max(50).nullable().optional(),
   comment: z.string().max(5000).nullable().optional(),
   items: z.array(migrateItemSchema).max(50).optional(),
+  createdAt: z.string().max(40).nullable().optional(),
 });
 
 const migrateMarketSchema = z.object({
@@ -63,6 +64,8 @@ const migrateMarketSchema = z.object({
   travelCost: z.union([z.number(), z.string()]).optional(),
   notes: z.string().max(5000).optional(),
   status: z.string().max(50).nullable().optional(),
+  applicationDeadline: z.string().max(50).nullable().optional(),
+  createdAt: z.string().max(40).nullable().optional(),
   quickItems: z.array(z.object({
     name: z.string().max(200),
     // accepts both euro decimals (v1) and integer cents (v2)
@@ -75,6 +78,11 @@ const migrateMarketSaleSchema = z.object({
   description: z.string().max(200).optional(),
   amount: z.union([z.number(), z.string()]).optional(),
   quantity: z.number().int().min(1).max(9999).optional(),
+  // Der Export traegt sie, der Import warf sie vorher weg: Zahlart (fuer
+  // den Tagesabschluss), Offline-Schluessel und Zeitstempel.
+  paymentMethod: z.string().max(20).nullable().optional(),
+  clientId: z.string().max(100).nullable().optional(),
+  createdAt: z.string().max(40).nullable().optional(),
 });
 
 const migrateExpenseSchema = z.object({
@@ -105,6 +113,13 @@ const migrateSchema = z.object({
   profile: migrateProfileSchema,
   invoiceCounter: z.number().int().min(0).max(999999).optional(),
 });
+
+// Zeitstempel aus dem Backup; unbrauchbar -> null (Aufrufer nimmt "jetzt").
+function legacyTimestamp(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 const MAX_CENTS = 99999999; // €999.999,99
 
@@ -147,20 +162,17 @@ export const POST = withAuth(
 
   // Entire restore runs in a single transaction — rollback on any failure
   await db.transaction(async (tx) => {
-    // Step 1: Delete all existing user data
-    await tx.delete(marketSales).where(eq(marketSales.userId, userId));
-    const userOrders = await tx.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
-    if (userOrders.length > 0) {
-      await tx.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
-    }
-    await tx.delete(orders).where(eq(orders.userId, userId));
-    // Drop the stale customer master set so restore stays consistent. It is
-    // rebuilt as the user next creates/edits orders (imported orders keep their
-    // address snapshot; customerId is left null). Invoices are intentionally kept.
-    await tx.delete(customers).where(eq(customers.userId, userId));
-    await tx.delete(marketEvents).where(eq(marketEvents.userId, userId));
-    await tx.delete(expenses).where(eq(expenses.userId, userId));
-    await tx.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
+    // Step 1: Delete all existing user data — dieselbe Implementierung wie die
+    // Kontoloeschung (vorher eine zweite Kopie mit anderer Tabellenmenge).
+    // Rechnungen und Zaehler bleiben stehen (Schritt 7), und ein Backup ohne
+    // Profil darf das vorhandene Profil nicht wegwerfen: vorher war es nach
+    // einem solchen Restore einfach weg. Kunden werden aus den Auftraegen neu
+    // aufgebaut (importierte Auftraege behalten ihren Adress-Schnappschuss).
+    await deleteAllUserData(userId, tx, {
+      keepInvoiceCounter: true,
+      keepEuerExports: true,
+      keepProfile: !data.profile,
+    });
 
     // Step 2: Import orders (with original invoice numbers preserved)
     const now = new Date();
@@ -204,7 +216,7 @@ export const POST = withAuth(
           total,
           processingStatus: order.processingStatus,
           comment: order.comment,
-          createdAt: now,
+          createdAt: legacyTimestamp(order.createdAt) ?? now,
           updatedAt: now,
         }).returning();
 
@@ -242,11 +254,12 @@ export const POST = withAuth(
           travelCost,
           notes: market.notes || "",
           status: mapLegacyMarketStatus(market.status),
+          applicationDeadline: normalizeLegacyDate(market.applicationDeadline),
+          createdAt: legacyTimestamp(market.createdAt) ?? now,
           quickItems: market.quickItems?.map((q) => ({
             name: q.name,
             price: toCents(q.price, fromEuros),
           })),
-          createdAt: now,
         }).returning();
 
         // Status mitgeben, sonst wuerde der Restore am Gate vorbei buchen.
@@ -273,7 +286,9 @@ export const POST = withAuth(
             description: sale.description || "",
             amount: toCents(sale.amount, fromEuros),
             quantity: sale.quantity || 1,
-            createdAt: now,
+            paymentMethod: sale.paymentMethod === "cash" || sale.paymentMethod === "card" ? sale.paymentMethod : null,
+            clientId: sale.clientId || null,
+            createdAt: legacyTimestamp(sale.createdAt) ?? now,
           });
         }
       }

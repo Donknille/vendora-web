@@ -47,11 +47,11 @@ export function FeatureGrid() {
             <motion.div
               whileHover={reduceMotion ? undefined : { rotate: 10, scale: 1.05 }}
               transition={{ duration: 0.2 }}
-              className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center mb-4"
+              className="h-10 w-10 rounded-lg bg-brand-primary/10 flex items-center justify-center mb-4"
             >
-              <Icon className="h-5 w-5 text-green-600" />
+              <Icon className="h-5 w-5 text-brand-primary" />
             </motion.div>
-            <h3 className="text-lg text-primary mb-1">{feature.title}</h3>
+            <h3 className="text-lg font-semibold text-primary mb-1">{feature.title}</h3>
             <p className="text-sm text-muted leading-relaxed">{feature.desc}</p>
           </motion.div>
         );

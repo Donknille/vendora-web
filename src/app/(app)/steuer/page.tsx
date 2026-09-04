@@ -19,8 +19,7 @@ import type { Order, Expense, MarketEvent, MarketSale } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default function SteuerPage() {
-  const { language } = useLanguage();
-  const isDE = language === "de";
+  const { t, language } = useLanguage();
   const userId = useCurrentUserId();
   const { data: profile } = useProfile();
   const canCreate = useCanCreate();
@@ -85,12 +84,10 @@ export default function SteuerPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            {isDE ? "Steuer / EÜR" : "Tax / P&L"}
+            {t.steuer.taxPL}
           </h1>
           <p className="text-sm text-muted">
-            {isDE
-              ? "Einnahmen-Überschuss-Rechnung nach Zuflussprinzip"
-              : "Cash-basis income–expense statement"}
+            {t.steuer.cashBasisIncomeExpense}
           </p>
         </div>
         {canCreate || (unlocks?.years ?? []).includes(year) ? (
@@ -111,7 +108,7 @@ export default function SteuerPage() {
         ) : (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-elevated px-3 py-2 text-xs text-faint">
             <FileDown className="h-3.5 w-3.5" />
-            {isDE ? "Export mit Pro" : "Export with Pro"}
+            {t.steuer.exportWithPro}
           </span>
         )}
       </div>
@@ -138,15 +135,15 @@ export default function SteuerPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
-          <p className="text-sm text-faint">{isDE ? "Einnahmen" : "Income"}</p>
+          <p className="text-sm text-faint">{t.steuer.income}</p>
           <p className="mt-1 text-2xl font-bold text-income">{formatCurrency(report.incomeTotal)}</p>
         </Card>
         <Card>
-          <p className="text-sm text-faint">{isDE ? "Ausgaben" : "Expenses"}</p>
+          <p className="text-sm text-faint">{t.steuer.expenses}</p>
           <p className="mt-1 text-2xl font-bold text-expense">{formatCurrency(report.expenseTotal)}</p>
         </Card>
         <Card>
-          <p className="text-sm text-faint">{isDE ? "Überschuss" : "Surplus"}</p>
+          <p className="text-sm text-faint">{t.steuer.surplus}</p>
           <p className={`mt-1 text-2xl font-bold ${report.surplus >= 0 ? "text-income" : "text-expense"}`}>
             {formatCurrency(report.surplus)}
           </p>
@@ -155,18 +152,18 @@ export default function SteuerPage() {
 
       {/* Income breakdown */}
       <Card>
-        <h2 className="mb-3 text-lg font-semibold text-primary">{isDE ? "Einnahmen" : "Income"}</h2>
+        <h2 className="mb-3 text-lg font-semibold text-primary">{t.steuer.income}</h2>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary">{isDE ? "Aufträge (bezahlt)" : "Orders (paid)"}</span>
+            <span className="text-secondary">{t.steuer.ordersPaid}</span>
             <span className="text-primary">{formatCurrency(incomeOrders)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary">{isDE ? "Marktverkäufe" : "Market sales"}</span>
+            <span className="text-secondary">{t.steuer.marketSales}</span>
             <span className="text-primary">{formatCurrency(incomeMarket)}</span>
           </div>
           <div className="flex justify-between border-t border-line pt-2 font-medium">
-            <span className="text-secondary">{isDE ? "Summe" : "Total"}</span>
+            <span className="text-secondary">{t.steuer.total}</span>
             <span className="text-income">{formatCurrency(report.incomeTotal)}</span>
           </div>
         </div>
@@ -175,7 +172,7 @@ export default function SteuerPage() {
       {/* Expenses by category */}
       <Card>
         <h2 className="mb-3 text-lg font-semibold text-primary">
-          {isDE ? "Ausgaben nach Kategorie" : "Expenses by category"}
+          {t.steuer.expensesByCategory}
         </h2>
         {report.expensesByCategory.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted">—</p>
@@ -188,7 +185,7 @@ export default function SteuerPage() {
               </div>
             ))}
             <div className="flex justify-between border-t border-line pt-2 font-medium">
-              <span className="text-secondary">{isDE ? "Summe" : "Total"}</span>
+              <span className="text-secondary">{t.steuer.total}</span>
               <span className="text-expense">{formatCurrency(report.expenseTotal)}</span>
             </div>
           </div>
@@ -198,21 +195,21 @@ export default function SteuerPage() {
       {/* Receipts */}
       {report.lines.length > 0 && (
         <Card>
-          <h2 className="mb-3 text-lg font-semibold text-primary">{isDE ? "Belege" : "Receipts"}</h2>
+          <h2 className="mb-3 text-lg font-semibold text-primary">{t.steuer.receipts}</h2>
           <div className="max-h-96 overflow-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-surface">
                 <tr className="border-b border-line text-left text-muted">
-                  <th className="pb-2 pr-3 font-medium">{isDE ? "Datum" : "Date"}</th>
-                  <th className="pb-2 pr-3 font-medium">{isDE ? "Beschreibung" : "Description"}</th>
-                  <th className="pb-2 text-right font-medium">{isDE ? "Betrag" : "Amount"}</th>
+                  <th className="pb-2 pr-3 font-medium">{t.steuer.date}</th>
+                  <th className="pb-2 pr-3 font-medium">{t.steuer.description}</th>
+                  <th className="pb-2 text-right font-medium">{t.steuer.amount}</th>
                 </tr>
               </thead>
               <tbody>
                 {report.lines.map((l, i) => (
                   <tr key={i} className="border-b border-line-subtle last:border-0">
                     <td className="py-2 pr-3 text-muted whitespace-nowrap">
-                      {formatDate(l.date, isDE ? "de-DE" : "en-US")}
+                      {formatDate(l.date, (language === "de" ? "de-DE" : "en-US"))}
                     </td>
                     <td className="py-2 pr-3 text-secondary">
                       {l.description}
@@ -233,9 +230,7 @@ export default function SteuerPage() {
 
       {profile?.isSmallBusiness && (
         <p className="text-center text-xs text-muted">
-          {isDE
-            ? "Kleinunternehmer nach § 19 UStG — keine Umsatzsteuer. Ohne Gewähr, keine Steuerberatung."
-            : "Small business under §19 UStG — no VAT. Provided without warranty; not tax advice."}
+          {t.steuer.smallBusinessUnder19}
         </p>
       )}
     </div>

@@ -173,7 +173,7 @@ export default function EditMarketPage() {
             </div>
             <div>
               <label htmlFor="market-edit-5" className={labelTight}>
-                {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
+                {t.markets.applicationDeadline}
               </label>
               <input id="market-edit-5" type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} className={inputSurface} />
             </div>

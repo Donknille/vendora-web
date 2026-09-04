@@ -39,7 +39,7 @@ Offene Risiken von damals, soweit sie die heutige Architektur noch betreffen:
 | B1 | Trial-Abuse durch E-Mail-Aliase | weiterhin offen |
 | B3 | Keine Pagination auf GET-Endpunkten | in Phase 0.5 umgesetzt |
 | B4 | Webhook-Replay (keine Event-ID-Dedup) | in Phase 0.5 umgesetzt (`webhook_events`) |
-| B5 | Session-Invalidierung bei Passwortänderung | war ein Supabase-Setting — für Better Auth neu zu bewerten |
+| B5 | Session-Invalidierung bei Passwortänderung | war ein Supabase-Setting — für Better Auth neu zu bewerten (Stand 04.09.2026 weiterhin offen; Better Auth bietet `revokeOtherSessions` beim Passwortwechsel) |
 | B6 | Preview-Deployments gegen Produktionsdaten | weiterhin offen |
 | B7 | Admin-E-Mails in Env-Variable | weiterhin offen (bewusst, `ADMIN_EMAILS`) |
 

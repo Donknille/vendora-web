@@ -158,7 +158,7 @@ export default function SettingsPage() {
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 2000);
     } catch {
-      setProfileError("Profil konnte nicht gespeichert werden.");
+      setProfileError(t.settings.theProfileCouldNot);
     }
   };
 
@@ -215,9 +215,7 @@ export default function SettingsPage() {
         const body = await res.json().catch(() => ({}));
         if (body.code === "PRO_REQUIRED") {
           throw new Error(
-            language === "de"
-              ? "Der Import eines Backups ist Bilanz-Buddy Pro vorbehalten."
-              : "Restoring a backup requires Bilanz-Buddy Pro.",
+            t.settings.restoringABackupRequires,
           );
         }
         throw new Error(
@@ -230,9 +228,7 @@ export default function SettingsPage() {
       const message = e instanceof Error ? e.message : "";
       setImportError(
         message ||
-          (language === "de"
-            ? "Die Datei konnte nicht gelesen werden. Ist es ein Bilanz-Buddy-Backup?"
-            : "The file could not be read. Is it a Bilanz-Buddy backup?"),
+          (t.settings.theFileCouldNot),
       );
       setImportStatus("error");
     }
@@ -245,7 +241,7 @@ export default function SettingsPage() {
     if (sub.plan === "pro") {
       const until =
         sub.expiresAt != null
-          ? ` (${language === "de" ? "bis" : "until"} ${new Date(sub.expiresAt).toLocaleDateString(language === "de" ? "de-DE" : "en-US")})`
+          ? ` (${t.settings.until} ${new Date(sub.expiresAt).toLocaleDateString((language === "de" ? "de-DE" : "en-US"))})`
           : "";
       return `Pro${until}`;
     }
@@ -253,7 +249,7 @@ export default function SettingsPage() {
       const days = sub.trialDaysLeft ?? 0;
       return language === "de" ? `Testphase (noch ${days} Tage)` : `Trial (${days} days left)`;
     }
-    return language === "de" ? "Free (Nur-Lese)" : "Free (read-only)";
+    return t.settings.freeReadOnly;
   })();
 
   const subscriptionColor =
@@ -329,7 +325,7 @@ export default function SettingsPage() {
                 disabled={portalLoading}
                 className="w-full rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
               >
-                {portalLoading ? t.common.loading : (language === "de" ? "Abo verwalten / kündigen" : "Manage / cancel subscription")}
+                {portalLoading ? t.common.loading : (t.settings.manageCancelSubscription)}
               </button>
               {portalError && <p className="mt-2 text-sm text-red-400">{portalError}</p>}
             </>
@@ -348,13 +344,11 @@ export default function SettingsPage() {
       {/* Referral slot (Phase 4.4): only rendered when a link is configured. */}
       <ReferralCard
         url={process.env.NEXT_PUBLIC_INSURANCE_REFERRAL_URL}
-        title={language === "de" ? "Betriebshaftpflicht für Markthändler" : "Trade liability insurance"}
+        title={t.settings.tradeLiabilityInsurance}
         description={
-          language === "de"
-            ? "Absicherung für Stand, Waren und Personenschäden auf dem Markt – Tarife vergleichen."
-            : "Cover your stall, goods and liability at the market – compare quotes."
+          t.settings.coverYourStallGoods
         }
-        cta={language === "de" ? "Tarife vergleichen" : "Compare quotes"}
+        cta={t.settings.compareQuotes}
         de={language === "de"}
       />
 
@@ -442,15 +436,13 @@ export default function SettingsPage() {
               className="mt-0.5 h-4 w-4 rounded border-line text-brand-primary focus:ring-brand-primary"
             />
             <span className="text-sm text-secondary">
-              {language === "de"
-                ? "Kleinunternehmer nach § 19 UStG (keine Umsatzsteuer ausweisen)"
-                : "Small business under §19 UStG (no VAT charged)"}
+              {t.settings.smallBusinessUnder19}
             </span>
           </label>
 
           <div>
             <label htmlFor="settings-6" className={labelTight}>
-              {language === "de" ? "Zusätzlicher Steuerhinweis" : "Additional tax note"}
+              {t.settings.additionalTaxNote}
             </label>
             <input id="settings-6"
               type="text"
@@ -605,9 +597,7 @@ export default function SettingsPage() {
             title={
               importAllowed
                 ? undefined
-                : language === "de"
-                  ? "Der Import ist Pro vorbehalten."
-                  : "Import is a Pro feature."
+                : t.settings.importIsAPro
             }
             className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-secondary hover:bg-elevated disabled:opacity-50 transition-colors"
           >
@@ -632,9 +622,7 @@ export default function SettingsPage() {
             aus und erfaehrt danach, dass der Import nicht freigeschaltet ist. */}
         {!importAllowed && (
           <p className="mt-3 text-sm text-muted">
-            {language === "de"
-              ? "Der Import eines Backups ist Bilanz-Buddy Pro vorbehalten. Der Export bleibt jederzeit möglich."
-              : "Restoring a backup requires Bilanz-Buddy Pro. Exporting stays available at all times."}
+            {t.settings.restoringABackupRequires2}
           </p>
         )}
 
@@ -690,20 +678,18 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3 mb-4">
           <Trash2 className="h-5 w-5 text-red-400" />
           <h2 className="text-base font-semibold text-primary">
-            {language === "de" ? "Konto löschen" : "Delete Account"}
+            {t.settings.deleteAccount}
           </h2>
         </div>
         <p className="text-sm text-faint mb-4">
-          {language === "de"
-            ? "Alle deine Daten werden unwiderruflich gelöscht. Ausgestellte Rechnungen bleiben gesetzlich vorgeschrieben aufbewahrt (§ 147 AO, § 14b UStG) — ohne Verbindung zu deinem Konto."
-            : "All your data will be permanently deleted. Issued invoices are retained as required by German tax law (§ 147 AO, § 14b UStG) — decoupled from your account."}
+          {t.settings.allYourDataWill}
         </p>
         <button
           onClick={() => setShowDeleteAccount(true)}
           className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <Trash2 className="h-4 w-4" />
-          {language === "de" ? "Konto und alle Daten löschen" : "Delete account and all data"}
+          {t.settings.deleteAccountAndAll}
         </button>
       </Card>
 
@@ -715,11 +701,9 @@ export default function SettingsPage() {
           setPendingImportFile(null);
         }}
         onConfirm={handleImportConfirm}
-        title={language === "de" ? "Backup wiederherstellen" : "Restore Backup"}
-        message={language === "de"
-          ? "Alle bestehenden Daten (Aufträge, Märkte, Ausgaben, etc.) werden gelöscht und durch das Backup ersetzt. Diese Aktion kann nicht rückgängig gemacht werden."
-          : "All existing data (orders, markets, expenses, etc.) will be deleted and replaced with the backup. This action cannot be undone."}
-        confirmText={language === "de" ? "Wiederherstellen" : "Restore"}
+        title={t.settings.restoreBackup2}
+        message={t.settings.allExistingDataOrders}
+        confirmText={t.settings.restore}
         cancelText={t.common.cancel}
       />
 
@@ -731,7 +715,7 @@ export default function SettingsPage() {
           // Ein Fehler wird GEWORFEN, nicht in den Seitenzustand geschrieben:
           // Der Dialog zeigt ihn an und bleibt offen. Ein `return` galt ihm
           // als Erfolg — und ließ ihn eingefroren stehen.
-          const fallback = language === "de" ? "Konto konnte nicht gelöscht werden." : "Failed to delete account.";
+          const fallback = t.settings.failedToDeleteAccount;
           let res: Response;
           try {
             res = await fetch("/api/account", { method: "DELETE" });
@@ -746,13 +730,11 @@ export default function SettingsPage() {
           await authClient.signOut();
           router.push("/auth/login");
         }}
-        title={language === "de" ? "Konto löschen" : "Delete Account"}
+        title={t.settings.deleteAccount}
         message={
-          (language === "de"
-            ? "Bist du sicher? Alle Aufträge, Märkte, Ausgaben und dein Firmenprofil werden unwiderruflich gelöscht. Bereits ausgestellte Rechnungen werden für die gesetzliche Aufbewahrungsfrist entkoppelt archiviert."
-            : "Are you sure? All orders, markets, expenses and your company profile will be permanently deleted. Invoices you already issued are archived, decoupled from your account, for the statutory retention period.")
+          (t.settings.areYouSureAll)
         }
-        confirmText={language === "de" ? "Endgültig löschen" : "Delete permanently"}
+        confirmText={t.settings.deletePermanently}
         cancelText={t.common.cancel}
       />
     </div>

@@ -17,8 +17,9 @@ describe("2.1 — Backup schema version and transactional restore", () => {
     const fs = await import("fs");
     const source = fs.readFileSync("src/app/api/migrate/route.ts", "utf-8");
     expect(source).toContain("db.transaction");
-    // All data operations happen inside tx callback
-    expect(source).toContain("tx.delete");
+    // All data operations happen inside tx callback — the wipe goes through the
+    // one shared implementation, handed the transaction.
+    expect(source).toContain("deleteAllUserData(userId, tx");
     expect(source).toContain("tx.insert");
   });
 

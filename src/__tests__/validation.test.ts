@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { z } from "zod";
 
 // Das Auftragsschema wird aus der Route IMPORTIERT, nicht nachgebaut. Eine
 // Kopie driftet unbemerkt ab: sie bestaetigt dann Regeln, die in Produktion
@@ -7,13 +6,9 @@ import { z } from "zod";
 // Seit Refactoring-Plan 2.2 liegt das Schema in lib/schemas — die Regeln,
 // die hier geprueft werden, sind unveraendert.
 import { createOrderSchema, MAX_ORDER_TOTAL_CENTS } from "@/lib/schemas/order";
-
-const createExpenseSchema = z.object({
-  description: z.string().min(1).max(200),
-  amount: z.number().int().min(0).max(99999999), // cents
-  category: z.string().min(1).max(100),
-  expenseDate: z.string().min(1).max(50),
-});
+// Auch das Ausgabenschema kommt aus der Domaene — die lokale Kopie prueft
+// sonst Regeln, die in Produktion laengst anders sind (Kategorie-Enum, Datum).
+import { createExpenseSchema } from "@/lib/schemas/misc";
 
 describe("Order validation", () => {
   it("accepts valid order", () => {
@@ -99,7 +94,7 @@ describe("Expense validation", () => {
     const result = createExpenseSchema.safeParse({
       description: "Materialien",
       amount: 5099,
-      category: "Materials",
+      category: "wareneinkauf_material",
       expenseDate: "2026-04-10",
     });
     expect(result.success).toBe(true);

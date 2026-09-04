@@ -38,7 +38,7 @@ export function PricingBox() {
         Ein Plan. Alles drin.
       </p>
       <div className="flex items-baseline justify-center gap-1 mb-4 relative">
-        <span className="text-5xl text-primary tabular-nums">
+        <span className="text-5xl font-bold text-primary tabular-nums">
           {reduceMotion || !inView ? (
             "19,90 €"
           ) : (

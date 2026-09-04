@@ -79,7 +79,7 @@ export default function OrdersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-line bg-input pl-10 pr-4 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
-              placeholder={language === "de" ? "Suchen..." : "Search..."}
+              placeholder={t.orders.search}
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -110,7 +110,7 @@ export default function OrdersPage() {
       ) : filteredOrders.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-muted text-sm">
-            {language === "de" ? "Keine Ergebnisse gefunden." : "No results found."}
+            {t.orders.noResultsFound}
           </p>
         </div>
       ) : (
@@ -149,7 +149,7 @@ export default function OrdersPage() {
                           {(order.orderDate || order.createdAt) && (
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), language === "de" ? "de-DE" : "en-US")}
+                              {formatDate(order.orderDate || (order.createdAt ? dayOf(order.createdAt) : ""), (language === "de" ? "de-DE" : "en-US"))}
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1">

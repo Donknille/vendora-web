@@ -323,9 +323,7 @@ export default function EditOrderPage() {
               className={inputSurface}
             />
             <p className="mt-1 text-xs text-muted">
-              {language === "de"
-                ? "Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum."
-                : "When the goods or service were delivered. Left empty, the invoice date applies."}
+              {t.orders.whenTheGoodsOr}
             </p>
           </div>
 
@@ -333,24 +331,24 @@ export default function EditOrderPage() {
           <div className="flex gap-3">
             <div className="flex-1">
               <label htmlFor="order-edit-9" className={labelClass}>
-                {language === "de" ? "Zahlungsart" : "Payment method"}
+                {t.orders.paymentMethod}
               </label>
               <select id="order-edit-9"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-primary focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               >
-                <option value="">{language === "de" ? "— keine —" : "— none —"}</option>
+                <option value="">{t.orders.none}</option>
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m} value={m}>
-                    {PAYMENT_METHOD_LABELS[m][language === "de" ? "de" : "en"]}
+                    {PAYMENT_METHOD_LABELS[m][language]}
                   </option>
                 ))}
               </select>
             </div>
             <div className="flex-1">
               <label htmlFor="order-edit-10" className={labelClass}>
-                {language === "de" ? "Bezahlt am" : "Paid on"}
+                {t.orders.paidOn}
               </label>
               <input id="order-edit-10"
                 type="date"

@@ -30,6 +30,8 @@ export const GET = withRoute("GET /api/cron/retention", async ({ request }) => {
   }
 
   const deleted = await storage.purgeExpiredArchivedInvoices();
+  // Nebenbei: das Idempotenz-Register des Webhooks wuchs sonst unbegrenzt.
+  const webhookEventsPurged = await storage.purgeOldWebhookEvents();
 
   // Der Backup-Waechter haengt hier mit drin, weil Vercel Hobby nur zwei
   // Cronjobs erlaubt. Bewusst in eigenem try/catch und NACH der Loeschung:
@@ -41,5 +43,5 @@ export const GET = withRoute("GET /api/cron/retention", async ({ request }) => {
     console.error("GET /api/cron/retention — Backup-Waechter fehlgeschlagen:", error);
   }
 
-  return NextResponse.json({ deleted, backup: backup?.status ?? "unknown" });
+  return NextResponse.json({ deleted, webhookEventsPurged, backup: backup?.status ?? "unknown" });
 });

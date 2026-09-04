@@ -10,7 +10,6 @@ import {
   buildInvoiceSnapshot,
   buildCancellationSnapshot,
   computeInvoiceTotals,
-  computeRetentionUntil,
   isInvoiceReadyProfile,
   type InvoiceSnapshot,
   type InvoiceType,
@@ -28,6 +27,7 @@ import {
   invoiceCounters,
   invoices,
   euerExports,
+  webhookEvents,
   type User,
   type SelectOrder,
   type SelectOrderItem,
@@ -1126,18 +1126,21 @@ export async function archiveUserInvoices(
   userId: string,
   txOrDb: Pick<typeof db, "select" | "update"> = db
 ): Promise<void> {
-  const rows = await txOrDb
-    .select({ id: invoices.id, issueDate: invoices.issueDate })
-    .from(invoices)
+  // EIN Update statt einer Schleife: die Frist (31.12. des Ausstellungsjahres
+  // + 10, § 147 Abs. 3 AO) rechnet Postgres selbst — dieselbe Regel wie
+  // computeRetentionUntil, dort fuer den Einzelfall, hier fuer die Menge.
+  await txOrDb
+    .update(invoices)
+    .set({
+      archivedAt: new Date(),
+      retentionUntil: sql`make_date(extract(year from ${invoices.issueDate})::int + ${RETENTION_YEARS}, 12, 31)`,
+      userId: null,
+    })
     .where(and(eq(invoices.userId, userId), isNull(invoices.archivedAt)));
-  const archivedAt = new Date();
-  for (const row of rows) {
-    await txOrDb
-      .update(invoices)
-      .set({ archivedAt, retentionUntil: computeRetentionUntil(row.issueDate), userId: null })
-      .where(eq(invoices.id, row.id));
-  }
 }
+
+/** Aufbewahrungsfrist in Jahren — muss zu computeRetentionUntil passen. */
+const RETENTION_YEARS = 10;
 
 /**
  * Löscht archivierte Rechnungen, deren Aufbewahrungsfrist abgelaufen ist.
@@ -1168,15 +1171,27 @@ export async function purgeExpiredArchivedInvoices(
 
 // ── Delete All User Data (for backup restore or account deletion) ────────────
 
-export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, "delete" | "select"> = db): Promise<void> {
-  // Delete in correct order due to foreign keys
+export interface DeleteAllUserDataOptions {
+  /** Restore: Zaehler und freigeschaltete EUeR-Jahre bleiben stehen. */
+  keepInvoiceCounter?: boolean;
+  keepEuerExports?: boolean;
+  /** Restore ohne Profil im Backup: das vorhandene Profil nicht wegwerfen. */
+  keepProfile?: boolean;
+}
+
+/**
+ * Loescht die Geschaeftsdaten eines Kontos. Einzige Implementierung — der
+ * Restore nutzte vorher eine eigene Kopie mit leicht anderer Tabellenmenge.
+ */
+export async function deleteAllUserData(
+  userId: string,
+  txOrDb: Pick<typeof db, "delete" | "select"> = db,
+  opts: DeleteAllUserDataOptions = {}
+): Promise<void> {
   // market_sales → references market_events
   await txOrDb.delete(marketSales).where(eq(marketSales.userId, userId));
-  // order_items → references orders (cascade handles this, but explicit is safer)
-  const userOrders = await txOrDb.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
-  if (userOrders.length > 0) {
-    await txOrDb.delete(orderItems).where(inArray(orderItems.orderId, userOrders.map(o => o.id)));
-  }
+  // order_items haengen per ON DELETE CASCADE an orders — keine IN-Liste ueber
+  // alle Auftrags-IDs (Postgres kappt bei 65535 Parametern).
   // NOTE: invoices are intentionally NOT deleted here. Statutory retention
   // (§147 AO / §14b UStG) requires keeping issued invoices ~10 years, so account
   // deletion *archives* them via archiveUserInvoices() instead. When orders are
@@ -1185,9 +1200,29 @@ export async function deleteAllUserData(userId: string, txOrDb: Pick<typeof db, 
   await txOrDb.delete(customers).where(eq(customers.userId, userId));
   await txOrDb.delete(marketEvents).where(eq(marketEvents.userId, userId));
   await txOrDb.delete(expenses).where(eq(expenses.userId, userId));
-  await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
-  await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
-  await txOrDb.delete(euerExports).where(eq(euerExports.userId, userId));
+  if (!opts.keepProfile) {
+    await txOrDb.delete(companyProfiles).where(eq(companyProfiles.userId, userId));
+  }
+  if (!opts.keepInvoiceCounter) {
+    await txOrDb.delete(invoiceCounters).where(eq(invoiceCounters.userId, userId));
+  }
+  if (!opts.keepEuerExports) {
+    await txOrDb.delete(euerExports).where(eq(euerExports.userId, userId));
+  }
+}
+
+/**
+ * Raeumt das Idempotenz-Register des Stripe-Webhooks auf. Stripe stellt
+ * Events hoechstens drei Tage lang erneut zu; alles Aeltere schuetzt nichts
+ * mehr und liesse die Tabelle sonst ewig wachsen.
+ */
+export async function purgeOldWebhookEvents(olderThanDays = 30): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanDays * 86_400_000);
+  const rows = await db
+    .delete(webhookEvents)
+    .where(lt(webhookEvents.processedAt, cutoff))
+    .returning({ eventId: webhookEvents.eventId });
+  return rows.length;
 }
 
 // ── Subscription ───────────────────────────────────────────

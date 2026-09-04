@@ -266,9 +266,7 @@ export default function NewOrderPage() {
               className={inputSurface}
             />
             <p className="mt-1 text-xs text-muted">
-              {language === "de"
-                ? "Wann die Leistung erbracht bzw. die Ware geliefert wurde. Ohne Angabe gilt das Rechnungsdatum."
-                : "When the goods or service were delivered. Left empty, the invoice date applies."}
+              {t.orders.whenTheGoodsOr}
             </p>
           </div>
         </div>

@@ -142,9 +142,7 @@ export default function MarketDetailPage() {
   );
 
   const readOnlyMsg =
-    language === "de"
-      ? "Nur-Lese-Modus – für neue Verkäufe wird Bilanz-Buddy Pro benötigt."
-      : "Read-only – Bilanz-Buddy Pro is required to record sales.";
+    t.markets.readOnlyBrand;
 
   const handleQuickSale = async (item: { name: string; price: number }) => {
     setError("");
@@ -271,7 +269,7 @@ export default function MarketDetailPage() {
           {market.date && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
+              {formatDate(market.date, (language === "de" ? "de-DE" : "en-US"))}
             </span>
           )}
           {market.location && (
@@ -292,7 +290,7 @@ export default function MarketDetailPage() {
         className="flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3.5 text-base font-semibold text-white hover:bg-brand-primary/90 active:scale-[0.99] transition-all"
       >
         <Store className="h-5 w-5" />
-        {language === "de" ? "Kasse öffnen" : "Open register"}
+        {t.markets.openRegister}
       </Link>
 
       {/* Cost Breakdown */}
@@ -359,17 +357,17 @@ export default function MarketDetailPage() {
             {syncing ? (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
                 <RefreshCw className="h-3 w-3 animate-spin" />
-                {language === "de" ? "Synchronisiere…" : "Syncing…"}
+                {t.markets.syncing}
               </span>
             ) : unsyncedPending.length > 0 ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
                 <RefreshCw className="h-3 w-3" />
-                {unsyncedPending.length} {language === "de" ? "ausstehend" : "pending"}
+                {unsyncedPending.length} {t.markets.pending}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
                 <CheckCircle2 className="h-3 w-3 text-income" />
-                {language === "de" ? "Synchronisiert" : "Synced"}
+                {t.markets.synced}
               </span>
             )}
           </div>
@@ -422,7 +420,7 @@ export default function MarketDetailPage() {
                   </span>
                   <RefreshCw
                     className="h-4 w-4 text-amber-500"
-                    aria-label={language === "de" ? "wird synchronisiert" : "syncing"}
+                    aria-label={t.markets.syncing2}
                   />
                 </div>
               </div>
@@ -462,25 +460,25 @@ export default function MarketDetailPage() {
       {/* Tagesabschluss (day closing) */}
       <Card>
         <h3 className="mb-3 text-sm font-medium text-faint uppercase tracking-wider">
-          {language === "de" ? "Tagesabschluss" : "Day closing"}
+          {t.markets.dayClosing}
         </h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-line bg-page p-3">
             <p className="inline-flex items-center gap-1.5 text-xs text-faint">
-              <Banknote className="h-3.5 w-3.5" /> {language === "de" ? "Bar" : "Cash"}
+              <Banknote className="h-3.5 w-3.5" /> {t.markets.cash}
             </p>
             <p className="mt-1 text-lg font-semibold text-primary tabular-nums">{formatCurrency(closing.cash)}</p>
           </div>
           <div className="rounded-lg border border-line bg-page p-3">
             <p className="inline-flex items-center gap-1.5 text-xs text-faint">
-              <CreditCard className="h-3.5 w-3.5" /> {language === "de" ? "Karte" : "Card"}
+              <CreditCard className="h-3.5 w-3.5" /> {t.markets.card}
             </p>
             <p className="mt-1 text-lg font-semibold text-primary tabular-nums">{formatCurrency(closing.card)}</p>
           </div>
         </div>
         {closing.unknown > 0 && (
           <p className="mt-2 text-xs text-muted">
-            {language === "de" ? "Ohne Zahlart" : "No method"}: {formatCurrency(closing.unknown)}
+            {t.markets.noMethod}: {formatCurrency(closing.unknown)}
           </p>
         )}
         <div className="mt-3 space-y-2 border-t border-line pt-3 text-sm">
@@ -505,7 +503,7 @@ export default function MarketDetailPage() {
       {sameNameMarkets.length > 1 && (
         <Card>
           <h3 className="mb-3 text-sm font-medium text-faint uppercase tracking-wider">
-            {language === "de" ? "Jahresvergleich" : "Year comparison"}
+            {t.markets.yearComparison}
           </h3>
           <div className="space-y-2">
             {yearStats.map((y) => (

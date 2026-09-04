@@ -159,7 +159,7 @@ export default function NewMarketPage() {
             </div>
             <div>
               <label htmlFor="market-new-5" className={labelTight}>
-                {language === "de" ? "Bewerbungsfrist" : "Application deadline"}
+                {t.markets.applicationDeadline}
               </label>
               <input id="market-new-5"
                 type="date"

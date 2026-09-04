@@ -87,7 +87,7 @@ export default function MarketsPage() {
                 {market.date && (
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {formatDate(market.date, language === "de" ? "de-DE" : "en-US")}
+                    {formatDate(market.date, (language === "de" ? "de-DE" : "en-US"))}
                   </span>
                 )}
                 {market.location && (
@@ -108,10 +108,10 @@ export default function MarketsPage() {
                   }`}
                 >
                   <AlarmClock className="h-3 w-3" />
-                  {language === "de" ? "Frist" : "Deadline"}:{" "}
-                  {formatDate(market.applicationDeadline!, language === "de" ? "de-DE" : "en-US")}
+                  {t.markets.deadline}:{" "}
+                  {formatDate(market.applicationDeadline!, (language === "de" ? "de-DE" : "en-US"))}
                   {dl.state === "overdue"
-                    ? language === "de" ? " (abgelaufen)" : " (passed)"
+                    ? t.markets.passed
                     : dl.days != null && dl.days <= 7
                       ? language === "de" ? ` (in ${dl.days} T.)` : ` (in ${dl.days}d)`
                       : ""}
@@ -177,7 +177,7 @@ export default function MarketsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-line bg-input pl-10 pr-4 py-2.5 text-sm text-primary placeholder-holder focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
-            placeholder={language === "de" ? "Suchen..." : "Search..."}
+            placeholder={t.markets.search}
           />
         </div>
       )}
@@ -192,7 +192,7 @@ export default function MarketsPage() {
       ) : filteredMarkets.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-muted text-sm">
-            {language === "de" ? "Keine Ergebnisse gefunden." : "No results found."}
+            {t.markets.noResultsFound}
           </p>
         </div>
       ) : (
@@ -200,7 +200,7 @@ export default function MarketsPage() {
           {upcoming.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-faint">
-                {language === "de" ? "Anstehend" : "Upcoming"}
+                {t.markets.upcoming}
               </h2>
               {upcoming.map(renderMarketCard)}
             </section>
@@ -208,7 +208,7 @@ export default function MarketsPage() {
           {past.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-faint">
-                {language === "de" ? "Vergangen" : "Past"}
+                {t.markets.past}
               </h2>
               {past.map(renderMarketCard)}
             </section>

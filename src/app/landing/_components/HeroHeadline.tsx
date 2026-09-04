@@ -19,7 +19,7 @@ export function HeroHeadline() {
   }, [reduceMotion]);
 
   return (
-    <h1 className="text-4xl md:text-5xl text-primary leading-tight max-w-2xl mx-auto">
+    <h1 className="text-4xl md:text-5xl font-bold text-primary leading-tight max-w-2xl mx-auto">
       Dein Business. <br className="hidden md:block" />
       <span className="text-brand-primary inline-block relative">
         Einfach{" "}

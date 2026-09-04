@@ -34,9 +34,10 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   );
   if (!url) return false;
 
-  if (url === "/api/markets") return true;
-  // /api/markets/<id>/sales — die Verkäufe des laufenden Marktes
-  return /^\/api\/markets\/[^/]+\/sales$/.test(url);
+  // Marktliste UND die Verkaeufe eines Marktes: deren Schluessel ist
+  // [userId, "/api/markets", marketId, "sales"] (useMarketSales), das erste
+  // /api/-Segment ist also ebenfalls "/api/markets".
+  return url === "/api/markets";
 }
 
 export function dehydrateFilter(query: Query): boolean {
